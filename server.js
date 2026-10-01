@@ -1,0 +1,64 @@
+const express = require("express");
+const path = require("path");
+
+const app = express();
+const KEY = process.env.GEMINI_API_KEY;
+const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+
+app.use(express.json({ limit: "12mb" }));
+app.use(express.static(path.join(__dirname, "public")));
+
+// Limite simple : 20 analyses par heure et par adresse IP
+const hits = new Map();
+function limited(ip) {
+  const now = Date.now();
+  const list = (hits.get(ip) || []).filter((t) => now - t < 3600000);
+  list.push(now);
+  hits.set(ip, list);
+  return list.length > 20;
+}
+
+function prompt(mode) {
+  const kids = mode === "kids";
+  return `Tu es Studia, un assistant de révision pour élèves. Analyse la photo d'une leçon (cahier ou manuel).
+Public : ${kids ? "enfant de 6 à 11 ans. Phrases très courtes, mots simples, ton très encourageant." : "adolescent de 12 à 17 ans. Ton direct et clair."}
+Écris en français. Base-toi uniquement sur ce qui est visible sur la photo. Si la photo est illisible, mets "erreur" avec une courte explication.
+Réponds UNIQUEMENT avec ce JSON :
+{"matiere":"Maths|Français|Sciences|Histoire|Anglais|Autre","titre":"titre court de la leçon","resume":"résumé en 3 à 5 phrases","fiches":[{"q":"question ou mot clé","r":"réponse courte"}],"quiz":[{"q":"question","choix":["a","b","c"],"bonne":0,"explication":"une phrase"}]}
+Donne 4 à 6 fiches et exactement 5 questions de quiz. "bonne" est l'index (0, 1 ou 2) de la bonne réponse.`;
+}
+
+app.post("/api/analyze", async (req, res) => {
+  if (!KEY) return res.status(500).json({ erreur: "Clé Gemini manquante sur le serveur." });
+  if (limited(req.ip)) return res.status(429).json({ erreur: "Trop de demandes. Réessaie dans un moment." });
+
+  const { image, mode } = req.body || {};
+  const m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(image || "");
+  if (!m) return res.status(400).json({ erreur: "Image invalide. Utilise une photo JPG, PNG ou WebP." });
+
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": KEY },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt(mode) }, { inline_data: { mime_type: m[1], data: m[2] } }] }],
+        generationConfig: { responseMimeType: "application/json", temperature: 0.4 },
+      }),
+    });
+    if (!r.ok) {
+      console.error("Gemini", r.status, (await r.text()).slice(0, 300));
+      return res.status(502).json({ erreur: "L'IA ne répond pas pour le moment. Réessaie." });
+    }
+    const data = await r.json();
+    const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("") || "";
+    const out = JSON.parse(text.replace(/```json|```/g, "").trim());
+    if (out.erreur) return res.status(422).json({ erreur: String(out.erreur) });
+    if (!Array.isArray(out.quiz) || !Array.isArray(out.fiches)) throw new Error("format");
+    res.json(out);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ erreur: "Je n'ai pas réussi à lire cette leçon. Essaie avec une photo plus nette." });
+  }
+});
+
+app.listen(process.env.PORT || 3000, () => console.log("Studia prêt"));
