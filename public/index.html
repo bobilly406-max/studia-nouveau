@@ -79,7 +79,7 @@ button:focus-visible,label:focus-within{outline:3px solid var(--sun);outline-off
 .bdg{display:flex;gap:12px;flex-wrap:wrap;font-size:1.7rem}
 .bdg span{filter:grayscale(1);opacity:.3}
 .bdg span.on{filter:none;opacity:1}
-#auth{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:20px;overflow:auto}
+#auth,#pin{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:20px;overflow:auto}
 .abox{max-width:380px;width:100%;text-align:center}
 .abox h2{font-size:1.7rem;margin:4px 0}
 .abox label{display:block;text-align:left;font-weight:700;margin-top:10px}
@@ -141,11 +141,20 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <div id="auth" class="hide" role="dialog" aria-modal="true" aria-labelledby="atitle"><div class="abox">
 <div style="font-size:2.6rem">🦊</div><h2 id="atitle">Espace parent</h2>
 <p class="mute">Le parent se connecte. Les enfants retrouvent ensuite leurs séances sur tous leurs appareils.</p>
-<label>Courriel<input id="aem" type="email" autocomplete="email"></label>
-<label>Mot de passe (8 caractères ou plus)<input id="apw" type="password" autocomplete="current-password"></label>
+<label id="aeml">Courriel<input id="aem" type="email" autocomplete="email"></label>
+<label><span id="apl">Mot de passe (8 caractères ou plus)</span><input id="apw" type="password" autocomplete="current-password"></label>
 <div id="amsg" class="mute" role="status"></div>
 <button class="go" id="alog" type="button">Se connecter</button>
 <button class="again" id="areg" type="button">Créer mon compte</button>
+<button class="pf" id="aforgot" type="button" style="margin-top:12px">Mot de passe oublié ?</button>
+</div></div>
+<div id="pin" class="hide" role="dialog" aria-modal="true" aria-labelledby="ptitle"><div class="abox">
+<div style="font-size:2.4rem">🔒</div><h2 id="ptitle">Code parent</h2><p class="mute" id="pdesc"></p>
+<label>Code à 4 chiffres<input id="pin1" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></label>
+<label id="p2l">Confirme le code<input id="pin2" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></label>
+<div id="pmsg" class="mute" role="alert"></div>
+<button class="go" id="pok" type="button">Valider</button>
+<button class="again" id="pcancel" type="button">Annuler</button>
 </div></div>
 <div id="toast" role="status"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -208,9 +217,10 @@ if(user)h+='<button type="button" class="pf" id="parBtn">📊 Parent</button>';
 if(db.profiles.length>1)h+='<button type="button" class="pf" id="delP" aria-label="Supprimer ce profil">🗑️</button>';
 $("profiles").innerHTML=h;renderStats();$("hi").textContent="Salut "+cur.name+" ! On révise quoi aujourd'hui ?";
 [].forEach.call($("profiles").querySelectorAll("[data-id]"),function(b){b.onclick=function(){switchTo(db.profiles.filter(function(p){return p.id===b.dataset.id})[0])}});
-if($("parBtn"))$("parBtn").onclick=function(){renderDash();show("dash",true);$("dash").scrollIntoView()};
+if($("parBtn"))$("parBtn").onclick=function(){gate(function(){renderDash();show("dash",true);$("dash").scrollIntoView()},true)};
 $("addP").onclick=function(){var n=(prompt("Prénom de l'élève ?")||"").trim().slice(0,20);if(n){switchTo(newProfile(n))}};
-if($("delP"))$("delP").onclick=function(){if(!confirm("Supprimer le profil "+cur.name+" et toutes ses séances ?"))return;
+if($("delP"))$("delP").onclick=function(){gate(delProfile)};
+function delProfile(){if(!confirm("Supprimer le profil "+cur.name+" et toutes ses séances ?"))return;
 var id=cur.id;cdel("profiles",id);db.profiles=db.profiles.filter(function(p){return p.id!==id});db.sessions=db.sessions.filter(function(s){return s.pid!==id});switchTo(db.profiles[0])}}
 function addSession(d){var s={id:uid(),pid:cur.id,date:Date.now(),matiere:d.matiere||"Autre",titre:d.titre||"Leçon",res:d,score:null};
 db.sessions.unshift(s);dirty[s.id]=1;db.sessions=db.sessions.slice(0,100);save();renderHist();reward(10,"Nouvelle leçon");return s}
@@ -269,6 +279,9 @@ if(!db.profiles.length&&lg&&lg.profiles&&lg.profiles.length)migrate(lg);
 KEY="studia:v1:"+u.id;$("logout").classList.remove("hide");start()}
 function fr(m){m=m||"";if(/Invalid login/i.test(m))return"Courriel ou mot de passe incorrect.";if(/already registered/i.test(m))return"Un compte existe déjà avec ce courriel.";if(/not confirmed/i.test(m))return"Confirme d'abord ton courriel (regarde ta boîte de réception).";if(/rate limit/i.test(m))return"Trop d'essais. Réessaie dans quelques minutes.";return"Erreur : "+m}
 async function doAuth(signup){var e=$("aem").value.trim(),p=$("apw").value,msg=$("amsg");
+if(authM==="reset"){if(p.length<8){msg.textContent="Au moins 8 caractères, s'il te plaît.";return}
+msg.textContent="Un instant…";var u=await sb.auth.updateUser({password:p});if(u.error){msg.textContent=fr(u.error.message);return}
+history.replaceState(null,"",location.pathname);authMode("login");$("apw").value="";msg.textContent="";await enter(u.data.user);return}
 if(!e||p.length<8){msg.textContent="Entre ton courriel et un mot de passe d'au moins 8 caractères.";return}
 msg.textContent="Un instant…";
 var r=signup?await sb.auth.signUp({email:e,password:p}):await sb.auth.signInWithPassword({email:e,password:p});
@@ -276,11 +289,46 @@ if(r.error){msg.textContent=fr(r.error.message);return}
 if(r.data.session){$("apw").value="";msg.textContent="";await enter(r.data.user)}else msg.textContent="Compte créé ! Vérifie ton courriel pour le confirmer, puis connecte-toi."}
 $("alog").onclick=function(){doAuth(false)};$("areg").onclick=function(){doAuth(true)};
 $("apw").onkeydown=function(e){if(e.key==="Enter")doAuth(false)};
-$("logout").onclick=function(){sb.auth.signOut().then(function(){location.reload()})};
+$("logout").onclick=function(){gate(function(){sb.auth.signOut().then(function(){location.reload()})})};
 async function boot(){try{var c=await(await fetch("/api/config")).json();
-if(c.url&&c.key&&window.supabase){sb=supabase.createClient(c.url,c.key);var r=await sb.auth.getSession();
+if(c.url&&c.key&&window.supabase){var rec=/type=recovery/.test(location.hash);sb=supabase.createClient(c.url,c.key);var r=await sb.auth.getSession();
+if(rec&&r.data.session){authMode("reset");$("auth").classList.remove("hide");return}
 if(r.data.session){await enter(r.data.session.user)}else{$("auth").classList.remove("hide")}return}}catch(e){console.error(e)}
 start()}
+// Code PIN parent (haché, enregistré dans le compte)
+var pinTry=0,pinLock=0,unlock=0,pinCb=null,pinMode="check";
+function hasPin(){return!!(user&&user.user_metadata&&user.user_metadata.pin)}
+async function hashPin(pin,salt){var b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(salt+":"+pin));return Array.from(new Uint8Array(b)).map(function(x){return("0"+x.toString(16)).slice(-2)}).join("")}
+function openPin(mode,cb){pinMode=mode;pinCb=cb;$("pin1").value="";$("pin2").value="";$("pmsg").textContent="";
+$("ptitle").textContent=mode==="set"?"Crée ton code parent":"Code parent";
+$("pdesc").textContent=mode==="set"?"Choisis 4 chiffres. Il protège l'espace parent, la déconnexion et la suppression d'un profil.":"Entre ton code à 4 chiffres.";
+$("p2l").classList.toggle("hide",mode!=="set");$("pin").classList.remove("hide");$("pin1").focus()}
+function gate(fn,force){if(Date.now()<unlock){fn();return}
+if(!hasPin()){if(force)openPin("set",fn);else fn();return}
+openPin("check",fn)}
+$("pcancel").onclick=function(){$("pin").classList.add("hide");pinCb=null};
+$("pok").onclick=async function(){var a=$("pin1").value,m=$("pmsg");
+if(!/^\d{4}$/.test(a)){m.textContent="Le code doit avoir exactement 4 chiffres.";return}
+if(pinMode==="set"){if(a!==$("pin2").value){m.textContent="Les deux codes ne sont pas identiques.";return}
+var s=uid(),h=await hashPin(a,s),r=await sb.auth.updateUser({data:{pin:{s:s,h:h}}});
+if(r.error){m.textContent="Impossible d'enregistrer le code. Réessaie.";return}
+user=r.data.user}
+else{if(Date.now()<pinLock){m.textContent="Trop d'essais. Réessaie dans une minute.";return}
+var p=user.user_metadata.pin;
+if(await hashPin(a,p.s)!==p.h){pinTry++;if(pinTry>=5){pinLock=Date.now()+60000;pinTry=0}m.textContent="Code incorrect.";return}
+pinTry=0}
+unlock=Date.now()+18e4;$("pin").classList.add("hide");var f=pinCb;pinCb=null;if(f)f()};
+$("pin1").onkeydown=$("pin2").onkeydown=function(e){if(e.key==="Enter")$("pok").click()};
+// Mot de passe oublié
+var authM="login";
+function authMode(m){authM=m;var r=m==="reset";$("aeml").classList.toggle("hide",r);$("areg").classList.toggle("hide",r);$("aforgot").classList.toggle("hide",r);
+$("atitle").textContent=r?"Nouveau mot de passe":"Espace parent";
+$("apl").textContent=r?"Nouveau mot de passe (8 caractères ou plus)":"Mot de passe (8 caractères ou plus)";
+$("alog").textContent=r?"Enregistrer":"Se connecter";$("apw").autocomplete=r?"new-password":"current-password"}
+$("aforgot").onclick=async function(){var e=$("aem").value.trim(),msg=$("amsg");
+if(!e){msg.textContent="Entre d'abord ton courriel dans le champ ci-dessus.";return}
+msg.textContent="Un instant…";var r=await sb.auth.resetPasswordForEmail(e,{redirectTo:location.origin});
+msg.textContent=r.error?fr(r.error.message):"Si un compte existe avec ce courriel, un lien de réinitialisation vient d'être envoyé."};
 // Tableau de bord parent
 function streakOf(p){return(p.last===day()||p.last===yest())?p.streak||0:0}
 function renderDash(){var h='<h2>📊 Espace parent</h2><p class="mute">'+esc(user.email)+'</p>';
@@ -292,8 +340,9 @@ h+='<div class="dp"><b>'+p.av+' '+esc(p.name)+'</b><small>Niveau '+(L.i+1)+' · 
 +'<div class="dk"><span><b>'+wk.length+'</b>séances en 7 jours</span><span><b>'+(avg==null?"–":avg+" %")+'</b>bonnes réponses</span><span><b>'+ss.length+'</b>séances au total</span></div>'
 +Object.keys(by).map(function(m){var v=Math.round(by[m].reduce(function(a,b){return a+b},0)/by[m].length*100);
 return '<div><div class="r"><span>'+esc(m)+'</span><span>'+v+' %</span></div><div class="track"><i style="width:'+v+'%;background:'+col(m)+'"></i></div></div>'}).join("")+'</div>'});
-$("dash").innerHTML=h+'<button class="again" id="dclose" type="button">Fermer</button>';
-$("dclose").onclick=function(){show("dash",false)}}
+$("dash").innerHTML=h+'<button class="again" id="dclose" type="button">Fermer</button> <button class="pf" id="dpin" type="button">Changer mon code</button>';
+$("dclose").onclick=function(){show("dash",false)};
+$("dpin").onclick=function(){openPin("set",null)}}
 
 // Confettis
 var cv=$("c"),cx=cv.getContext("2d"),P=[],run=false,calm=matchMedia("(prefers-reduced-motion: reduce)").matches;
