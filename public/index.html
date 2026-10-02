@@ -70,6 +70,17 @@ button:focus-visible,label:focus-within{outline:3px solid var(--sun);outline-off
 .sess small{color:var(--soft)}
 .sess .x{border:2px solid var(--line);background:var(--card);border-radius:14px;width:44px}
 .mute{color:var(--soft);margin:0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.stat{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:10px;text-align:center}
+.stat b{display:block;font:800 1.6rem/1.1 'Baloo 2',sans-serif}
+.stat span{font-size:.82rem;color:var(--soft)}
+.lvl{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:12px 16px;margin-top:10px}
+.lvl .prog{margin:6px 0}
+.bdg{display:flex;gap:12px;flex-wrap:wrap;font-size:1.7rem}
+.bdg span{filter:grayscale(1);opacity:.3}
+.bdg span.on{filter:none;opacity:1}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,160px);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:22px;font-weight:700;max-width:92%;text-align:center;transition:transform .25s}
+#toast.on{transform:translate(-50%,0)}
 footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 </style>
@@ -89,6 +100,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <label class="snap">📸 Photographier ma leçon<input type="file" id="file" accept="image/jpeg,image/png,image/webp"></label>
 </section>
 
+<section id="gam" aria-label="Ma progression"></section>
+
 <section id="load" class="card load hide" role="status"><span class="spin">🦊</span><div id="loadT">Je lis ta leçon…</div></section>
 <section id="err" class="card err hide" role="alert"></section>
 
@@ -107,6 +120,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 
 <footer>Studia utilise l'IA et peut se tromper : vérifie avec ton cahier. Ne mets aucune donnée personnelle sur tes photos.</footer>
 </main>
+<div id="toast" role="status"></div>
 <script>
 var $=function(i){return document.getElementById(i)},mode="ado",R=null,qi=0,sc=0,lock=false;
 function esc(s){var d=document.createElement("div");d.textContent=s==null?"":s;return d.innerHTML}
@@ -137,7 +151,7 @@ $("p1").innerHTML=R.fiches.map(function(f){return '<button type="button" class="
 qi=0;sc=0;quiz()}
 
 function quiz(){var n=R.quiz.length;
-if(qi>=n){endQuiz();$("p2").innerHTML='<div style="text-align:center"><div style="font-size:2.6rem">'+"⭐".repeat(sc)+"☆".repeat(n-sc)+'</div><h2 style="font-size:1.8rem;margin:6px 0">'+(sc===n?"Score parfait ! 🏆":"Bien joué !")+'</h2><p>Tu as gagné '+sc*10+' points.</p><button class="again" id="re" type="button">Rejouer le quiz</button></div>';
+if(qi>=n){endQuiz();$("p2").innerHTML='<div style="text-align:center"><div style="font-size:2.6rem">'+"⭐".repeat(sc)+"☆".repeat(n-sc)+'</div><h2 style="font-size:1.8rem;margin:6px 0">'+(sc===n?"Score parfait ! 🏆":"Bien joué !")+'</h2><p>'+(lastGain>0?"Tu as gagné "+lastGain+" points !":"Bats ton meilleur score pour gagner des points.")+'</p><button class="again" id="re" type="button">Rejouer le quiz</button></div>';
 $("re").onclick=function(){qi=0;sc=0;quiz()};if(sc>0)burst(innerWidth/2,innerHeight/3,150);return}
 var d=R.quiz[qi];lock=false;
 $("p2").innerHTML='<div class="meta"><span>Question '+(qi+1)+' sur '+n+'</span><span>⭐ '+sc+'</span></div><div class="prog"><i style="width:'+(qi/n*100)+'%"></i></div><h2 class="q">'+esc(d.q)+'</h2><div class="ans" id="ans"></div><div id="why"></div>';
@@ -163,14 +177,35 @@ function switchTo(p){cur=p;db.active=p.id;save();setMode(p.mode||"ado");show("ou
 function renderProfiles(){var h=db.profiles.map(function(p){return '<button type="button" class="pf'+(p.id===cur.id?' on':'')+'" data-id="'+p.id+'">'+p.av+' '+esc(p.name)+'</button>'}).join("");
 h+='<button type="button" class="pf add" id="addP">+ Profil</button>';
 if(db.profiles.length>1)h+='<button type="button" class="pf" id="delP" aria-label="Supprimer ce profil">🗑️</button>';
-$("profiles").innerHTML=h;$("hi").textContent="Salut "+cur.name+" ! On révise quoi aujourd'hui ?";
+$("profiles").innerHTML=h;renderStats();$("hi").textContent="Salut "+cur.name+" ! On révise quoi aujourd'hui ?";
 [].forEach.call($("profiles").querySelectorAll("[data-id]"),function(b){b.onclick=function(){switchTo(db.profiles.filter(function(p){return p.id===b.dataset.id})[0])}});
 $("addP").onclick=function(){var n=(prompt("Prénom de l'élève ?")||"").trim().slice(0,20);if(n){switchTo(newProfile(n))}};
 if($("delP"))$("delP").onclick=function(){if(!confirm("Supprimer le profil "+cur.name+" et toutes ses séances ?"))return;
 var id=cur.id;db.profiles=db.profiles.filter(function(p){return p.id!==id});db.sessions=db.sessions.filter(function(s){return s.pid!==id});switchTo(db.profiles[0])}}
 function addSession(d){var s={id:uid(),pid:cur.id,date:Date.now(),matiere:d.matiere||"Autre",titre:d.titre||"Leçon",res:d,score:null};
-db.sessions.unshift(s);db.sessions=db.sessions.slice(0,100);save();renderHist();return s}
-function endQuiz(){if(cs&&(cs.score==null||sc>cs.score)){cs.score=sc;save();renderHist()}}
+db.sessions.unshift(s);db.sessions=db.sessions.slice(0,100);save();renderHist();reward(10,"Nouvelle leçon");return s}
+// Points, série de jours, niveaux et badges
+var lastGain=0,tt;
+function day(d){var x=d||new Date();return x.getFullYear()+"-"+("0"+(x.getMonth()+1)).slice(-2)+"-"+("0"+x.getDate()).slice(-2)}
+function yest(){var y=new Date();y.setDate(y.getDate()-1);return day(y)}
+function lvl(xp){var L=[["Débutant",0],["Explorateur",100],["Champion",300],["Légende",700]],i=0;while(i<L.length-1&&xp>=L[i+1][1])i++;return{i:i,name:L[i][0],from:L[i][1],to:L[i+1]?L[i+1][1]:null}}
+function toast(m){var t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(function(){t.classList.remove("on")},3500)}
+function endQuiz(){if(!cs)return;var prev=cs.score||0,n=cs.res.quiz.length,gain=0;
+if(cs.score==null||sc>cs.score){gain=(sc-prev)*10;if(sc===n&&prev<n)gain+=20;cs.score=sc;save();renderHist()}
+reward(gain,sc===n?"Score parfait !":"Quiz terminé")}
+function reward(pts,msg){var before=lvl(cur.xp||0).i,t=day(),m=[];
+if(cur.last!==t){cur.streak=cur.last===yest()?(cur.streak||0)+1:1;cur.last=t;cur.best=Math.max(cur.best||0,cur.streak);if(cur.streak>1)m.push("🔥 "+cur.streak+" jours d'affilée !")}
+cur.xp=(cur.xp||0)+pts;lastGain=pts;save();renderStats();
+var L=lvl(cur.xp);if(L.i>before){m.unshift("Niveau "+(L.i+1)+" : "+L.name+" ! 🎉");burst(innerWidth/2,innerHeight/3,120)}
+toast((pts?"+"+pts+" points · ":"")+msg+(m.length?" · "+m.join(" · "):""))}
+function badges(){var ss=db.sessions.filter(function(s){return s.pid===cur.id}),su={};ss.forEach(function(s){su[s.matiere]=1});
+return [["📸","Première leçon",ss.length>0],["🎯","Premier quiz",ss.some(function(s){return s.score!=null})],["🏆","Score parfait",ss.some(function(s){return s.score!=null&&s.score===s.res.quiz.length})],["🔥","3 jours d'affilée",(cur.best||0)>=3],["🌈","3 matières",Object.keys(su).length>=3]]}
+function renderStats(){var ss=db.sessions.filter(function(s){return s.pid===cur.id}),stars=ss.reduce(function(a,s){return a+(s.score||0)},0),
+st=(cur.last===day()||cur.last===yest())?cur.streak||0:0,xp=cur.xp||0,L=lvl(xp),B=badges(),got=B.filter(function(b){return b[2]}).length,
+pct=L.to?Math.round((xp-L.from)/(L.to-L.from)*100):100;
+$("gam").innerHTML='<div class="stats"><div class="stat"><b>🔥 '+st+'</b><span>'+(st>1?"jours d'affilée":"jour d'affilée")+'</span></div><div class="stat"><b>⭐ '+stars+'</b><span>étoiles</span></div><div class="stat"><b>🏅 '+got+'</b><span>badges</span></div></div>'
++'<div class="lvl"><b style="font-family:Baloo 2,sans-serif">Niveau '+(L.i+1)+' · '+L.name+'</b><div class="prog"><i style="width:'+pct+'%"></i></div><small style="color:var(--soft)">'+(L.to?"Encore "+(L.to-xp)+" points pour le niveau suivant":"Niveau maximum atteint !")+'</small><div class="bdg" style="margin-top:8px">'
++B.map(function(b){return '<span class="'+(b[2]?"on":"")+'" role="img" aria-label="'+b[1]+(b[2]?"":" (à débloquer)")+'" title="'+b[1]+'">'+b[0]+'</span>'}).join("")+'</div></div>'}
 function renderHist(){var ss=db.sessions.filter(function(s){return s.pid===cur.id}),subj=["Toutes"];
 ss.forEach(function(s){if(subj.indexOf(s.matiere)<0)subj.push(s.matiere)});if(subj.indexOf(filt)<0)filt="Toutes";
 $("chips").innerHTML=subj.length>2?subj.map(function(m){return '<button type="button" data-f="'+esc(m)+'" aria-pressed="'+(m===filt)+'">'+esc(m)+'</button>'}).join(""):"";
@@ -179,7 +214,7 @@ $("list").innerHTML=shown.length?shown.map(function(s){var dt=new Date(s.date).t
 return '<div class="sess"><button type="button" class="open" data-o="'+s.id+'"><span class="tag" style="background:'+col(s.matiere)+'">'+esc(s.matiere)+'</span><b>'+esc(s.titre)+'</b><small>'+dt+(s.score!=null?' · ⭐ '+s.score+'/'+s.res.quiz.length:'')+'</small></button><button type="button" class="x" data-x="'+s.id+'" aria-label="Supprimer cette séance">🗑️</button></div>'}).join(""):'<p class="mute">Rien ici pour l\'instant. Prends ta première leçon en photo et elle apparaîtra ici ! 🦊</p>';
 [].forEach.call($("chips").querySelectorAll("[data-f]"),function(b){b.onclick=function(){filt=b.dataset.f;renderHist()}});
 [].forEach.call($("list").querySelectorAll("[data-o]"),function(b){b.onclick=function(){var s=db.sessions.filter(function(x){return x.id===b.dataset.o})[0];if(s){cs=s;R=s.res;show("err",false);render();$("out").scrollIntoView()}}});
-[].forEach.call($("list").querySelectorAll("[data-x]"),function(b){b.onclick=function(){if(confirm("Supprimer cette séance ?")){db.sessions=db.sessions.filter(function(x){return x.id!==b.dataset.x});save();renderHist()}}})}
+[].forEach.call($("list").querySelectorAll("[data-x]"),function(b){b.onclick=function(){if(confirm("Supprimer cette séance ?")){db.sessions=db.sessions.filter(function(x){return x.id!==b.dataset.x});save();renderHist();renderStats()}}})}
 load();renderProfiles();renderHist();
 
 // Confettis
