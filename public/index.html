@@ -79,13 +79,16 @@ button:focus-visible,label:focus-within{outline:3px solid var(--sun);outline-off
 .bdg{display:flex;gap:12px;flex-wrap:wrap;font-size:1.7rem}
 .bdg span{filter:grayscale(1);opacity:.3}
 .bdg span.on{filter:none;opacity:1}
-#auth,#pin{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:20px;overflow:auto}
+#auth,#pin,#qr{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:20px;overflow:auto}
 .abox{max-width:380px;width:100%;text-align:center}
 .abox h2{font-size:1.7rem;margin:4px 0}
 .abox label{display:block;text-align:left;font-weight:700;margin-top:10px}
 .abox input{width:100%;margin-top:4px;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:12px;font:inherit}
 .abox .go,.abox .again{display:block;width:100%;margin-top:12px}
 #amsg{min-height:1.5em;margin-top:10px}
+.pw{position:relative}
+.pw input{padding-right:54px}
+.pw button{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;font-size:1.3rem;line-height:1;padding:6px;cursor:pointer}
 #dash h2{font-size:1.25rem;margin:0}
 .dp{border:2px solid var(--line);background:var(--bg);border-radius:20px;padding:14px;margin-top:12px}
 .dp small{display:block;color:var(--soft)}
@@ -94,7 +97,7 @@ button:focus-visible,label:focus-within{outline:3px solid var(--sun);outline-off
 .dp .r{display:flex;justify-content:space-between;font-weight:700;margin-top:8px}
 .track{height:10px;background:var(--line);border-radius:99px;overflow:hidden}
 .track i{display:block;height:100%}
-#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,160px);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:22px;font-weight:700;max-width:92%;text-align:center;transition:transform .25s}
+#toast{z-index:40;position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,160px);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:22px;font-weight:700;max-width:92%;text-align:center;transition:transform .25s}
 #toast.on{transform:translate(-50%,0)}
 footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
@@ -105,6 +108,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <main>
 <div class="top">
 <div class="brand">✨ Studia</div>
+<button type="button" class="pf" id="qrBtn">📱 Partager</button>
 <button type="button" class="pf hide" id="logout">Déconnexion</button>
 <div class="seg" role="group" aria-label="Mode"><button type="button" id="mAdo" aria-pressed="true">Ados</button><button type="button" id="mKids" aria-pressed="false">Petits</button></div>
 </div>
@@ -144,7 +148,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <button class="go" id="agoogle" type="button" style="background:#fff;color:#241F4A;border:2px solid var(--line)">🔐 Continuer avec Google</button>
 <p class="mute" id="aor" style="margin:14px 0 0">ou avec un courriel</p>
 <label id="aeml">Courriel<input id="aem" type="email" autocomplete="email"></label>
-<label><span id="apl">Mot de passe (8 caractères ou plus)</span><input id="apw" type="password" autocomplete="current-password"></label>
+<label><span id="apl">Mot de passe (8 caractères ou plus)</span><div class="pw"><input id="apw" type="password" autocomplete="current-password"><button type="button" id="aeye" aria-label="Afficher le mot de passe">👁️</button></div></label>
 <div id="amsg" class="mute" role="status"></div>
 <button class="go" id="alog" type="button">Se connecter</button>
 <button class="again" id="areg" type="button">Créer mon compte</button>
@@ -158,7 +162,16 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <button class="go" id="pok" type="button">Valider</button>
 <button class="again" id="pcancel" type="button">Annuler</button>
 </div></div>
+<div id="qr" class="hide" role="dialog" aria-modal="true" aria-labelledby="qtitle"><div class="abox">
+<h2 id="qtitle">Partager Studia</h2>
+<p class="mute">Scanne ce code avec un téléphone pour ouvrir Studia.</p>
+<div id="qrimg" style="display:inline-block;margin:6px 0"></div>
+<p class="mute" id="qurl" style="word-break:break-all;margin:4px 0 0"></p>
+<button class="go" id="qcopy" type="button">Copier le lien</button>
+<button class="again" id="qclose" type="button">Fermer</button>
+</div></div>
 <div id="toast" role="status"></div>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var $=function(i){return document.getElementById(i)},mode="ado",R=null,qi=0,sc=0,lock=false;
@@ -275,7 +288,7 @@ dirty={};return true}
 function migrate(l){var m={};db.profiles=l.profiles.map(function(p){var n=uid();m[p.id]=n;p.id=n;return p});
 db.sessions=(l.sessions||[]).filter(function(s){return m[s.pid]}).map(function(s){s.id=uid();s.pid=m[s.pid];dirty[s.id]=1;return s});
 db.active=db.profiles[0].id;push().then(function(ok){if(ok){try{localStorage.removeItem("studia:v1")}catch(e){}}})}
-async function enter(u){user=u;$("auth").classList.add("hide");var lg=null;try{lg=JSON.parse(localStorage.getItem("studia:v1"))}catch(e){}
+async function enter(u){user=u;eyeReset();$("auth").classList.add("hide");var lg=null;try{lg=JSON.parse(localStorage.getItem("studia:v1"))}catch(e){}
 try{await pull()}catch(e){user=null;toast("Connexion impossible. Réessaie dans un instant.");$("auth").classList.remove("hide");return}
 if(!db.profiles.length&&lg&&lg.profiles&&lg.profiles.length)migrate(lg);
 if(/access_token|[?&]code=/.test(location.hash+location.search))history.replaceState(null,"",location.pathname);
@@ -324,6 +337,8 @@ unlock=Date.now()+18e4;$("pin").classList.add("hide");var f=pinCb;pinCb=null;if(
 $("pin1").onkeydown=$("pin2").onkeydown=function(e){if(e.key==="Enter")$("pok").click()};
 // Mot de passe oublié
 var authM="login";
+function eyeReset(){$("apw").type="password";$("aeye").textContent="👁️";$("aeye").setAttribute("aria-label","Afficher le mot de passe")}
+$("aeye").onclick=function(){var i=$("apw"),show=i.type==="password";i.type=show?"text":"password";this.textContent=show?"🙈":"👁️";this.setAttribute("aria-label",show?"Masquer le mot de passe":"Afficher le mot de passe")};
 $("agoogle").onclick=async function(){var r=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin}});if(r.error)$("amsg").textContent=fr(r.error.message)};
 function authMode(m){authM=m;var r=m==="reset";$("aeml").classList.toggle("hide",r);$("agoogle").classList.toggle("hide",r);$("aor").classList.toggle("hide",r);$("areg").classList.toggle("hide",r);$("aforgot").classList.toggle("hide",r);
 $("atitle").textContent=r?"Nouveau mot de passe":"Espace parent";
@@ -333,6 +348,18 @@ $("aforgot").onclick=async function(){var e=$("aem").value.trim(),msg=$("amsg");
 if(!e){msg.textContent="Entre d'abord ton courriel dans le champ ci-dessus.";return}
 msg.textContent="Un instant…";var r=await sb.auth.resetPasswordForEmail(e,{redirectTo:location.origin});
 msg.textContent=r.error?fr(r.error.message):"Si un compte existe avec ce courriel, un lien de réinitialisation vient d'être envoyé."};
+// Code QR pour partager le lien
+function siteUrl(){return location.origin+"/"}
+function showQr(){var u=siteUrl(),el=$("qrimg");
+try{if(typeof qrcode==="undefined")throw 0;var q=qrcode(0,"M");q.addData(u);q.make();
+el.innerHTML='<img alt="Code QR vers '+esc(u)+'" src="'+q.createDataURL(6,4)+'" style="width:220px;height:220px;display:block;image-rendering:pixelated;border-radius:12px">'}
+catch(e){el.textContent="Code QR indisponible pour l'instant. Copie le lien ci-dessous."}
+$("qurl").textContent=u;$("qr").classList.remove("hide")}
+$("qrBtn").onclick=showQr;
+$("qclose").onclick=function(){$("qr").classList.add("hide")};
+$("qcopy").onclick=function(){var u=siteUrl();
+if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(function(){toast("Lien copié ✔")},function(){prompt("Copie ce lien :",u)})}
+else prompt("Copie ce lien :",u)};
 // Tableau de bord parent
 function streakOf(p){return(p.last===day()||p.last===yest())?p.streak||0:0}
 function renderDash(){var h='<h2>📊 Espace parent</h2><p class="mute">'+esc(user.email)+'</p>';
