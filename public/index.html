@@ -79,6 +79,21 @@ button:focus-visible,label:focus-within{outline:3px solid var(--sun);outline-off
 .bdg{display:flex;gap:12px;flex-wrap:wrap;font-size:1.7rem}
 .bdg span{filter:grayscale(1);opacity:.3}
 .bdg span.on{filter:none;opacity:1}
+#auth{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:20px;overflow:auto}
+.abox{max-width:380px;width:100%;text-align:center}
+.abox h2{font-size:1.7rem;margin:4px 0}
+.abox label{display:block;text-align:left;font-weight:700;margin-top:10px}
+.abox input{width:100%;margin-top:4px;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:12px;font:inherit}
+.abox .go,.abox .again{display:block;width:100%;margin-top:12px}
+#amsg{min-height:1.5em;margin-top:10px}
+#dash h2{font-size:1.25rem;margin:0}
+.dp{border:2px solid var(--line);background:var(--bg);border-radius:20px;padding:14px;margin-top:12px}
+.dp small{display:block;color:var(--soft)}
+.dk{display:flex;gap:16px;flex-wrap:wrap;margin:10px 0;font-size:.88rem}
+.dk b{font-family:'Baloo 2',sans-serif;font-size:1.3rem;display:block}
+.dp .r{display:flex;justify-content:space-between;font-weight:700;margin-top:8px}
+.track{height:10px;background:var(--line);border-radius:99px;overflow:hidden}
+.track i{display:block;height:100%}
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,160px);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:22px;font-weight:700;max-width:92%;text-align:center;transition:transform .25s}
 #toast.on{transform:translate(-50%,0)}
 footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
@@ -90,6 +105,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <main>
 <div class="top">
 <div class="brand">✨ Studia</div>
+<button type="button" class="pf hide" id="logout">Déconnexion</button>
 <div class="seg" role="group" aria-label="Mode"><button type="button" id="mAdo" aria-pressed="true">Ados</button><button type="button" id="mKids" aria-pressed="false">Petits</button></div>
 </div>
 <div class="profiles" id="profiles"></div>
@@ -116,11 +132,23 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <div class="card hide" id="p2"></div>
 </section>
 
+<section class="card hide" id="dash" aria-label="Espace parent"></section>
+
 <section class="card" id="hist"><h2>📚 Mes séances</h2><div class="chips" id="chips"></div><div id="list"></div></section>
 
 <footer>Studia utilise l'IA et peut se tromper : vérifie avec ton cahier. Ne mets aucune donnée personnelle sur tes photos.</footer>
 </main>
+<div id="auth" class="hide" role="dialog" aria-modal="true" aria-labelledby="atitle"><div class="abox">
+<div style="font-size:2.6rem">🦊</div><h2 id="atitle">Espace parent</h2>
+<p class="mute">Le parent se connecte. Les enfants retrouvent ensuite leurs séances sur tous leurs appareils.</p>
+<label>Courriel<input id="aem" type="email" autocomplete="email"></label>
+<label>Mot de passe (8 caractères ou plus)<input id="apw" type="password" autocomplete="current-password"></label>
+<div id="amsg" class="mute" role="status"></div>
+<button class="go" id="alog" type="button">Se connecter</button>
+<button class="again" id="areg" type="button">Créer mon compte</button>
+</div></div>
 <div id="toast" role="status"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var $=function(i){return document.getElementById(i)},mode="ado",R=null,qi=0,sc=0,lock=false;
 function esc(s){var d=document.createElement("div");d.textContent=s==null?"":s;return d.innerHTML}
@@ -167,23 +195,25 @@ $("nx").onclick=function(){qi++;quiz()}}
 var KEY="studia:v1",db={profiles:[],active:null,sessions:[]},cur=null,cs=null,filt="Toutes",AV=["🦊","🐼","🦁","🐸","🐙","🦄"];
 var COL={"Maths":"#3DA5FF","Français":"#FF6B6B","Sciences":"#27B994","Histoire":"#9B6BFF","Anglais":"#E8920C"};
 function col(m){return COL[m]||"#6B6794"}
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}
+function uid(){if(window.crypto&&crypto.randomUUID)return crypto.randomUUID();return"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16)})}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}sched()}
 function newProfile(name){var p={id:uid(),name:name,av:AV[db.profiles.length%AV.length],mode:"ado"};db.profiles.push(p);db.active=p.id;cur=p;save();return p}
-function load(){try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&s.profiles&&s.profiles.length)db=s}catch(e){}
+function load(){if(!user){try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&s.profiles&&s.profiles.length)db=s}catch(e){}}
 if(!db.profiles.length){newProfile((prompt("Bienvenue sur Studia ! Quel est ton prénom ?")||"").trim().slice(0,20)||"Élève")}
 cur=db.profiles.filter(function(p){return p.id===db.active})[0]||db.profiles[0];db.active=cur.id;setMode(cur.mode||"ado")}
 function switchTo(p){cur=p;db.active=p.id;save();setMode(p.mode||"ado");show("out",false);show("err",false);filt="Toutes";renderProfiles();renderHist()}
 function renderProfiles(){var h=db.profiles.map(function(p){return '<button type="button" class="pf'+(p.id===cur.id?' on':'')+'" data-id="'+p.id+'">'+p.av+' '+esc(p.name)+'</button>'}).join("");
 h+='<button type="button" class="pf add" id="addP">+ Profil</button>';
+if(user)h+='<button type="button" class="pf" id="parBtn">📊 Parent</button>';
 if(db.profiles.length>1)h+='<button type="button" class="pf" id="delP" aria-label="Supprimer ce profil">🗑️</button>';
 $("profiles").innerHTML=h;renderStats();$("hi").textContent="Salut "+cur.name+" ! On révise quoi aujourd'hui ?";
 [].forEach.call($("profiles").querySelectorAll("[data-id]"),function(b){b.onclick=function(){switchTo(db.profiles.filter(function(p){return p.id===b.dataset.id})[0])}});
+if($("parBtn"))$("parBtn").onclick=function(){renderDash();show("dash",true);$("dash").scrollIntoView()};
 $("addP").onclick=function(){var n=(prompt("Prénom de l'élève ?")||"").trim().slice(0,20);if(n){switchTo(newProfile(n))}};
 if($("delP"))$("delP").onclick=function(){if(!confirm("Supprimer le profil "+cur.name+" et toutes ses séances ?"))return;
-var id=cur.id;db.profiles=db.profiles.filter(function(p){return p.id!==id});db.sessions=db.sessions.filter(function(s){return s.pid!==id});switchTo(db.profiles[0])}}
+var id=cur.id;cdel("profiles",id);db.profiles=db.profiles.filter(function(p){return p.id!==id});db.sessions=db.sessions.filter(function(s){return s.pid!==id});switchTo(db.profiles[0])}}
 function addSession(d){var s={id:uid(),pid:cur.id,date:Date.now(),matiere:d.matiere||"Autre",titre:d.titre||"Leçon",res:d,score:null};
-db.sessions.unshift(s);db.sessions=db.sessions.slice(0,100);save();renderHist();reward(10,"Nouvelle leçon");return s}
+db.sessions.unshift(s);dirty[s.id]=1;db.sessions=db.sessions.slice(0,100);save();renderHist();reward(10,"Nouvelle leçon");return s}
 // Points, série de jours, niveaux et badges
 var lastGain=0,tt;
 function day(d){var x=d||new Date();return x.getFullYear()+"-"+("0"+(x.getMonth()+1)).slice(-2)+"-"+("0"+x.getDate()).slice(-2)}
@@ -191,7 +221,7 @@ function yest(){var y=new Date();y.setDate(y.getDate()-1);return day(y)}
 function lvl(xp){var L=[["Débutant",0],["Explorateur",100],["Champion",300],["Légende",700]],i=0;while(i<L.length-1&&xp>=L[i+1][1])i++;return{i:i,name:L[i][0],from:L[i][1],to:L[i+1]?L[i+1][1]:null}}
 function toast(m){var t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(function(){t.classList.remove("on")},3500)}
 function endQuiz(){if(!cs)return;var prev=cs.score||0,n=cs.res.quiz.length,gain=0;
-if(cs.score==null||sc>cs.score){gain=(sc-prev)*10;if(sc===n&&prev<n)gain+=20;cs.score=sc;save();renderHist()}
+if(cs.score==null||sc>cs.score){gain=(sc-prev)*10;if(sc===n&&prev<n)gain+=20;cs.score=sc;dirty[cs.id]=1;save();renderHist()}
 reward(gain,sc===n?"Score parfait !":"Quiz terminé")}
 function reward(pts,msg){var before=lvl(cur.xp||0).i,t=day(),m=[];
 if(cur.last!==t){cur.streak=cur.last===yest()?(cur.streak||0)+1:1;cur.last=t;cur.best=Math.max(cur.best||0,cur.streak);if(cur.streak>1)m.push("🔥 "+cur.streak+" jours d'affilée !")}
@@ -214,8 +244,56 @@ $("list").innerHTML=shown.length?shown.map(function(s){var dt=new Date(s.date).t
 return '<div class="sess"><button type="button" class="open" data-o="'+s.id+'"><span class="tag" style="background:'+col(s.matiere)+'">'+esc(s.matiere)+'</span><b>'+esc(s.titre)+'</b><small>'+dt+(s.score!=null?' · ⭐ '+s.score+'/'+s.res.quiz.length:'')+'</small></button><button type="button" class="x" data-x="'+s.id+'" aria-label="Supprimer cette séance">🗑️</button></div>'}).join(""):'<p class="mute">Rien ici pour l\'instant. Prends ta première leçon en photo et elle apparaîtra ici ! 🦊</p>';
 [].forEach.call($("chips").querySelectorAll("[data-f]"),function(b){b.onclick=function(){filt=b.dataset.f;renderHist()}});
 [].forEach.call($("list").querySelectorAll("[data-o]"),function(b){b.onclick=function(){var s=db.sessions.filter(function(x){return x.id===b.dataset.o})[0];if(s){cs=s;R=s.res;show("err",false);render();$("out").scrollIntoView()}}});
-[].forEach.call($("list").querySelectorAll("[data-x]"),function(b){b.onclick=function(){if(confirm("Supprimer cette séance ?")){db.sessions=db.sessions.filter(function(x){return x.id!==b.dataset.x});save();renderHist();renderStats()}}})}
-load();renderProfiles();renderHist();
+[].forEach.call($("list").querySelectorAll("[data-x]"),function(b){b.onclick=function(){if(confirm("Supprimer cette séance ?")){cdel("sessions",b.dataset.x);db.sessions=db.sessions.filter(function(x){return x.id!==b.dataset.x});save();renderHist();renderStats()}}})}
+// Comptes parents (Supabase)
+var sb=null,user=null,dirty={},pt;
+function start(){load();renderProfiles();renderHist()}
+function sched(){if(!sb||!user)return;clearTimeout(pt);pt=setTimeout(push,700)}
+function cdel(t,id){if(sb&&user)sb.from(t).delete().eq("id",id).then(function(r){if(r.error)console.error(r.error)})}
+async function pull(){var P=await sb.from("profiles").select("*").order("created_at"),S=await sb.from("sessions").select("*").order("created_at",{ascending:false});
+if(P.error||S.error)throw new Error("pull");
+db={active:db.active,profiles:P.data.map(function(p){return{id:p.id,name:p.name,av:p.av,mode:p.mode,xp:p.xp,streak:p.streak,last:p.last,best:p.best}}),
+sessions:S.data.map(function(s){return{id:s.id,pid:s.profile_id,date:Date.parse(s.created_at),matiere:s.matiere,titre:s.titre,res:s.res,score:s.score}})}}
+async function push(){if(!sb||!user)return false;
+var P=db.profiles.map(function(p){return{id:p.id,name:p.name,av:p.av,mode:p.mode||"ado",xp:p.xp||0,streak:p.streak||0,last:p.last||null,best:p.best||0}});
+var S=db.sessions.filter(function(s){return dirty[s.id]}).map(function(s){return{id:s.id,profile_id:s.pid,matiere:s.matiere,titre:s.titre,res:s.res,score:s.score,created_at:new Date(s.date).toISOString()}});
+var a=await sb.from("profiles").upsert(P);if(a.error){console.error(a.error);return false}
+if(S.length){var b=await sb.from("sessions").upsert(S);if(b.error){console.error(b.error);return false}}
+dirty={};return true}
+function migrate(l){var m={};db.profiles=l.profiles.map(function(p){var n=uid();m[p.id]=n;p.id=n;return p});
+db.sessions=(l.sessions||[]).filter(function(s){return m[s.pid]}).map(function(s){s.id=uid();s.pid=m[s.pid];dirty[s.id]=1;return s});
+db.active=db.profiles[0].id;push().then(function(ok){if(ok){try{localStorage.removeItem("studia:v1")}catch(e){}}})}
+async function enter(u){user=u;$("auth").classList.add("hide");var lg=null;try{lg=JSON.parse(localStorage.getItem("studia:v1"))}catch(e){}
+try{await pull()}catch(e){user=null;toast("Connexion impossible. Réessaie dans un instant.");$("auth").classList.remove("hide");return}
+if(!db.profiles.length&&lg&&lg.profiles&&lg.profiles.length)migrate(lg);
+KEY="studia:v1:"+u.id;$("logout").classList.remove("hide");start()}
+function fr(m){m=m||"";if(/Invalid login/i.test(m))return"Courriel ou mot de passe incorrect.";if(/already registered/i.test(m))return"Un compte existe déjà avec ce courriel.";if(/not confirmed/i.test(m))return"Confirme d'abord ton courriel (regarde ta boîte de réception).";if(/rate limit/i.test(m))return"Trop d'essais. Réessaie dans quelques minutes.";return"Erreur : "+m}
+async function doAuth(signup){var e=$("aem").value.trim(),p=$("apw").value,msg=$("amsg");
+if(!e||p.length<8){msg.textContent="Entre ton courriel et un mot de passe d'au moins 8 caractères.";return}
+msg.textContent="Un instant…";
+var r=signup?await sb.auth.signUp({email:e,password:p}):await sb.auth.signInWithPassword({email:e,password:p});
+if(r.error){msg.textContent=fr(r.error.message);return}
+if(r.data.session){$("apw").value="";msg.textContent="";await enter(r.data.user)}else msg.textContent="Compte créé ! Vérifie ton courriel pour le confirmer, puis connecte-toi."}
+$("alog").onclick=function(){doAuth(false)};$("areg").onclick=function(){doAuth(true)};
+$("apw").onkeydown=function(e){if(e.key==="Enter")doAuth(false)};
+$("logout").onclick=function(){sb.auth.signOut().then(function(){location.reload()})};
+async function boot(){try{var c=await(await fetch("/api/config")).json();
+if(c.url&&c.key&&window.supabase){sb=supabase.createClient(c.url,c.key);var r=await sb.auth.getSession();
+if(r.data.session){await enter(r.data.session.user)}else{$("auth").classList.remove("hide")}return}}catch(e){console.error(e)}
+start()}
+// Tableau de bord parent
+function streakOf(p){return(p.last===day()||p.last===yest())?p.streak||0:0}
+function renderDash(){var h='<h2>📊 Espace parent</h2><p class="mute">'+esc(user.email)+'</p>';
+db.profiles.forEach(function(p){var ss=db.sessions.filter(function(s){return s.pid===p.id}),wk=ss.filter(function(s){return Date.now()-s.date<6048e5}),
+sc=ss.filter(function(s){return s.score!=null}),by={},L=lvl(p.xp||0),
+avg=sc.length?Math.round(sc.reduce(function(a,s){return a+s.score/s.res.quiz.length},0)/sc.length*100):null;
+sc.forEach(function(s){(by[s.matiere]=by[s.matiere]||[]).push(s.score/s.res.quiz.length)});
+h+='<div class="dp"><b>'+p.av+' '+esc(p.name)+'</b><small>Niveau '+(L.i+1)+' · '+L.name+' · 🔥 '+streakOf(p)+' j · '+(p.xp||0)+' points</small>'
++'<div class="dk"><span><b>'+wk.length+'</b>séances en 7 jours</span><span><b>'+(avg==null?"–":avg+" %")+'</b>bonnes réponses</span><span><b>'+ss.length+'</b>séances au total</span></div>'
++Object.keys(by).map(function(m){var v=Math.round(by[m].reduce(function(a,b){return a+b},0)/by[m].length*100);
+return '<div><div class="r"><span>'+esc(m)+'</span><span>'+v+' %</span></div><div class="track"><i style="width:'+v+'%;background:'+col(m)+'"></i></div></div>'}).join("")+'</div>'});
+$("dash").innerHTML=h+'<button class="again" id="dclose" type="button">Fermer</button>';
+$("dclose").onclick=function(){show("dash",false)}}
 
 // Confettis
 var cv=$("c"),cx=cv.getContext("2d"),P=[],run=false,calm=matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -227,6 +305,7 @@ if(!run){run=true;requestAnimationFrame(tick)}}
 function tick(){cx.clearRect(0,0,cv.width,cv.height);P=P.filter(function(p){return p.l>0});
 P.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.vy+=.35;p.r+=.2;p.l--;cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.globalAlpha=Math.min(1,p.l/30);cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);cx.restore()});
 if(P.length)requestAnimationFrame(tick);else run=false}
+boot();
 </script>
 </body>
 </html>
