@@ -8,6 +8,11 @@ const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 app.use(express.json({ limit: "12mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
+// Réglages publics pour les comptes parents (la clé anon est faite pour être publique)
+app.get("/api/config", (req, res) =>
+  res.json({ url: process.env.SUPABASE_URL || "", key: process.env.SUPABASE_ANON_KEY || "" })
+);
+
 // Limite simple : 20 analyses par heure et par adresse IP
 const hits = new Map();
 function limited(ip) {
