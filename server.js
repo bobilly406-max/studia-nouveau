@@ -18,6 +18,17 @@ function limited(ip) {
   return list.length > 20;
 }
 
+// Réessaie jusqu'à 3 fois si Gemini est surchargé (503) ou limité (429)
+async function withRetry(call) {
+  let r;
+  for (let i = 0; i < 3; i++) {
+    r = await call();
+    if (r.status !== 503 && r.status !== 429 && r.status !== 500) return r;
+    await new Promise((ok) => setTimeout(ok, 2000 * (i + 1)));
+  }
+  return r;
+}
+
 function prompt(mode) {
   const kids = mode === "kids";
   return `Tu es Studia, un assistant de révision pour élèves. Analyse la photo d'une leçon (cahier ou manuel).
@@ -37,14 +48,14 @@ app.post("/api/analyze", async (req, res) => {
   if (!m) return res.status(400).json({ erreur: "Image invalide. Utilise une photo JPG, PNG ou WebP." });
 
   try {
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
+    const r = await withRetry(() => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": KEY },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt(mode) }, { inline_data: { mime_type: m[1], data: m[2] } }] }],
         generationConfig: { responseMimeType: "application/json", temperature: 0.4 },
       }),
-    });
+    }));
     if (!r.ok) {
       console.error("Gemini", r.status, (await r.text()).slice(0, 300));
       return res.status(502).json({ erreur: "L'IA ne répond pas pour le moment. Réessaie." });
