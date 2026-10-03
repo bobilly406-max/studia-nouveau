@@ -188,7 +188,7 @@ im.onerror=function(){ko()};im.src=u})}
 
 $("file").onchange=function(e){var f=e.target.files[0];e.target.value="";if(!f)return;
 show("err",false);show("out",false);show("load",true);$("loadT").textContent=mode==="kids"?"Je regarde ta leçon… 🔍":"Je lis ta leçon…";
-shrink(f).then(function(img){return fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:img,mode:mode})})})
+shrink(f).then(function(img){return token().then(function(t){var hd={"Content-Type":"application/json"};if(t)hd.Authorization="Bearer "+t;return fetch("/api/analyze",{method:"POST",headers:hd,body:JSON.stringify({image:img,mode:mode})})})})
 .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.erreur||"Erreur");return j})})
 .then(function(d){R=d;show("load",false);cs=addSession(d);render();celebrate()})
 .catch(function(er){fail(er.message&&er.message!=="Failed to fetch"?er.message:"Impossible de lire cette photo. Essaie encore.")})};
@@ -273,6 +273,7 @@ return '<div class="sess"><button type="button" class="open" data-o="'+s.id+'"><
 // Comptes parents (Supabase)
 var sb=null,user=null,dirty={},pt;
 function start(){load();renderProfiles();renderHist()}
+function token(){return sb?sb.auth.getSession().then(function(r){return r.data.session?r.data.session.access_token:null}):Promise.resolve(null)}
 function sched(){if(!sb||!user)return;clearTimeout(pt);pt=setTimeout(push,700)}
 function cdel(t,id){if(sb&&user)sb.from(t).delete().eq("id",id).then(function(r){if(r.error)console.error(r.error)})}
 async function pull(){var P=await sb.from("profiles").select("*").order("created_at"),S=await sb.from("sessions").select("*").order("created_at",{ascending:false});
