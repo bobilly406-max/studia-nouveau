@@ -79,13 +79,17 @@ button:focus-visible,label:focus-within{outline:3px solid var(--sun);outline-off
 .bdg{display:flex;gap:12px;flex-wrap:wrap;font-size:1.7rem}
 .bdg span{filter:grayscale(1);opacity:.3}
 .bdg span.on{filter:none;opacity:1}
-#auth,#pin,#qr{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:20px;overflow:auto}
+#auth,#pin,#qr,#stop{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:20px;overflow:auto}
 .abox{max-width:380px;width:100%;text-align:center}
 .abox h2{font-size:1.7rem;margin:4px 0}
 .abox label{display:block;text-align:left;font-weight:700;margin-top:10px}
 .abox input{width:100%;margin-top:4px;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:12px;font:inherit}
 .abox .go,.abox .again{display:block;width:100%;margin-top:12px}
 #amsg{min-height:1.5em;margin-top:10px}
+.bars{display:flex;gap:6px;align-items:flex-end;height:64px;margin:6px 0}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;font-size:.7rem;color:var(--soft);height:100%}
+.bars i{display:block;width:100%;max-width:26px;background:var(--violet);border-radius:6px 6px 0 0}
+.lim{display:flex;align-items:center;gap:10px;margin-top:10px;font-weight:700;flex-wrap:wrap}
 .pw{position:relative}
 .pw input{padding-right:54px}
 .pw button{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;font-size:1.3rem;line-height:1;padding:6px;cursor:pointer}
@@ -153,6 +157,12 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <button class="go" id="alog" type="button">Se connecter</button>
 <button class="again" id="areg" type="button">Créer mon compte</button>
 <button class="pf" id="aforgot" type="button" style="margin-top:12px">Mot de passe oublié ?</button>
+</div></div>
+<div id="stop" class="hide" role="alertdialog" aria-modal="true" aria-labelledby="stitle"><div class="abox">
+<div style="font-size:3rem">😴</div><h2 id="stitle">C'est fini pour aujourd'hui !</h2>
+<p class="mute" id="stxt"></p>
+<div id="sprof" style="margin:10px 0"></div>
+<button class="again" id="sext" type="button">Un parent peut ajouter 15 minutes</button>
 </div></div>
 <div id="pin" class="hide" role="dialog" aria-modal="true" aria-labelledby="ptitle"><div class="abox">
 <div style="font-size:2.4rem">🔒</div><h2 id="ptitle">Code parent</h2><p class="mute" id="pdesc"></p>
@@ -225,7 +235,7 @@ function newProfile(name){var p={id:uid(),name:name,av:AV[db.profiles.length%AV.
 function load(){if(!user){try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&s.profiles&&s.profiles.length)db=s}catch(e){}}
 if(!db.profiles.length){newProfile((prompt("Bienvenue sur Studia ! Quel est ton prénom ?")||"").trim().slice(0,20)||"Élève")}
 cur=db.profiles.filter(function(p){return p.id===db.active})[0]||db.profiles[0];db.active=cur.id;setMode(cur.mode||"ado")}
-function switchTo(p){cur=p;db.active=p.id;save();setMode(p.mode||"ado");show("out",false);show("err",false);filt="Toutes";renderProfiles();renderHist()}
+function switchTo(p){cur=p;db.active=p.id;save();setMode(p.mode||"ado");show("out",false);show("err",false);filt="Toutes";renderProfiles();renderHist();checkLimit()}
 function renderProfiles(){var h=db.profiles.map(function(p){return '<button type="button" class="pf'+(p.id===cur.id?' on':'')+'" data-id="'+p.id+'">'+p.av+' '+esc(p.name)+'</button>'}).join("");
 h+='<button type="button" class="pf add" id="addP">+ Profil</button>';
 if(user)h+='<button type="button" class="pf" id="parBtn">📊 Parent</button>';
@@ -233,7 +243,7 @@ if(db.profiles.length>1)h+='<button type="button" class="pf" id="delP" aria-labe
 $("profiles").innerHTML=h;renderStats();$("hi").textContent="Salut "+cur.name+" ! On révise quoi aujourd'hui ?";
 [].forEach.call($("profiles").querySelectorAll("[data-id]"),function(b){b.onclick=function(){switchTo(db.profiles.filter(function(p){return p.id===b.dataset.id})[0])}});
 if($("parBtn"))$("parBtn").onclick=function(){gate(function(){renderDash();show("dash",true);$("dash").scrollIntoView()},true)};
-$("addP").onclick=function(){var n=(prompt("Prénom de l'élève ?")||"").trim().slice(0,20);if(n){switchTo(newProfile(n))}};
+$("addP").onclick=function(){gate(function(){var n=(prompt("Prénom de l'élève ?")||"").trim().slice(0,20);if(n){switchTo(newProfile(n))}})};
 if($("delP"))$("delP").onclick=function(){gate(delProfile)};
 function delProfile(){if(!confirm("Supprimer le profil "+cur.name+" et toutes ses séances ?"))return;
 var id=cur.id;cdel("profiles",id);db.profiles=db.profiles.filter(function(p){return p.id!==id});db.sessions=db.sessions.filter(function(s){return s.pid!==id});switchTo(db.profiles[0])}}
@@ -272,18 +282,20 @@ return '<div class="sess"><button type="button" class="open" data-o="'+s.id+'"><
 [].forEach.call($("list").querySelectorAll("[data-x]"),function(b){b.onclick=function(){if(confirm("Supprimer cette séance ?")){cdel("sessions",b.dataset.x);db.sessions=db.sessions.filter(function(x){return x.id!==b.dataset.x});save();renderHist();renderStats()}}})}
 // Comptes parents (Supabase)
 var sb=null,user=null,dirty={},pt;
-function start(){load();renderProfiles();renderHist()}
+function start(){load();renderProfiles();renderHist();checkLimit()}
 function token(){return sb?sb.auth.getSession().then(function(r){return r.data.session?r.data.session.access_token:null}):Promise.resolve(null)}
 function sched(){if(!sb||!user)return;clearTimeout(pt);pt=setTimeout(push,700)}
 function cdel(t,id){if(sb&&user)sb.from(t).delete().eq("id",id).then(function(r){if(r.error)console.error(r.error)})}
 async function pull(){var P=await sb.from("profiles").select("*").order("created_at"),S=await sb.from("sessions").select("*").order("created_at",{ascending:false});
 if(P.error||S.error)throw new Error("pull");
-db={active:db.active,profiles:P.data.map(function(p){return{id:p.id,name:p.name,av:p.av,mode:p.mode,xp:p.xp,streak:p.streak,last:p.last,best:p.best}}),
+db={active:db.active,profiles:P.data.map(function(p){return{id:p.id,name:p.name,av:p.av,mode:p.mode,xp:p.xp,streak:p.streak,last:p.last,best:p.best,study:p.study||{},limit:p.daily_limit||0}}),
 sessions:S.data.map(function(s){return{id:s.id,pid:s.profile_id,date:Date.parse(s.created_at),matiere:s.matiere,titre:s.titre,res:s.res,score:s.score}})}}
 async function push(){if(!sb||!user)return false;
-var P=db.profiles.map(function(p){return{id:p.id,name:p.name,av:p.av,mode:p.mode||"ado",xp:p.xp||0,streak:p.streak||0,last:p.last||null,best:p.best||0}});
+var P=db.profiles.map(function(p){return{id:p.id,name:p.name,av:p.av,mode:p.mode||"ado",xp:p.xp||0,streak:p.streak||0,last:p.last||null,best:p.best||0,study:p.study||{},daily_limit:p.limit||0}});
 var S=db.sessions.filter(function(s){return dirty[s.id]}).map(function(s){return{id:s.id,profile_id:s.pid,matiere:s.matiere,titre:s.titre,res:s.res,score:s.score,created_at:new Date(s.date).toISOString()}});
-var a=await sb.from("profiles").upsert(P);if(a.error){console.error(a.error);return false}
+var a=await sb.from("profiles").upsert(P);
+if(a.error&&/study|daily_limit|column/i.test(a.error.message||"")){console.warn("Colonnes temps absentes : lance le SQL dans Supabase.");a=await sb.from("profiles").upsert(P.map(function(p){var q=Object.assign({},p);delete q.study;delete q.daily_limit;return q}))}
+if(a.error){console.error(a.error);return false}
 if(S.length){var b=await sb.from("sessions").upsert(S);if(b.error){console.error(b.error);return false}}
 dirty={};return true}
 function migrate(l){var m={};db.profiles=l.profiles.map(function(p){var n=uid();m[p.id]=n;p.id=n;return p});
@@ -349,6 +361,33 @@ $("aforgot").onclick=async function(){var e=$("aem").value.trim(),msg=$("amsg");
 if(!e){msg.textContent="Entre d'abord ton courriel dans le champ ci-dessus.";return}
 msg.textContent="Un instant…";var r=await sb.auth.resetPasswordForEmail(e,{redirectTo:location.origin});
 msg.textContent=r.error?fr(r.error.message):"Si un compte existe avec ce courriel, un lien de réinitialisation vient d'être envoyé."};
+// Temps de révision et limite quotidienne
+var lastAct=Date.now(),acc=0,warned="";
+["pointerdown","keydown","touchstart","scroll"].forEach(function(ev){addEventListener(ev,function(){lastAct=Date.now()},{passive:true})});
+function used(p,d){return(p.study&&p.study[d||day()])||0}
+function fmt(s){var m=Math.round(s/60);return m>=60?Math.floor(m/60)+" h "+("0"+(m%60)).slice(-2):m+" min"}
+function extra(){try{var e=JSON.parse(localStorage.getItem("studia:ext")||"{}");return e.d===day()&&e.p===cur.id?e.m:0}catch(x){return 0}}
+function addExtra(m){try{localStorage.setItem("studia:ext",JSON.stringify({d:day(),p:cur.id,m:extra()+m}))}catch(x){}}
+function allowed(){return cur&&cur.limit>0?(cur.limit+extra())*60:0}
+function checkLimit(){if(!cur)return;var a=allowed(),left=a-used(cur);
+if(a>0&&left<=0){showStop()}else{$("stop").classList.add("hide");
+if(a>0&&left<=300&&warned!==cur.id+day()){warned=cur.id+day();toast("Plus que "+Math.max(1,Math.ceil(left/60))+" min pour aujourd'hui ⏰")}}}
+function showStop(){$("stxt").textContent="Tu as révisé "+fmt(used(cur))+" aujourd'hui. À demain pour de nouvelles étoiles ⭐";
+$("sprof").innerHTML=db.profiles.filter(function(p){return p.id!==cur.id}).map(function(p){return'<button type="button" class="pf" data-s="'+p.id+'">'+p.av+' '+esc(p.name)+'</button>'}).join(" ");
+[].forEach.call($("sprof").querySelectorAll("[data-s]"),function(b){b.onclick=function(){switchTo(db.profiles.filter(function(p){return p.id===b.dataset.s})[0])}});
+$("stop").classList.remove("hide")}
+$("sext").onclick=function(){gate(function(){addExtra(15);checkLimit()},true)};
+function prune(){var ks=Object.keys(cur.study).sort();while(ks.length>35)delete cur.study[ks.shift()]}
+function wkTime(p){var t=0;for(var i=0;i<7;i++){var d=new Date();d.setDate(d.getDate()-i);t+=used(p,day(d))}return t}
+function bars(p){var v=[],mx=60;for(var i=6;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);v.push(["DLMMJVS".charAt(d.getDay()),used(p,day(d))])}
+v.forEach(function(x){if(x[1]>mx)mx=x[1]});
+return'<div class="bars" role="img" aria-label="Temps de révision des 7 derniers jours">'+v.map(function(x){return'<div><i style="height:'+Math.max(3,Math.round(x[1]/mx*44))+'px"></i><span>'+x[0]+'</span></div>'}).join("")+'</div>'}
+function limitCtl(p){var l=p.limit||0;return'<div class="lim">Limite par jour : <button type="button" class="pf" data-lm="'+p.id+'" data-d="-15" aria-label="Moins">−</button><b>'+(l?l+" min":"Aucune")+'</b><button type="button" class="pf" data-lm="'+p.id+'" data-d="15" aria-label="Plus">+</button></div>'}
+setInterval(function(){if(!cur||document.visibilityState!=="visible"||Date.now()-lastAct>120000)return;
+if(!$("stop").classList.contains("hide"))return;
+cur.study=cur.study||{};var d=day();cur.study[d]=(cur.study[d]||0)+5;acc+=5;
+if(acc>=30){acc=0;prune();save()}checkLimit()},5000);
+document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden"&&cur&&acc>0){acc=0;save()}});
 // Code QR pour partager le lien
 function siteUrl(){return location.origin+"/"}
 function showQr(){var u=siteUrl(),el=$("qrimg");
@@ -369,12 +408,14 @@ sc=ss.filter(function(s){return s.score!=null}),by={},L=lvl(p.xp||0),
 avg=sc.length?Math.round(sc.reduce(function(a,s){return a+s.score/s.res.quiz.length},0)/sc.length*100):null;
 sc.forEach(function(s){(by[s.matiere]=by[s.matiere]||[]).push(s.score/s.res.quiz.length)});
 h+='<div class="dp"><b>'+p.av+' '+esc(p.name)+'</b><small>Niveau '+(L.i+1)+' · '+L.name+' · 🔥 '+streakOf(p)+' j · '+(p.xp||0)+' points</small>'
-+'<div class="dk"><span><b>'+wk.length+'</b>séances en 7 jours</span><span><b>'+(avg==null?"–":avg+" %")+'</b>bonnes réponses</span><span><b>'+ss.length+'</b>séances au total</span></div>'
++'<div class="dk"><span><b>'+fmt(used(p))+'</b>aujourd\'hui</span><span><b>'+fmt(wkTime(p))+'</b>sur 7 jours</span><span><b>'+wk.length+'</b>séances en 7 jours</span><span><b>'+(avg==null?"–":avg+" %")+'</b>bonnes réponses</span></div>'+bars(p)+limitCtl(p)
 +Object.keys(by).map(function(m){var v=Math.round(by[m].reduce(function(a,b){return a+b},0)/by[m].length*100);
 return '<div><div class="r"><span>'+esc(m)+'</span><span>'+v+' %</span></div><div class="track"><i style="width:'+v+'%;background:'+col(m)+'"></i></div></div>'}).join("")+'</div>'});
 $("dash").innerHTML=h+'<button class="again" id="dclose" type="button">Fermer</button> <button class="pf" id="dpin" type="button">Changer mon code</button>';
 $("dclose").onclick=function(){show("dash",false)};
-$("dpin").onclick=function(){openPin("set",null)}}
+$("dpin").onclick=function(){openPin("set",null)};
+[].forEach.call($("dash").querySelectorAll("[data-lm]"),function(b){b.onclick=function(){var p=db.profiles.filter(function(x){return x.id===b.dataset.lm})[0];
+p.limit=Math.max(0,Math.min(240,(p.limit||0)+Number(b.dataset.d)));save();renderDash();if(p.id===cur.id)checkLimit()}})}
 
 // Confettis
 var cv=$("c"),cx=cv.getContext("2d"),P=[],run=false,calm=matchMedia("(prefers-reduced-motion: reduce)").matches;
