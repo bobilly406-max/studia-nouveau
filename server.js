@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 
 const app = express();
+app.set("trust proxy", 1); // derrière Render, pour lire la vraie adresse IP
 const KEY = process.env.GEMINI_API_KEY;
 const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
@@ -13,7 +14,27 @@ app.get("/api/config", (req, res) =>
   res.json({ url: process.env.SUPABASE_URL || "", key: process.env.SUPABASE_ANON_KEY || "" })
 );
 
-// Limite simple : 20 analyses par heure et par adresse IP
+// Connexion obligatoire : on demande à Supabase si le jeton est valide
+const SB_URL = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");
+const SB_KEY = process.env.SUPABASE_ANON_KEY || "";
+const needLogin = Boolean(SB_URL && SB_KEY);
+const tokens = new Map(); // jeton -> { id, exp } (mémoire de 60 s pour éviter trop d'appels)
+
+async function whoIs(token) {
+  const c = tokens.get(token);
+  if (c && c.exp > Date.now()) return c.id;
+  const r = await fetch(`${SB_URL}/auth/v1/user`, {
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${token}` },
+  });
+  if (!r.ok) return null;
+  const u = await r.json();
+  if (!u || !u.id) return null;
+  tokens.set(token, { id: u.id, exp: Date.now() + 60000 });
+  if (tokens.size > 500) for (const [k, v] of tokens) if (v.exp < Date.now()) tokens.delete(k);
+  return u.id;
+}
+
+// Limite simple : 20 analyses par heure et par parent (ou par adresse IP sans compte)
 const hits = new Map();
 function limited(ip) {
   const now = Date.now();
@@ -46,7 +67,14 @@ Donne 4 à 6 fiches et exactement 5 questions de quiz. "bonne" est l'index (0, 1
 
 app.post("/api/analyze", async (req, res) => {
   if (!KEY) return res.status(500).json({ erreur: "Clé Gemini manquante sur le serveur." });
-  if (limited(req.ip)) return res.status(429).json({ erreur: "Trop de demandes. Réessaie dans un moment." });
+  let who = req.ip;
+  if (needLogin) {
+    const m = /^Bearer (.+)$/.exec(req.headers.authorization || "");
+    const id = m ? await whoIs(m[1]).catch(() => null) : null;
+    if (!id) return res.status(401).json({ erreur: "Connecte-toi avec ton compte parent pour utiliser Studia." });
+    who = "u:" + id;
+  }
+  if (limited(who)) return res.status(429).json({ erreur: "Trop de demandes. Réessaie dans un moment." });
 
   const { image, mode } = req.body || {};
   const m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(image || "");
