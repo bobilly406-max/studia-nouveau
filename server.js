@@ -4,7 +4,9 @@ const path = require("path");
 const app = express();
 app.set("trust proxy", 1); // derrière Render, pour lire la vraie adresse IP
 const KEY = process.env.GEMINI_API_KEY;
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+// Modèle de secours si le principal est saturé (mettre vide pour désactiver)
+const FALLBACK = process.env.GEMINI_FALLBACK_MODEL === undefined ? "gemini-3.7-flash" : process.env.GEMINI_FALLBACK_MODEL;
 const GEMINI_BASE = process.env.GEMINI_BASE || "https://generativelanguage.googleapis.com";
 const MAX_PER_HOUR = 20;
 
@@ -51,9 +53,9 @@ function limited(who) {
 }
 
 // Réessaie jusqu'à 3 fois si Gemini est surchargé (503) ou limité (429)
-async function withRetry(call) {
+async function withRetry(call, tries = 3) {
   let r;
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < tries; i++) {
     r = await call();
     if (r.status !== 503 && r.status !== 429 && r.status !== 500) return r;
     await new Promise((ok) => setTimeout(ok, 2000 * (i + 1)));
@@ -92,14 +94,21 @@ app.post("/api/analyze", async (req, res) => {
   if (!m) return res.status(400).json({ erreur: "Image invalide. Utilise une photo JPG, PNG ou WebP." });
 
   try {
-    const r = await withRetry(() => fetch(`${GEMINI_BASE}/v1beta/models/${MODEL}:generateContent`, {
+    const call = (model, tries) => withRetry(() => fetch(`${GEMINI_BASE}/v1beta/models/${model}:generateContent`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": KEY },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt(mode) }, { inline_data: { mime_type: m[1], data: m[2] } }] }],
         generationConfig: { responseMimeType: "application/json", temperature: 0.4 },
       }),
-    }));
+    }), tries);
+    const useFallback = Boolean(FALLBACK) && FALLBACK !== MODEL;
+    let r = await call(MODEL, useFallback ? 2 : 3);
+    // Si le modèle principal est saturé, on essaie le modèle de secours (autre réserve de capacité chez Google)
+    if (useFallback && (r.status === 503 || r.status === 429)) {
+      console.error("Gemini", r.status, "sur", MODEL, "- essai avec", FALLBACK);
+      r = await call(FALLBACK, 3);
+    }
     if (!r.ok) {
       console.error("Gemini", r.status, (await r.text()).slice(0, 300));
       if (r.status === 429 || r.status === 503) {
