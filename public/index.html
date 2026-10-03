@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Studia — Apprends. Explore. Brille à ta façon.</title>
+<title>Studia Kids — Apprends. Explore. Brille à ta façon.</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F3F0FF;--card:#fff;--ink:#241F4A;--soft:#6B6794;--violet:#6C4CF1;--sun:#FFC93C;--mint:#27B994;--coral:#FF6B6B;--line:#E2DCFA;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -56,6 +56,7 @@ button:focus-visible,label:focus-within{outline:3px solid var(--sun);outline-off
 .why{margin-top:12px;padding:12px 16px;border-radius:16px;background:var(--bg)}
 .go{width:100%;border:0;border-radius:20px;background:var(--violet);color:#fff;font-size:1.2rem;font-weight:800;padding:14px;margin-top:12px}
 .again{border:0;border-radius:18px;background:var(--sun);color:#3A2A00;font-weight:800;padding:12px 22px;margin-top:12px;font-size:1.1rem}
+.tbtn{display:flex;gap:8px;flex-wrap:wrap}
 .profiles{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .pf{border:2px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;font-weight:700;font-size:1rem}
 .pf.on{background:var(--violet);border-color:var(--violet);color:#fff}
@@ -64,6 +65,8 @@ button:focus-visible,label:focus-within{outline:3px solid var(--sun);outline-off
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
 .chips button{border:2px solid var(--line);background:var(--card);border-radius:99px;padding:4px 14px;font-weight:700}
 .chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chips button[data-sub]{color:#fff;border-color:transparent}
+.chips button[data-sub][aria-pressed="true"]{color:#fff;box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--ink)}
 .sess{display:flex;gap:8px;margin-top:10px}
 .sess .open{flex:1;text-align:left;border:2px solid var(--line);background:var(--bg);border-radius:18px;padding:10px 14px;font-size:1rem}
 .sess .open b{display:block;font-family:'Nunito',sans-serif}
@@ -111,10 +114,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <canvas id="c" aria-hidden="true"></canvas>
 <main>
 <div class="top">
-<div class="brand">✨ Studia</div>
-<button type="button" class="pf" id="qrBtn">📱 Partager</button>
-<button type="button" class="pf hide" id="logout">Déconnexion</button>
-<div class="seg" role="group" aria-label="Mode"><button type="button" id="mAdo" aria-pressed="true">Ados</button><button type="button" id="mKids" aria-pressed="false">Petits</button></div>
+<div class="brand">✨ Studia Kids</div>
+<div class="tbtn"><button type="button" class="pf hide" id="parBtn">📊 Parent</button><button type="button" class="pf hide" id="logout">Connexion</button></div>
 </div>
 <div class="profiles" id="profiles"></div>
 
@@ -173,7 +174,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <button class="again" id="pcancel" type="button">Annuler</button>
 </div></div>
 <div id="qr" class="hide" role="dialog" aria-modal="true" aria-labelledby="qtitle"><div class="abox">
-<h2 id="qtitle">Partager Studia</h2>
+<h2 id="qtitle">Partager Studia Kids</h2>
 <p class="mute">Scanne ce code avec un téléphone pour ouvrir Studia.</p>
 <div id="qrimg" style="display:inline-block;margin:6px 0"></div>
 <p class="mute" id="qurl" style="word-break:break-all;margin:4px 0 0"></p>
@@ -184,10 +185,10 @@ canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-var $=function(i){return document.getElementById(i)},mode="ado",R=null,qi=0,sc=0,lock=false;
+var $=function(i){return document.getElementById(i)},mode="kids",R=null,qi=0,sc=0,lock=false;
 function esc(s){var d=document.createElement("div");d.textContent=s==null?"":s;return d.innerHTML}
-function setMode(m){mode=m;if(cur){cur.mode=m;save()}document.body.className=m==="kids"?"kids":"";$("mAdo").setAttribute("aria-pressed",m==="ado");$("mKids").setAttribute("aria-pressed",m==="kids")}
-$("mAdo").onclick=function(){setMode("ado")};$("mKids").onclick=function(){setMode("kids")};
+var APP="kids"; // "kids" = Studia Kids (primaire). "ados" sera la version Studia Ados.
+function setMode(){mode=APP;document.body.className=APP==="kids"?"kids":""}
 function show(id,on){$(id).classList.toggle("hide",!on)}
 function fail(m){show("load",false);show("err",true);$("err").textContent=m}
 
@@ -231,18 +232,18 @@ var COL={"Maths":"#3DA5FF","Français":"#FF6B6B","Sciences":"#27B994","Histoire"
 function col(m){return COL[m]||"#6B6794"}
 function uid(){if(window.crypto&&crypto.randomUUID)return crypto.randomUUID();return"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16)})}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}sched()}
-function newProfile(name){var p={id:uid(),name:name,av:AV[db.profiles.length%AV.length],mode:"ado"};db.profiles.push(p);db.active=p.id;cur=p;save();return p}
+function newProfile(name){var p={id:uid(),name:name,av:AV[db.profiles.length%AV.length],mode:APP};db.profiles.push(p);db.active=p.id;cur=p;save();return p}
 function load(){if(!user){try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&s.profiles&&s.profiles.length)db=s}catch(e){}}
 if(!db.profiles.length){newProfile((prompt("Bienvenue sur Studia ! Quel est ton prénom ?")||"").trim().slice(0,20)||"Élève")}
 cur=db.profiles.filter(function(p){return p.id===db.active})[0]||db.profiles[0];db.active=cur.id;setMode(cur.mode||"ado")}
 function switchTo(p){cur=p;db.active=p.id;save();setMode(p.mode||"ado");show("out",false);show("err",false);filt="Toutes";renderProfiles();renderHist();checkLimit()}
 function renderProfiles(){var h=db.profiles.map(function(p){return '<button type="button" class="pf'+(p.id===cur.id?' on':'')+'" data-id="'+p.id+'">'+p.av+' '+esc(p.name)+'</button>'}).join("");
 h+='<button type="button" class="pf add" id="addP">+ Profil</button>';
-if(user)h+='<button type="button" class="pf" id="parBtn">📊 Parent</button>';
+h+='<button type="button" class="pf" id="qrBtn">📱 Partager</button>';
 if(db.profiles.length>1)h+='<button type="button" class="pf" id="delP" aria-label="Supprimer ce profil">🗑️</button>';
 $("profiles").innerHTML=h;renderStats();$("hi").textContent="Salut "+cur.name+" ! On révise quoi aujourd'hui ?";
 [].forEach.call($("profiles").querySelectorAll("[data-id]"),function(b){b.onclick=function(){switchTo(db.profiles.filter(function(p){return p.id===b.dataset.id})[0])}});
-if($("parBtn"))$("parBtn").onclick=function(){gate(function(){renderDash();show("dash",true);$("dash").scrollIntoView()},true)};
+$("qrBtn").onclick=showQr;
 $("addP").onclick=function(){gate(function(){var n=(prompt("Prénom de l'élève ?")||"").trim().slice(0,20);if(n){switchTo(newProfile(n))}})};
 if($("delP"))$("delP").onclick=function(){gate(delProfile)};
 function delProfile(){if(!confirm("Supprimer le profil "+cur.name+" et toutes ses séances ?"))return;
@@ -273,7 +274,7 @@ $("gam").innerHTML='<div class="stats"><div class="stat"><b>🔥 '+st+'</b><span
 +B.map(function(b){return '<span class="'+(b[2]?"on":"")+'" role="img" aria-label="'+b[1]+(b[2]?"":" (à débloquer)")+'" title="'+b[1]+'">'+b[0]+'</span>'}).join("")+'</div></div>'}
 function renderHist(){var ss=db.sessions.filter(function(s){return s.pid===cur.id}),subj=["Toutes"];
 ss.forEach(function(s){if(subj.indexOf(s.matiere)<0)subj.push(s.matiere)});if(subj.indexOf(filt)<0)filt="Toutes";
-$("chips").innerHTML=subj.length>2?subj.map(function(m){return '<button type="button" data-f="'+esc(m)+'" aria-pressed="'+(m===filt)+'">'+esc(m)+'</button>'}).join(""):"";
+$("chips").innerHTML=subj.length>2?subj.map(function(m){return '<button type="button" data-f="'+esc(m)+'" aria-pressed="'+(m===filt)+'"'+(m==="Toutes"?'':' data-sub="1" style="background:'+col(m)+'"')+'>'+esc(m)+'</button>'}).join(""):"";
 var shown=ss.filter(function(s){return filt==="Toutes"||s.matiere===filt});
 $("list").innerHTML=shown.length?shown.map(function(s){var dt=new Date(s.date).toLocaleDateString("fr-CA",{day:"numeric",month:"short"});
 return '<div class="sess"><button type="button" class="open" data-o="'+s.id+'"><span class="tag" style="background:'+col(s.matiere)+'">'+esc(s.matiere)+'</span><b>'+esc(s.titre)+'</b><small>'+dt+(s.score!=null?' · ⭐ '+s.score+'/'+s.res.quiz.length:'')+'</small></button><button type="button" class="x" data-x="'+s.id+'" aria-label="Supprimer cette séance">🗑️</button></div>'}).join(""):'<p class="mute">Rien ici pour l\'instant. Prends ta première leçon en photo et elle apparaîtra ici ! 🦊</p>';
@@ -291,7 +292,7 @@ if(P.error||S.error)throw new Error("pull");
 db={active:db.active,profiles:P.data.map(function(p){return{id:p.id,name:p.name,av:p.av,mode:p.mode,xp:p.xp,streak:p.streak,last:p.last,best:p.best,study:p.study||{},limit:p.daily_limit||0}}),
 sessions:S.data.map(function(s){return{id:s.id,pid:s.profile_id,date:Date.parse(s.created_at),matiere:s.matiere,titre:s.titre,res:s.res,score:s.score}})}}
 async function push(){if(!sb||!user)return false;
-var P=db.profiles.map(function(p){return{id:p.id,name:p.name,av:p.av,mode:p.mode||"ado",xp:p.xp||0,streak:p.streak||0,last:p.last||null,best:p.best||0,study:p.study||{},daily_limit:p.limit||0}});
+var P=db.profiles.map(function(p){return{id:p.id,name:p.name,av:p.av,mode:p.mode||APP,xp:p.xp||0,streak:p.streak||0,last:p.last||null,best:p.best||0,study:p.study||{},daily_limit:p.limit||0}});
 var S=db.sessions.filter(function(s){return dirty[s.id]}).map(function(s){return{id:s.id,profile_id:s.pid,matiere:s.matiere,titre:s.titre,res:s.res,score:s.score,created_at:new Date(s.date).toISOString()}});
 var a=await sb.from("profiles").upsert(P);
 if(a.error&&/study|daily_limit|column/i.test(a.error.message||"")){console.warn("Colonnes temps absentes : lance le SQL dans Supabase.");a=await sb.from("profiles").upsert(P.map(function(p){var q=Object.assign({},p);delete q.study;delete q.daily_limit;return q}))}
@@ -305,7 +306,7 @@ async function enter(u){user=u;eyeReset();$("auth").classList.add("hide");var lg
 try{await pull()}catch(e){user=null;toast("Connexion impossible. Réessaie dans un instant.");$("auth").classList.remove("hide");return}
 if(!db.profiles.length&&lg&&lg.profiles&&lg.profiles.length)migrate(lg);
 if(/access_token|[?&]code=/.test(location.hash+location.search))history.replaceState(null,"",location.pathname);
-KEY="studia:v1:"+u.id;$("logout").classList.remove("hide");start()}
+KEY="studia:v1:"+u.id;$("logout").classList.remove("hide");$("logout").textContent="Déconnexion";$("parBtn").classList.remove("hide");start()}
 function fr(m){m=m||"";if(/Invalid login/i.test(m))return"Courriel ou mot de passe incorrect.";if(/already registered/i.test(m))return"Un compte existe déjà avec ce courriel.";if(/not confirmed/i.test(m))return"Confirme d'abord ton courriel (regarde ta boîte de réception).";if(/rate limit/i.test(m))return"Trop d'essais. Réessaie dans quelques minutes.";return"Erreur : "+m}
 async function doAuth(signup){var e=$("aem").value.trim(),p=$("apw").value,msg=$("amsg");
 if(authM==="reset"){if(p.length<8){msg.textContent="Au moins 8 caractères, s'il te plaît.";return}
@@ -318,9 +319,10 @@ if(r.error){msg.textContent=fr(r.error.message);return}
 if(r.data.session){$("apw").value="";msg.textContent="";await enter(r.data.user)}else msg.textContent="Compte créé ! Vérifie ton courriel pour le confirmer, puis connecte-toi."}
 $("alog").onclick=function(){doAuth(false)};$("areg").onclick=function(){doAuth(true)};
 $("apw").onkeydown=function(e){if(e.key==="Enter")doAuth(false)};
-$("logout").onclick=function(){gate(function(){sb.auth.signOut().then(function(){location.reload()})})};
+$("parBtn").onclick=function(){gate(function(){renderDash();show("dash",true);$("dash").scrollIntoView()},true)};
+$("logout").onclick=function(){if(!user){$("auth").classList.remove("hide");return}gate(function(){sb.auth.signOut().then(function(){location.reload()})})};
 async function boot(){try{var c=await(await fetch("/api/config")).json();
-if(c.url&&c.key&&window.supabase){var rec=/type=recovery/.test(location.hash);sb=supabase.createClient(c.url,c.key);var r=await sb.auth.getSession();
+if(c.url&&c.key&&window.supabase){var rec=/type=recovery/.test(location.hash);sb=supabase.createClient(c.url,c.key);$("logout").classList.remove("hide");var r=await sb.auth.getSession();
 if(rec&&r.data.session){authMode("reset");$("auth").classList.remove("hide");return}
 if(r.data.session){await enter(r.data.session.user)}else{$("auth").classList.remove("hide")}return}}catch(e){console.error(e)}
 start()}
@@ -395,7 +397,6 @@ try{if(typeof qrcode==="undefined")throw 0;var q=qrcode(0,"M");q.addData(u);q.ma
 el.innerHTML='<img alt="Code QR vers '+esc(u)+'" src="'+q.createDataURL(6,4)+'" style="width:220px;height:220px;display:block;image-rendering:pixelated;border-radius:12px">'}
 catch(e){el.textContent="Code QR indisponible pour l'instant. Copie le lien ci-dessous."}
 $("qurl").textContent=u;$("qr").classList.remove("hide")}
-$("qrBtn").onclick=showQr;
 $("qclose").onclick=function(){$("qr").classList.add("hide")};
 $("qcopy").onclick=function(){var u=siteUrl();
 if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(function(){toast("Lien copié ✔")},function(){prompt("Copie ce lien :",u)})}
