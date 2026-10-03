@@ -5,6 +5,8 @@ const app = express();
 app.set("trust proxy", 1); // derrière Render, pour lire la vraie adresse IP
 const KEY = process.env.GEMINI_API_KEY;
 const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const GEMINI_BASE = process.env.GEMINI_BASE || "https://generativelanguage.googleapis.com";
+const MAX_PER_HOUR = 20;
 
 app.use(express.json({ limit: "12mb" }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -36,12 +38,16 @@ async function whoIs(token) {
 
 // Limite simple : 20 analyses par heure et par parent (ou par adresse IP sans compte)
 const hits = new Map();
-function limited(ip) {
+function limited(who) {
   const now = Date.now();
-  const list = (hits.get(ip) || []).filter((t) => now - t < 3600000);
+  const list = (hits.get(who) || []).filter((t) => now - t < 3600000);
+  if (list.length >= MAX_PER_HOUR) {
+    hits.set(who, list);
+    return Math.max(1, Math.ceil((list[0] + 3600000 - now) / 60000)); // minutes à attendre
+  }
   list.push(now);
-  hits.set(ip, list);
-  return list.length > 20;
+  hits.set(who, list);
+  return 0;
 }
 
 // Réessaie jusqu'à 3 fois si Gemini est surchargé (503) ou limité (429)
@@ -74,14 +80,19 @@ app.post("/api/analyze", async (req, res) => {
     if (!id) return res.status(401).json({ erreur: "Connecte-toi avec ton compte parent pour utiliser Studia." });
     who = "u:" + id;
   }
-  if (limited(who)) return res.status(429).json({ erreur: "Trop de demandes. Réessaie dans un moment." });
+  const wait = limited(who);
+  if (wait) {
+    return res.status(429).json({
+      erreur: `Tu as atteint la limite de ${MAX_PER_HOUR} analyses par heure. Réessaie dans environ ${wait} minute${wait > 1 ? "s" : ""}.`,
+    });
+  }
 
   const { image, mode } = req.body || {};
   const m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(image || "");
   if (!m) return res.status(400).json({ erreur: "Image invalide. Utilise une photo JPG, PNG ou WebP." });
 
   try {
-    const r = await withRetry(() => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
+    const r = await withRetry(() => fetch(`${GEMINI_BASE}/v1beta/models/${MODEL}:generateContent`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": KEY },
       body: JSON.stringify({
@@ -91,6 +102,9 @@ app.post("/api/analyze", async (req, res) => {
     }));
     if (!r.ok) {
       console.error("Gemini", r.status, (await r.text()).slice(0, 300));
+      if (r.status === 429 || r.status === 503) {
+        return res.status(503).json({ erreur: "L'IA est très sollicitée en ce moment. Réessaie dans une minute ou deux." });
+      }
       return res.status(502).json({ erreur: "L'IA ne répond pas pour le moment. Réessaie." });
     }
     const data = await r.json();
