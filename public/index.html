@@ -117,7 +117,9 @@ body.easy,body.easy h1,body.easy h2,body.easy h3,body.easy button,body.easy inpu
 .bdg{display:flex;gap:12px;flex-wrap:wrap;font-size:1.7rem}
 .bdg span{filter:grayscale(1);opacity:.3}
 .bdg span.on{filter:none;opacity:1}
-#auth,#pin,#qr,#stop,#crop,#shop,#set{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:20px;overflow:auto}
+#auth,#pin,#qr,#stop,#crop,#shop,#set,#agenda{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:20px;overflow:auto}
+#stop{z-index:25}
+#pin{z-index:30}
 .abox{max-width:380px;width:100%;text-align:center}
 .abox h2{font-size:1.7rem;margin:4px 0}
 .abox label{display:block;text-align:start;font-weight:700;margin-top:10px}
@@ -128,6 +130,22 @@ body.easy,body.easy h1,body.easy h2,body.easy h3,body.easy button,body.easy inpu
 .bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;font-size:.7rem;color:var(--soft);height:100%}
 .bars i{display:block;width:100%;max-width:26px;background:var(--violet);border-radius:6px 6px 0 0}
 .lim{display:flex;align-items:center;gap:10px;margin-top:10px;font-weight:700;flex-wrap:wrap}
+.agb{width:100%;text-align:start;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;padding:12px 16px;margin-top:10px;display:block;font-size:1rem}
+.agb b{display:block;font-family:'Baloo 2',sans-serif;font-size:1.1rem}
+.agb span{display:block;font-weight:600;color:var(--soft)}
+.bad{color:var(--coral);font-weight:700}
+#agenda h3{text-align:start;margin:14px 0 6px;font-size:1.05rem}
+.agform select,.agform input{width:100%;margin-top:8px;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:12px;font:inherit}
+.task{display:flex;align-items:flex-start;gap:8px;text-align:start;background:var(--card);border:2px solid var(--line);border-radius:18px;padding:8px 10px;margin-top:8px}
+.task.late{border-color:var(--coral)}
+.task.done .tb b{text-decoration:line-through;opacity:.6}
+.task .tk,.task .x{border:0;background:none;font-size:1.5rem;line-height:1;padding:6px;cursor:pointer}
+.task .tb{flex:1;min-width:0}
+.task .tb b{display:block;word-break:break-word}
+.task .tb>span{display:block;font-size:.85rem;color:var(--soft)}
+.task .prep{margin-top:4px}
+.watch{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 12px;margin:10px 0;display:grid;gap:4px}
+.tgcard{margin-top:12px;padding:12px 14px;border-radius:18px;background:var(--bg);border:2px solid var(--line)}
 .pw{position:relative}
 .pw input{padding-right:54px}
 .pw button{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;font-size:1.3rem;line-height:1;padding:6px;cursor:pointer}
@@ -161,6 +179,7 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 </section>
 
 <section id="gam" aria-label="Ma progression"></section>
+<section id="agbar" aria-label="Agenda"></section>
 
 <section id="load" class="card load hide" role="status"><span class="spin">🦊</span><div id="loadT">Je lis ta leçon…</div></section>
 <section id="err" class="card err hide" role="alert"></section>
@@ -226,6 +245,7 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 </div></div>
 <div id="shop" class="hide" role="dialog" aria-modal="true"><div class="abox" id="shopbox" style="max-width:520px"></div></div>
 <div id="set" class="hide" role="dialog" aria-modal="true"><div class="abox" id="setbox" style="max-width:460px"></div></div>
+<div id="agenda" class="hide" role="dialog" aria-modal="true"><div class="abox" id="agbox" style="max-width:560px"></div></div>
 <div id="toast" role="status"></div>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -273,7 +293,14 @@ var TR={en:{
 "Un parent peut ajouter 15 minutes":"A parent can add 15 minutes","Plus que":"Only","min pour aujourd'hui ⏰":"min left today ⏰",
 "Voix":"Voice",
 "Aucune voix trouvée sur cet appareil.":"No voice found on this device.",
-"Ton appareil propose peu de voix pour cette langue. Tu peux en ajouter dans les réglages de synthèse vocale de ton téléphone.":"Your device has few voices for this language. You can add more in your phone's text-to-speech settings."
+"Ton appareil propose peu de voix pour cette langue. Tu peux en ajouter dans les réglages de synthèse vocale de ton téléphone.":"Your device has few voices for this language. You can add more in your phone's text-to-speech settings.",
+"📅 Agenda":"📅 Planner","📅 Mon agenda":"📅 My planner","📝 Devoir":"📝 Homework","🎯 Examen":"🎯 Exam","Matière":"Subject","Ex. : exercices 1 à 5, page 42":"E.g. exercises 1 to 5, page 42",
+"➕ Ajouter":"➕ Add","🔒 Ajouter comme parent":"🔒 Add as parent","Donne un titre et une date.":"Enter a title and a date.",
+"Examens à venir":"Upcoming exams","En retard":"Late","Cette semaine":"This week","Plus tard":"Later","Faits récemment":"Done recently",
+"Aujourd'hui":"Today","Demain":"Tomorrow","Dans":"In","jours":"days","jour":"day","En retard de":"Late by","leçons":"lessons","leçon":"lesson","quiz moyen":"average quiz",
+"Aucune leçon de cette matière pour l'instant.":"No lesson in this subject yet.","📚 Réviser":"📚 Study","Marquer comme fait":"Mark as done","Examen passé":"Exam taken",
+"Supprimer":"Delete","Supprimer cet élément ?":"Delete this item?","Devoir fait !":"Homework done!","devoir en retard":"homework item late","devoirs en retard":"homework items late",
+"à faire aujourd'hui":"to do today","Examen":"Exam","Rien de prévu. Profite ! 🎉":"Nothing planned. Enjoy! 🎉","Ton agenda est vide. Ajoute un devoir ou un examen.":"Your planner is empty. Add homework or an exam."
 }};
 function t(s){var d=TR[lang];return d&&d[s]?d[s]:s}
 function applyDir(){var L=LG(lang);document.documentElement.lang=lang;document.documentElement.dir=L.dir;[].forEach.call(document.querySelectorAll("#langseg button"),function(b){b.setAttribute("aria-pressed",b.dataset.l===lang)})}
@@ -436,24 +463,26 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}sched
 function newProfile(name){var p={id:uid(),name:name,av:AV[db.profiles.length%AV.length],mode:APP,extra:{}};db.profiles.push(p);db.active=p.id;cur=p;save();return p}
 function load(){if(!user){try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&s.profiles&&s.profiles.length)db=s}catch(e){}}
 if(!db.profiles.length){newProfile((prompt("Bienvenue sur Studia ! Quel est ton prénom ?")||"").trim().slice(0,20)||"Élève")}
-cur=db.profiles.filter(function(p){return p.id===db.active})[0]||db.profiles[0];db.active=cur.id;setMode()}
+db.tasks=db.tasks||[];cur=db.profiles.filter(function(p){return p.id===db.active})[0]||db.profiles[0];db.active=cur.id;setMode()}
 function switchTo(p){cur=p;db.active=p.id;save();setMode();show("out",false);show("err",false);filt="Toutes";renderProfiles();renderHist();checkLimit()}
 function greet(){return lang==="en"?"Hi "+cur.name+"! What are we studying today?":"Salut "+cur.name+" ! On révise quoi aujourd'hui ?"}
 function renderProfiles(){var h=db.profiles.map(function(p){return'<button type="button" class="pf'+(p.id===cur.id?" on":"")+'" data-id="'+p.id+'">'+p.av+' '+esc(p.name)+'</button>'}).join("");
 h+='<button type="button" class="pf add" id="addP">'+t("+ Profil")+'</button>';
+h+='<button type="button" class="pf" id="agBtn">'+t("📅 Agenda")+'</button>';
 h+='<button type="button" class="pf" id="qrBtn">'+t("📱 Partager")+'</button>';
 h+='<button type="button" class="pf" id="setBtn">'+t("⚙️ Réglages")+'</button>';
 h+='<button type="button" class="pf" id="shopBtn">'+t("🎨 Mon renard")+'</button>';
 if(db.profiles.length>1)h+='<button type="button" class="pf" id="delP" aria-label="Supprimer ce profil">🗑️</button>';
-$("profiles").innerHTML=h;renderStats();$("hi").textContent=greet();
+$("profiles").innerHTML=h;renderStats();renderAgBar();$("hi").textContent=greet();
 [].forEach.call($("profiles").querySelectorAll("[data-id]"),function(b){b.onclick=function(){switchTo(db.profiles.filter(function(p){return p.id===b.dataset.id})[0])}});
+$("agBtn").onclick=openAgenda;
 $("qrBtn").onclick=showQr;
 $("setBtn").onclick=function(){renderSet();$("set").classList.remove("hide")};
 $("shopBtn").onclick=function(){renderShop();$("shop").classList.remove("hide")};
 $("addP").onclick=function(){gate(function(){var n=(prompt("Prénom de l'élève ?")||"").trim().slice(0,20);if(n){switchTo(newProfile(n))}})};
 if($("delP"))$("delP").onclick=function(){gate(delProfile)};
 function delProfile(){if(!confirm("Supprimer le profil "+cur.name+" et toutes ses séances ?"))return;
-var id=cur.id;cdel("profiles",id);db.profiles=db.profiles.filter(function(p){return p.id!==id});db.sessions=db.sessions.filter(function(s){return s.pid!==id});switchTo(db.profiles[0])}}
+var id=cur.id;cdel("profiles",id);db.profiles=db.profiles.filter(function(p){return p.id!==id});db.sessions=db.sessions.filter(function(s){return s.pid!==id});db.tasks=db.tasks.filter(function(x){return x.pid!==id});switchTo(db.profiles[0])}}
 function addSession(d){var s={id:uid(),pid:cur.id,date:Date.now(),matiere:d.matiere||"Autre",titre:d.titre||"Leçon",res:d,score:null};
 db.sessions.unshift(s);dirty[s.id]=1;db.sessions=db.sessions.slice(0,100);save();renderHist();reward(10,t("Nouvelle leçon"));return s}
 
@@ -506,8 +535,9 @@ function sched(){if(!sb||!user)return;clearTimeout(pt);pt=setTimeout(push,700)}
 function cdel(t,id){if(sb&&user)sb.from(t).delete().eq("id",id).then(function(r){if(r.error)console.error(r.error)})}
 async function pull(){var P=await sb.from("profiles").select("*").order("created_at"),S=await sb.from("sessions").select("*").order("created_at",{ascending:false});
 if(P.error||S.error)throw new Error("pull");
+var T=await sb.from("tasks").select("*").order("due");noTasks=!!T.error;
 db={active:db.active,profiles:P.data.map(function(p){return{id:p.id,name:p.name,av:p.av,mode:p.mode,xp:p.xp,streak:p.streak,last:p.last,best:p.best,study:p.study||{},limit:p.daily_limit||0,extra:p.extra||{}}}),
-sessions:S.data.map(function(s){return{id:s.id,pid:s.profile_id,date:Date.parse(s.created_at),matiere:s.matiere,titre:s.titre,res:s.res,score:s.score}})}}
+sessions:S.data.map(function(s){return{id:s.id,pid:s.profile_id,date:Date.parse(s.created_at),matiere:s.matiere,titre:s.titre,res:s.res,score:s.score}}),tasks:tasksOf(T)}}
 async function push(){if(!sb||!user)return false;
 var P=db.profiles.map(function(p){return{id:p.id,name:p.name,av:p.av,mode:p.mode||APP,xp:p.xp||0,streak:p.streak||0,last:p.last||null,best:p.best||0,study:p.study||{},daily_limit:p.limit||0,extra:p.extra||{}}});
 var S=db.sessions.filter(function(s){return dirty[s.id]}).map(function(s){return{id:s.id,profile_id:s.pid,matiere:s.matiere,titre:s.titre,res:s.res,score:s.score,created_at:new Date(s.date).toISOString()}});
@@ -515,7 +545,11 @@ var a=await sb.from("profiles").upsert(P);
 if(a.error&&/study|daily_limit|extra|column/i.test(a.error.message||"")){console.warn("Colonnes temps absentes : lance le SQL dans Supabase.");a=await sb.from("profiles").upsert(P.map(function(p){var q=Object.assign({},p);delete q.study;delete q.daily_limit;delete q.extra;return q}))}
 if(a.error){console.error(a.error);return false}
 if(S.length){var b=await sb.from("sessions").upsert(S);if(b.error){console.error(b.error);return false}}
-dirty={};return true}
+var TT=db.tasks.filter(function(x){return dirty[x.id]}).map(function(x){return{id:x.id,profile_id:x.pid,kind:x.kind,title:x.title,subject:x.subject,due:x.due,notes:x.notes||"",done_at:x.done?new Date(x.done).toISOString():null,added_by:x.by,rw:!!x.rw,created_at:new Date(x.created).toISOString()}});
+var keep={};
+if(TT.length&&!noTasks){var c=await sb.from("tasks").upsert(TT);if(c.error){if(/tasks|relation|schema|does not exist/i.test(c.error.message||"")){noTasks=true;console.warn("Table tasks absente : lance le SQL dans Supabase.")}else{console.error(c.error);return false}}}
+if(noTasks)db.tasks.forEach(function(x){if(dirty[x.id])keep[x.id]=1});
+dirty=keep;return true}
 function migrate(l){var m={};db.profiles=l.profiles.map(function(p){var n=uid();m[p.id]=n;p.id=n;return p});
 db.sessions=(l.sessions||[]).filter(function(s){return m[s.pid]}).map(function(s){s.id=uid();s.pid=m[s.pid];dirty[s.id]=1;return s});
 db.active=db.profiles[0].id;push().then(function(ok){if(ok){try{localStorage.removeItem("studia:v1")}catch(e){}}})}
@@ -580,6 +614,72 @@ $("aforgot").onclick=async function(){var e=$("aem").value.trim(),msg=$("amsg");
 if(!e){msg.textContent="Entre d'abord ton courriel dans le champ ci-dessus.";return}
 msg.textContent="Un instant…";var r=await sb.auth.resetPasswordForEmail(e,{redirectTo:location.origin});
 msg.textContent=r.error?fr(r.error.message):"Si un compte existe avec ce courriel, un lien de réinitialisation vient d'être envoyé."};
+// ---------- Agenda : devoirs et examens ----------
+var SUBJ=["Maths","Français","Sciences","Histoire","Anglais","Autre"],agKind="devoir",noTasks=false;
+function dnum(d){return Math.round((new Date(d+"T00:00:00")-new Date(day()+"T00:00:00"))/864e5)}
+function byDue(a,b){return a.due<b.due?-1:a.due>b.due?1:a.created-b.created}
+function relIn(d,tr){var n=dnum(d);return n===0?tr("Aujourd'hui"):n===1?tr("Demain"):n>1?tr("Dans")+" "+n+" "+tr("jours"):tr("En retard de")+" "+(-n)+" "+tr(n<-1?"jours":"jour")}
+function rel(d){return relIn(d,t)}
+function ident(s){return s}
+function prepInfo(pid,sub){var ss=db.sessions.filter(function(s){return s.pid===pid&&s.matiere===sub}),sc=ss.filter(function(s){return s.score!=null});
+return{n:ss.length,avg:sc.length?Math.round(sc.reduce(function(a,s){return a+s.score/s.res.quiz.length},0)/sc.length*100):null}}
+function prepText(pid,sub,tr){var p=prepInfo(pid,sub);return p.n?p.n+" "+tr(p.n>1?"leçons":"leçon")+(p.avg==null?"":" · "+tr("quiz moyen")+" "+p.avg+" %"):tr("Aucune leçon de cette matière pour l'instant.")}
+function tasksOf(T){return(T&&!T.error&&T.data?T.data:[]).map(function(x){return{id:x.id,pid:x.profile_id,kind:x.kind,title:x.title,subject:x.subject,due:String(x.due||"").slice(0,10),notes:x.notes||"",done:x.done_at?Date.parse(x.done_at):null,by:x.added_by||"enfant",rw:!!x.rw,created:Date.parse(x.created_at)||Date.now()}})}
+function taskRow(x){var n=dnum(x.due),late=!x.done&&x.kind==="devoir"&&n<0;
+return'<div class="task'+(x.done?" done":"")+(late?" late":"")+'"><button type="button" class="tk" data-tk="'+x.id+'" aria-pressed="'+(!!x.done)+'" aria-label="'+ea(t(x.kind==="devoir"?"Marquer comme fait":"Examen passé"))+'">'+(x.done?"✅":"⬜")+'</button><div class="tb"><b>'+esc(x.title)+'</b><span><span class="tag" style="background:'+col(x.subject)+'">'+esc(t(x.subject))+'</span> '+(x.kind==="examen"?"🎯 ":"")+esc(rel(x.due))+(x.by==="parent"?" · 👨‍👩":"")+'</span>'
++(x.kind==="examen"&&!x.done?'<span class="prep">'+esc(prepText(cur.id,x.subject,t))+' <button type="button" class="pf" data-rv="'+ea(x.subject)+'">'+t("📚 Réviser")+'</button></span>':"")
++'</div><button type="button" class="x" data-td="'+x.id+'" aria-label="'+ea(t("Supprimer"))+'">🗑️</button></div>'}
+function agSection(title,arr){return arr.length?'<h3>'+title+'</h3>'+arr.map(taskRow).join(""):""}
+function renderAgList(){var all=db.tasks.filter(function(x){return x.pid===cur.id}),
+open=all.filter(function(x){return!x.done&&!(x.kind==="examen"&&dnum(x.due)<0)}).sort(byDue),
+dev=open.filter(function(x){return x.kind==="devoir"}),exm=open.filter(function(x){return x.kind==="examen"}),
+fait=all.filter(function(x){return x.done}).sort(function(a,b){return b.done-a.done}).slice(0,5),
+h=agSection("🎯 "+t("Examens à venir"),exm)+agSection("⚠️ "+t("En retard"),dev.filter(function(x){return dnum(x.due)<0}))
++agSection("📌 "+t("Aujourd'hui"),dev.filter(function(x){return dnum(x.due)===0}))
++agSection("📆 "+t("Cette semaine"),dev.filter(function(x){var n=dnum(x.due);return n>=1&&n<=7}))
++agSection("🗓️ "+t("Plus tard"),dev.filter(function(x){return dnum(x.due)>7}))+agSection("✅ "+t("Faits récemment"),fait);
+$("aglist").innerHTML=h||'<p class="mute">'+t("Rien de prévu. Profite ! 🎉")+'</p>';renderAgBar()}
+function renderAgBar(){if(!cur||!$("agbar"))return;var mine=db.tasks.filter(function(x){return x.pid===cur.id}),open=mine.filter(function(x){return!x.done}),
+late=open.filter(function(x){return x.kind==="devoir"&&dnum(x.due)<0}).length,today=open.filter(function(x){return x.kind==="devoir"&&dnum(x.due)===0}).length,
+nx=open.filter(function(x){return x.kind==="examen"&&dnum(x.due)>=0}).sort(byDue)[0],L=[];
+if(late)L.push('<span class="bad">⚠️ '+late+" "+t(late>1?"devoirs en retard":"devoir en retard")+'</span>');
+if(today)L.push("📌 "+today+" "+t("à faire aujourd'hui"));
+if(nx)L.push("🎯 "+t("Examen")+" "+esc(t(nx.subject))+" · "+esc(rel(nx.due)));
+$("agbar").innerHTML='<button type="button" class="agb" id="agOpen"><b>'+t("📅 Mon agenda")+'</b><span>'+(L.length?L.join(" · "):(mine.length?t("Rien de prévu. Profite ! 🎉"):t("Ton agenda est vide. Ajoute un devoir ou un examen.")))+'</span></button>';
+$("agOpen").onclick=openAgenda}
+function openAgenda(){var tm=new Date();tm.setDate(tm.getDate()+1);
+$("agbox").innerHTML='<h2>'+t("📅 Mon agenda")+'</h2><div class="agform"><div class="crow">'+[["devoir","📝 Devoir"],["examen","🎯 Examen"]].map(function(k){return'<button type="button" class="pf" data-k="'+k[0]+'" aria-pressed="'+(agKind===k[0])+'">'+t(k[1])+'</button>'}).join("")+'</div>'
++'<select id="agS" aria-label="'+ea(t("Matière"))+'">'+SUBJ.map(function(s){return'<option value="'+s+'">'+esc(t(s))+'</option>'}).join("")+'</select>'
++'<input id="agT" type="text" maxlength="80" placeholder="'+ea(t("Ex. : exercices 1 à 5, page 42"))+'">'
++'<input id="agD" type="date" value="'+day(tm)+'" aria-label="Date">'
++'<div class="crow"><button type="button" class="go" id="agAdd" style="width:auto;margin:0">'+t("➕ Ajouter")+'</button><button type="button" class="pf" id="agPar">'+t("🔒 Ajouter comme parent")+'</button></div><p id="agMsg" class="mute" role="status"></p></div><div id="aglist"></div><button class="again" id="agclose" type="button">'+t("Fermer")+'</button>';
+$("agenda").classList.remove("hide");renderAgList()}
+function addTask(by){var ti=$("agT").value.trim(),d=$("agD").value,m=$("agMsg");if(!ti||!d){m.textContent=t("Donne un titre et une date.");return}
+var x={id:uid(),pid:cur.id,kind:agKind,title:ti.slice(0,80),subject:$("agS").value,due:d,notes:"",done:null,by:by,rw:false,created:Date.now()};
+db.tasks.push(x);dirty[x.id]=1;save();$("agT").value="";m.textContent="";sfx("click");renderAgList()}
+function toggleTask(id){var x=db.tasks.filter(function(k){return k.id===id})[0];if(!x)return;x.done=x.done?null:Date.now();dirty[x.id]=1;
+if(x.done&&x.kind==="devoir"&&!x.rw){x.rw=true;save();reward(10,t("Devoir fait !"));sfx("ok");burst(innerWidth/2,innerHeight/3,60)}else{save();if(x.done)sfx("click")}
+renderAgList();renderStats()}
+function delTask(id){var x=db.tasks.filter(function(k){return k.id===id})[0];if(!x)return;
+function go(){if(!confirm(t("Supprimer cet élément ?")))return;cdel("tasks",id);db.tasks=db.tasks.filter(function(k){return k.id!==id});delete dirty[id];save();renderAgList()}
+if(x.by==="parent")gate(go);else go()}
+$("agbox").onclick=function(e){var b=e.target.closest("button");if(!b)return;
+if(b.dataset.tk)toggleTask(b.dataset.tk);
+else if(b.dataset.td)delTask(b.dataset.td);
+else if(b.dataset.rv){$("agenda").classList.add("hide");filt=b.dataset.rv;renderHist();$("hist").scrollIntoView()}
+else if(b.dataset.k){agKind=b.dataset.k;[].forEach.call($("agbox").querySelectorAll("[data-k]"),function(k){k.setAttribute("aria-pressed",k.dataset.k===agKind)})}
+else if(b.id==="agAdd")addTask("enfant");
+else if(b.id==="agPar"){if(user)gate(function(){addTask("parent")},true);else addTask("parent")}
+else if(b.id==="agclose")$("agenda").classList.add("hide")};
+// Espace parent : ce qu'il faut surveiller pour chaque enfant (devoirs en retard, examens proches)
+function watchHtml(p){var all=db.tasks.filter(function(x){return x.pid===p.id}),open=all.filter(function(x){return!x.done}),
+late=open.filter(function(x){return x.kind==="devoir"&&dnum(x.due)<0}).sort(byDue),
+soon=open.filter(function(x){return x.kind==="examen"&&dnum(x.due)>=0&&dnum(x.due)<=7}).sort(byDue),
+wk=all.filter(function(x){return x.kind==="devoir"&&dnum(x.due)>=-6&&dnum(x.due)<=0}),h='<div class="watch"><b>🔔 À surveiller</b>';
+if(!late.length&&!soon.length)h+='<div>✅ Rien à signaler.</div>';
+late.slice(0,5).forEach(function(x){h+='<div class="bad">⚠️ Devoir en retard : '+esc(x.title)+' ('+esc(x.subject)+', '+esc(relIn(x.due,ident))+')</div>'});
+soon.forEach(function(x){h+='<div>🎯 Examen de '+esc(x.subject)+' : '+esc(x.title)+' — '+esc(relIn(x.due,ident))+' · '+esc(prepText(p.id,x.subject,ident))+'</div>'});
+return h+'<small>Devoirs des 7 derniers jours : '+wk.filter(function(x){return x.done}).length+' faits sur '+wk.length+'</small></div>'}
 // Temps de révision et limite quotidienne
 var lastAct=Date.now(),acc=0,warned="";
 ["pointerdown","keydown","touchstart","scroll"].forEach(function(ev){addEventListener(ev,function(){lastAct=Date.now()},{passive:true})});
@@ -618,18 +718,35 @@ $("qclose").onclick=function(){$("qr").classList.add("hide")};
 $("qcopy").onclick=function(){var u=siteUrl();
 if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(function(){toast("Lien copié ✔")},function(){prompt("Copie ce lien :",u)})}
 else prompt("Copie ce lien :",u)};
+// Alertes Telegram (espace parent)
+function tgApi(path,body){return token().then(function(tk){return fetch("/api/tg/"+path,{method:body===undefined?"GET":"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+(tk||"")},body:body===undefined?undefined:JSON.stringify(body)}).then(function(r){return r.json().then(function(j){j._ok=r.ok;return j})})})}
+function tgPanel(){var box=$("tgbox");if(!box)return;var T='<b>🔔 Alertes sur Telegram</b>';box.innerHTML=T+'<p class="mute">Chargement…</p>';
+tgApi("status").then(function(s){var h=T;
+if(!s.enabled)h+='<p class="mute">Les alertes Telegram ne sont pas encore activées sur le serveur.</p>';
+else if(s.erreur)h+='<p class="bad">'+esc(s.erreur)+'</p>';
+else if(s.linked)h+='<p>✅ Connecté. Tu recevras un message quand un devoir est en retard ou qu\'un examen approche.</p><div class="crow"><button type="button" class="pf" id="tgTest">Envoyer un test</button><button type="button" class="pf" id="tgOff">Déconnecter</button></div>'+(s.cron?"":'<p class="mute">Le rappel automatique du soir n\'est pas encore programmé sur le serveur.</p>');
+else h+='<p class="mute">Reçois un message sur Telegram quand un devoir n\'est pas fait ou qu\'un examen approche.</p><div class="crow"><button type="button" class="go" id="tgOn" style="width:auto;margin:0">Connecter Telegram</button><button type="button" class="pf" id="tgRefresh">J\'ai terminé</button></div>';
+box.innerHTML=h+'<p id="tgMsg" class="mute" role="status"></p>';
+var msg=function(m){$("tgMsg").textContent=m};
+if($("tgOn"))$("tgOn").onclick=function(){msg("Un instant…");tgApi("link",{}).then(function(j){if(!j.url){msg(j.erreur||"Impossible de créer le lien.");return}
+$("tgMsg").innerHTML='<a class="go" style="display:inline-block;width:auto;text-decoration:none;padding:10px 16px" href="'+ea(j.url)+'" target="_blank" rel="noopener">Ouvrir Telegram</a><br>Appuie sur « Démarrer », puis reviens ici et touche « J\'ai terminé ».'})};
+if($("tgRefresh"))$("tgRefresh").onclick=tgPanel;
+if($("tgTest"))$("tgTest").onclick=function(){msg("Envoi…");tgApi("test",{}).then(function(j){msg(j.ok?"Message envoyé : regarde ton Telegram.":(j.erreur||"Échec de l\'envoi."))})};
+if($("tgOff"))$("tgOff").onclick=function(){if(confirm("Arrêter les alertes Telegram ?"))tgApi("unlink",{}).then(tgPanel)}
+}).catch(function(){box.innerHTML=T+'<p class="mute">Le serveur ne répond pas.</p>'})}
 // Tableau de bord parent
 function streakOf(p){return(p.last===day()||p.last===yest())?p.streak||0:0}
-function renderDash(){var h='<h2>📊 Espace parent</h2><p class="mute">'+esc(user.email)+'</p>';
+function renderDash(){var h='<h2>📊 Espace parent</h2><p class="mute">'+esc(user.email)+'</p>'+(noTasks?'<p class="bad">⚠️ L\'agenda n\'est pas encore relié à la base de données (le SQL de l\'agenda reste à lancer dans Supabase).</p>':'')+'<div class="tgcard" id="tgbox"></div>';
 db.profiles.forEach(function(p){var ss=db.sessions.filter(function(s){return s.pid===p.id}),wk=ss.filter(function(s){return Date.now()-s.date<6048e5}),
 sc=ss.filter(function(s){return s.score!=null}),by={},L=lvl(p.xp||0),
 avg=sc.length?Math.round(sc.reduce(function(a,s){return a+s.score/s.res.quiz.length},0)/sc.length*100):null;
 sc.forEach(function(s){(by[s.matiere]=by[s.matiere]||[]).push(s.score/s.res.quiz.length)});
-h+='<div class="dp"><b>'+p.av+' '+esc(p.name)+'</b><small>Niveau '+(L.i+1)+' · '+L.name+' · 🔥 '+streakOf(p)+' j · '+(p.xp||0)+' points</small>'
+h+='<div class="dp"><b>'+p.av+' '+esc(p.name)+'</b><small>Niveau '+(L.i+1)+' · '+L.name+' · 🔥 '+streakOf(p)+' j · '+(p.xp||0)+' points</small>'+watchHtml(p)
 +'<div class="dk"><span><b>'+fmt(used(p))+'</b>aujourd\'hui</span><span><b>'+fmt(wkTime(p))+'</b>sur 7 jours</span><span><b>'+wk.length+'</b>séances en 7 jours</span><span><b>'+(avg==null?"–":avg+" %")+'</b>bonnes réponses</span></div>'+bars(p)+limitCtl(p)
 +Object.keys(by).map(function(m){var v=Math.round(by[m].reduce(function(a,b){return a+b},0)/by[m].length*100);
 return '<div><div class="r"><span>'+esc(m)+'</span><span>'+v+' %</span></div><div class="track"><i style="width:'+v+'%;background:'+col(m)+'"></i></div></div>'}).join("")+'</div>'});
 $("dash").innerHTML=h+'<button class="again" id="dclose" type="button">Fermer</button> <button class="pf" id="dpin" type="button">Changer mon code</button>';
+tgPanel();
 $("dclose").onclick=function(){show("dash",false)};
 $("dpin").onclick=function(){openPin("set",null)};
 [].forEach.call($("dash").querySelectorAll("[data-lm]"),function(b){b.onclick=function(){var p=db.profiles.filter(function(x){return x.id===b.dataset.lm})[0];
