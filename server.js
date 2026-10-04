@@ -15,6 +15,20 @@ const CLAUDE_MODEL = process.env.CLAUDE_MODEL || "claude-haiku-4-5-20251001";
 const CLAUDE_BASE = process.env.CLAUDE_BASE || "https://api.anthropic.com";
 const MAX_PER_HOUR = 20;
 
+// Langues prises en charge. Pour en ajouter une : une ligne ici + les textes du site.
+const LANG_NAME = { fr: "FRANÇAIS", en: "ANGLAIS" };
+const LANG_ERR = { fr: "français", en: "anglais" };
+const MSG = {
+  login: { fr: "Connecte-toi avec ton compte parent pour utiliser Studia.", en: "Sign in with your parent account to use Studia." },
+  limit: {
+    fr: (n, w) => `Tu as atteint la limite de ${n} analyses par heure. Réessaie dans environ ${w} minute${w > 1 ? "s" : ""}.`,
+    en: (n, w) => `You reached the limit of ${n} scans per hour. Try again in about ${w} minute${w > 1 ? "s" : ""}.`,
+  },
+  image: { fr: "Image invalide. Utilise une photo JPG, PNG ou WebP.", en: "Invalid image. Use a JPG, PNG or WebP photo." },
+  busy: { fr: "L'IA est très sollicitée en ce moment. Réessaie dans une minute ou deux.", en: "The AI is very busy right now. Try again in a minute or two." },
+  unreadable: { fr: "Je n'ai pas réussi à lire cette leçon. Essaie avec une photo plus nette.", en: "I couldn't read this lesson. Try a sharper photo." },
+};
+
 app.use(express.json({ limit: "12mb" }));
 
 // ---------- Application installable (PWA) : manifeste, service worker, icônes ----------
@@ -155,10 +169,10 @@ async function withRetry(call, tries = 3) {
 
 function prompt(mode, lang) {
   const kids = mode === "kids";
-  const en = lang === "en";
+  const L = LANG_NAME[lang] ? lang : "fr";
   return `Tu es Studia, un assistant de révision pour élèves. Analyse la photo d'une leçon (cahier ou manuel).
 Public : ${kids ? "enfant du primaire (6 à 12 ans). Phrases très courtes, mots simples, ton très encourageant." : "adolescent de 12 à 17 ans. Ton direct et clair."}
-Écris le titre, le résumé, les fiches et le quiz en ${en ? "ANGLAIS" : "FRANÇAIS"}. Base-toi uniquement sur ce qui est visible sur la photo. Si la photo est illisible, réponds {"erreur":"courte explication en ${en ? "anglais" : "français"}"}.
+Écris le titre, le résumé, les fiches et le quiz en ${LANG_NAME[L]}. Base-toi uniquement sur ce qui est visible sur la photo. Si la photo est illisible, réponds {"erreur":"courte explication en ${LANG_ERR[L]}"}.
 Réponds UNIQUEMENT avec ce JSON, sans aucun texte autour :
 {"matiere":"Maths|Français|Sciences|Histoire|Anglais|Autre","titre":"titre court de la leçon","resume":"résumé en 3 à 5 phrases","fiches":[{"q":"question ou mot clé","r":"réponse courte"}],"quiz":[{"t":"qcm","q":"question","choix":["a","b","c"],"bonne":0,"explication":"une phrase"},{"t":"qcm","q":"question","choix":["a","b","c"],"bonne":1,"explication":"une phrase"},{"t":"qcm","q":"question","choix":["a","b","c"],"bonne":2,"explication":"une phrase"},{"t":"vf","q":"affirmation à juger vraie ou fausse","bonne":true,"explication":"une phrase"},{"t":"assoc","q":"consigne courte pour associer","paires":[{"a":"mot","b":"partenaire"},{"a":"mot","b":"partenaire"},{"a":"mot","b":"partenaire"}],"explication":"une phrase"}]}
 Règles : 4 à 6 fiches ; exactement 5 questions dans cet ordre : 3 "qcm", 1 "vf", 1 "assoc". Pour "qcm", "bonne" est l'index (0, 1 ou 2) de la bonne réponse et il change d'une question à l'autre. "matiere" reste toujours l'une des valeurs françaises listées, même si le texte est en anglais.`;
@@ -229,24 +243,22 @@ function parseLesson(text) {
 
 app.post("/api/analyze", async (req, res) => {
   if (!KEY && !CLAUDE_KEY) return res.status(500).json({ erreur: "Aucune clé d'IA n'est configurée sur le serveur." });
+  const lg = LANG_NAME[(req.body || {}).lang] ? req.body.lang : "fr";
   let who = req.ip;
   if (needLogin) {
     const m = /^Bearer (.+)$/.exec(req.headers.authorization || "");
     const id = m ? await whoIs(m[1]).catch(() => null) : null;
-    if (!id) return res.status(401).json({ erreur: "Connecte-toi avec ton compte parent pour utiliser Studia." });
+    if (!id) return res.status(401).json({ erreur: MSG.login[lg] });
     who = "u:" + id;
   }
   const wait = limited(who);
   if (wait) {
-    return res.status(429).json({
-      erreur: `Tu as atteint la limite de ${MAX_PER_HOUR} analyses par heure. Réessaie dans environ ${wait} minute${wait > 1 ? "s" : ""}.`,
-    });
+    return res.status(429).json({ erreur: MSG.limit[lg](MAX_PER_HOUR, wait) });
   }
 
-  const { image, mode, lang } = req.body || {};
+  const { image, mode } = req.body || {};
   const m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(image || "");
-  if (!m) return res.status(400).json({ erreur: "Image invalide. Utilise une photo JPG, PNG ou WebP." });
-  const lg = lang === "en" ? "en" : "fr";
+  if (!m) return res.status(400).json({ erreur: MSG.image[lg] });
 
   // Ordre d'essai : Gemini, Gemini (modèle de secours), puis Claude
   const steps = [];
@@ -269,8 +281,8 @@ app.post("/api/analyze", async (req, res) => {
       console.error("Réponse inutilisable de", name, e.message);
     }
   }
-  if (busy) return res.status(503).json({ erreur: lg === "en" ? "The AI is very busy right now. Try again in a minute or two." : "L'IA est très sollicitée en ce moment. Réessaie dans une minute ou deux." });
-  res.status(502).json({ erreur: lg === "en" ? "I couldn't read this lesson. Try a sharper photo." : "Je n'ai pas réussi à lire cette leçon. Essaie avec une photo plus nette." });
+  if (busy) return res.status(503).json({ erreur: MSG.busy[lg] });
+  res.status(502).json({ erreur: MSG.unreadable[lg] });
 });
 
 app.listen(process.env.PORT || 3000, () => console.log("Studia prêt"));
