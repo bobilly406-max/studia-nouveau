@@ -31,7 +31,7 @@ button:focus-visible,label:focus-within{outline:3px solid var(--sun);outline-off
 .foxbox{width:90px;height:90px}
 .spk{border:2px solid var(--line);background:var(--card);border-radius:99px;padding:6px 14px;font-weight:700;font-size:.95rem;margin-top:10px}
 .spk.on{background:var(--violet);color:#fff;border-color:var(--violet)}
-.spk.mini{padding:2px 10px;margin:0 0 0 6px;font-size:1rem;vertical-align:middle}
+.spk.mini{padding:2px 10px;margin:0;margin-inline-start:6px;font-size:1rem;vertical-align:middle}
 body.nospk .spk{display:none}
 .shopfox{width:150px;height:150px;margin:0 auto}
 .shopfox .fox{width:150px;height:150px}
@@ -40,8 +40,8 @@ body.nospk .spk{display:none}
 .item{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:16px;padding:8px;font-weight:700;font-size:.9rem}
 .item small{display:block;color:var(--soft)}
 .item.on{border-color:var(--mint);background:rgba(39,185,148,.15)}
-#shop h3,#set h3{text-align:left;margin:12px 0 6px;font-size:1.05rem}
-.srow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);text-align:left;font-weight:700}
+#shop h3,#set h3{text-align:start;margin:12px 0 6px;font-size:1.05rem}
+.srow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);text-align:start;font-weight:700}
 .srow>div{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .pf[aria-pressed="true"]{background:var(--violet);color:#fff;border-color:var(--violet)}
 .crow{display:flex;gap:8px;justify-content:center;margin:10px 0;flex-wrap:wrap}
@@ -54,6 +54,8 @@ body.nospk .spk{display:none}
 .assoc button.no{border-color:var(--coral);animation:shake .35s}
 .daily{margin-top:10px;background:var(--card);border:2px dashed var(--coral);border-radius:20px;padding:10px 16px}
 .daily.done{border-style:solid;border-color:var(--mint)}
+.vrow{align-items:flex-start}
+.seg button{padding:6px 10px}
 body.easy,body.easy h1,body.easy h2,body.easy h3,body.easy button,body.easy input{font-family:'Lexend','Nunito',system-ui,sans-serif}
 .hero h1{font-size:1.5rem;line-height:1.15;margin:0 0 4px}
 .hero p{margin:0;opacity:.92}
@@ -73,7 +75,7 @@ body.easy,body.easy h1,body.easy h2,body.easy h3,body.easy button,body.easy inpu
 .tag{display:inline-block;background:var(--mint);color:#fff;border-radius:99px;padding:2px 12px;font-weight:700;font-size:.85rem}
 .res h2{margin:6px 0 8px;font-size:1.5rem}
 .res p{font-size:var(--fs);margin:0}
-.flash{width:100%;text-align:left;border:2px solid var(--line);background:var(--bg);border-radius:20px;padding:var(--pad) 18px;margin-top:10px;font-size:var(--fs)}
+.flash{width:100%;text-align:start;border:2px solid var(--line);background:var(--bg);border-radius:20px;padding:var(--pad) 18px;margin-top:10px;font-size:var(--fs)}
 .flash b{display:block}
 .flash span{display:none;margin-top:6px;color:var(--violet);font-weight:700}
 .flash.open span{display:block}
@@ -82,7 +84,7 @@ body.easy,body.easy h1,body.easy h2,body.easy h3,body.easy button,body.easy inpu
 .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--mint),var(--sun));transition:width .4s}
 .q{font:800 calc(var(--fs)*1.3)/1.2 'Baloo 2',sans-serif;margin:14px 0}
 .ans{display:grid;gap:10px}
-.ans button{text-align:left;border:3px solid var(--line);background:var(--card);border-radius:20px;padding:var(--pad) 16px;font-size:var(--fs);font-weight:700;box-shadow:0 4px 0 var(--line)}
+.ans button{text-align:start;border:3px solid var(--line);background:var(--card);border-radius:20px;padding:var(--pad) 16px;font-size:var(--fs);font-weight:700;box-shadow:0 4px 0 var(--line)}
 .ans button.ok{background:var(--mint);border-color:var(--mint);color:#fff}
 .ans button.no{border-color:var(--coral);animation:shake .35s}
 @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
@@ -101,7 +103,7 @@ body.easy,body.easy h1,body.easy h2,body.easy h3,body.easy button,body.easy inpu
 .chips button[data-sub]{color:#fff;border-color:transparent}
 .chips button[data-sub][aria-pressed="true"]{color:#fff;box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--ink)}
 .sess{display:flex;gap:8px;margin-top:10px}
-.sess .open{flex:1;text-align:left;border:2px solid var(--line);background:var(--bg);border-radius:18px;padding:10px 14px;font-size:1rem}
+.sess .open{flex:1;text-align:start;border:2px solid var(--line);background:var(--bg);border-radius:18px;padding:10px 14px;font-size:1rem}
 .sess .open b{display:block;font-family:'Nunito',sans-serif}
 .sess small{color:var(--soft)}
 .sess .x{border:2px solid var(--line);background:var(--card);border-radius:14px;width:44px}
@@ -118,7 +120,7 @@ body.easy,body.easy h1,body.easy h2,body.easy h3,body.easy button,body.easy inpu
 #auth,#pin,#qr,#stop,#crop,#shop,#set{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:20px;overflow:auto}
 .abox{max-width:380px;width:100%;text-align:center}
 .abox h2{font-size:1.7rem;margin:4px 0}
-.abox label{display:block;text-align:left;font-weight:700;margin-top:10px}
+.abox label{display:block;text-align:start;font-weight:700;margin-top:10px}
 .abox input{width:100%;margin-top:4px;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:12px;font:inherit}
 .abox .go,.abox .again{display:block;width:100%;margin-top:12px}
 #amsg{min-height:1.5em;margin-top:10px}
@@ -148,7 +150,7 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 <main>
 <div class="top">
 <div class="brand">✨ Studia Kids</div>
-<div class="tbtn"><button type="button" class="pf hide" id="parBtn">📊 Parent</button><button type="button" class="pf hide" id="logout">Connexion</button></div>
+<div class="tbtn"><div class="seg" id="langseg" role="group" aria-label="Langue / Language"><button type="button" data-l="fr" aria-pressed="true">FR</button><button type="button" data-l="en" aria-pressed="false">EN</button></div><button type="button" class="pf hide" id="parBtn">📊 Parent</button><button type="button" class="pf hide" id="logout">Connexion</button></div>
 </div>
 <div class="profiles" id="profiles"></div>
 
@@ -174,13 +176,13 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 <div class="card hide" id="p2"></div>
 </section>
 
-<section class="card hide" id="dash" aria-label="Espace parent"></section>
+<section class="card hide" id="dash" dir="ltr" aria-label="Espace parent"></section>
 
 <section class="card" id="hist"><h2 data-t>📚 Mes séances</h2><div class="chips" id="chips"></div><div id="list"></div></section>
 
 <footer data-t>Studia utilise l'IA et peut se tromper : vérifie avec ton cahier. Ne mets aucune donnée personnelle sur tes photos.</footer>
 </main>
-<div id="auth" class="hide" role="dialog" aria-modal="true" aria-labelledby="atitle"><div class="abox">
+<div id="auth" class="hide" dir="ltr" role="dialog" aria-modal="true" aria-labelledby="atitle"><div class="abox">
 <div style="font-size:2.6rem">🦊</div><h2 id="atitle">Espace parent</h2>
 <p class="mute">Le parent se connecte. Les enfants retrouvent ensuite leurs séances sur tous leurs appareils.</p>
 <button class="go" id="agoogle" type="button" style="background:#fff;color:#241F4A;border:2px solid var(--line)">🔐 Continuer avec Google</button>
@@ -198,7 +200,7 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 <div id="sprof" style="margin:10px 0"></div>
 <button class="again" id="sext" type="button" data-t>Un parent peut ajouter 15 minutes</button>
 </div></div>
-<div id="pin" class="hide" role="dialog" aria-modal="true" aria-labelledby="ptitle"><div class="abox">
+<div id="pin" class="hide" dir="ltr" role="dialog" aria-modal="true" aria-labelledby="ptitle"><div class="abox">
 <div style="font-size:2.4rem">🔒</div><h2 id="ptitle">Code parent</h2><p class="mute" id="pdesc"></p>
 <label>Code à 4 chiffres<input id="pin1" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></label>
 <label id="p2l">Confirme le code<input id="pin2" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></label>
@@ -206,7 +208,7 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 <button class="go" id="pok" type="button">Valider</button>
 <button class="again" id="pcancel" type="button">Annuler</button>
 </div></div>
-<div id="qr" class="hide" role="dialog" aria-modal="true" aria-labelledby="qtitle"><div class="abox">
+<div id="qr" class="hide" dir="ltr" role="dialog" aria-modal="true" aria-labelledby="qtitle"><div class="abox">
 <h2 id="qtitle">Partager Studia Kids</h2>
 <p class="mute">Scanne ce code avec un téléphone pour ouvrir Studia.</p>
 <div id="qrimg" style="display:inline-block;margin:6px 0"></div>
@@ -236,8 +238,12 @@ function show(id,on){$(id).classList.toggle("hide",!on)}
 function fail(m){show("load",false);show("err",true);$("err").textContent=m}
 
 // ---------- Langue : le français sert de clé, l'anglais est la traduction ----------
-var lang="fr";
-var EN={
+var LANGS=[{c:"fr",l:"FR",dir:"ltr",bcp:"fr-CA",date:"fr-CA",sample:"Bonjour ! Je suis ton assistant de révision."},
+{c:"en",l:"EN",dir:"ltr",bcp:"en-US",date:"en-CA",sample:"Hello! I'm your study helper."}];
+function LG(c){return LANGS.filter(function(x){return x.c===c})[0]||LANGS[0]}
+function devLang(){try{var s=localStorage.getItem("studia:lang");if(s&&LG(s).c===s)return s}catch(e){}var n=(navigator.language||"fr").slice(0,2);return LG(n).c===n?n:"fr"}
+var lang=devLang();
+var TR={en:{
 "Prends ta leçon en photo. Je prépare ta fiche et ton quiz.":"Take a photo of your lesson. I'll make your summary, flashcards and quiz.",
 "📸 Photographier ma leçon":"📸 Take a photo of my lesson","📝 Résumé":"📝 Summary","🃏 Fiches":"🃏 Flashcards","🎯 Quiz":"🎯 Quiz","📚 Mes séances":"📚 My sessions",
 "Studia utilise l'IA et peut se tromper : vérifie avec ton cahier. Ne mets aucune donnée personnelle sur tes photos.":"Studia uses AI and can make mistakes: check with your notebook. Don't put any personal information on your photos.",
@@ -264,15 +270,24 @@ var EN={
 "Réglages":"Settings","Sons":"Sounds","Police facile à lire":"Easy-to-read font","Taille du texte":"Text size","Langue":"Language","oui":"on","non":"off",
 "Installer l'application":"Install the app","Sur iPhone : touche Partager, puis « Sur l'écran d'accueil ».":"On iPhone: tap Share, then “Add to Home Screen”.",
 "C'est fini pour aujourd'hui !":"That's all for today!","Tu as révisé":"You studied for","aujourd'hui. À demain pour de nouvelles étoiles ⭐":"today. See you tomorrow for new stars ⭐",
-"Un parent peut ajouter 15 minutes":"A parent can add 15 minutes","Plus que":"Only","min pour aujourd'hui ⏰":"min left today ⏰"
-};
-function t(s){return lang==="en"&&EN[s]?EN[s]:s}
+"Un parent peut ajouter 15 minutes":"A parent can add 15 minutes","Plus que":"Only","min pour aujourd'hui ⏰":"min left today ⏰",
+"Voix":"Voice",
+"Aucune voix trouvée sur cet appareil.":"No voice found on this device.",
+"Ton appareil propose peu de voix pour cette langue. Tu peux en ajouter dans les réglages de synthèse vocale de ton téléphone.":"Your device has few voices for this language. You can add more in your phone's text-to-speech settings."
+}};
+function t(s){var d=TR[lang];return d&&d[s]?d[s]:s}
+function applyDir(){var L=LG(lang);document.documentElement.lang=lang;document.documentElement.dir=L.dir;[].forEach.call(document.querySelectorAll("#langseg button"),function(b){b.setAttribute("aria-pressed",b.dataset.l===lang)})}
+function setLang(l){try{localStorage.setItem("studia:lang",l)}catch(e){}
+if(!cur){lang=l;applyDir();applyLang();return}
+pref().lang=l;save();applyPrefs();renderProfiles();renderStats();renderHist();
+if(!$("set").classList.contains("hide"))renderSet();if(!$("shop").classList.contains("hide"))renderShop();if(qEnd&&R)endScreen()}
+[].forEach.call(document.querySelectorAll("#langseg button"),function(b){b.onclick=function(){setLang(b.dataset.l)}});
 function applyLang(){[].forEach.call(document.querySelectorAll("[data-t]"),function(el){if(el.dataset.fr===undefined)el.dataset.fr=el.textContent;el.textContent=t(el.dataset.fr)})}
 
 // ---------- Préférences de chaque enfant (sons, police, taille, langue) et boutique ----------
-function ex(){var e=cur.extra=cur.extra||{},p=e.prefs=e.prefs||{};e.coins=e.coins||0;e.owned=e.owned||[];e.equip=e.equip||{};if(p.sound===undefined)p.sound=true;p.size=p.size||0;p.lang=p.lang||"fr";p.easy=!!p.easy;return e}
+function ex(){var e=cur.extra=cur.extra||{},p=e.prefs=e.prefs||{};e.coins=e.coins||0;e.owned=e.owned||[];e.equip=e.equip||{};if(p.sound===undefined)p.sound=true;p.size=p.size||0;p.lang=(LG(p.lang).c===p.lang)?p.lang:devLang();p.voice=p.voice||{};p.easy=!!p.easy;return e}
 function pref(){return ex().prefs}
-function applyPrefs(){if(!cur)return;var p=pref();lang=p.lang;document.documentElement.lang=lang;
+function applyPrefs(){if(!cur)return;var p=pref();lang=LG(p.lang).c;applyDir();
 document.body.classList.toggle("kids",APP==="kids");document.body.classList.toggle("easy",p.easy);
 document.documentElement.style.fontSize=["100%","115%","130%"][p.size]||"100%";applyLang();renderFox()}
 function setMode(){mode=APP;applyPrefs();if(!ex().seen)ex().seen=seenNow()}
@@ -286,10 +301,19 @@ S.forEach(function(s){var o=AC.createOscillator(),g=AC.createGain();o.type="sine
 // ---------- Lecture à voix haute (voix du navigateur) ----------
 var spk=null;
 function spkOff(){if(window.speechSynthesis)speechSynthesis.cancel();if(spk){spk.classList.remove("on");if(spk.dataset.lbl!==undefined)spk.textContent=spk.dataset.lbl;spk=null}}
+var NOVELTY=/^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Deranged|Good News|Hysterical|Jester|Organ|Pipe Organ|Superstar|Trinoides|Whisper|Wobble|Zarvox|Fred|Junior|Ralph|Kathy)\b/i;
+function vid(v){return v.voiceURI||v.name}
+function voicesFor(l){if(!window.speechSynthesis)return[];var seen={};
+return speechSynthesis.getVoices().filter(function(v){return v.lang&&v.lang.toLowerCase().replace("_","-").indexOf(l)===0&&!NOVELTY.test(v.name)})
+.map(function(v){return{v:v,s:(/Natural|Neural|Online/i.test(v.name)?3:0)+(/Google|Premium|Enhanced|Siri/i.test(v.name)?2:0)+(v.localService?0:1)}})
+.sort(function(a,b){return b.s-a.s||a.v.name.localeCompare(b.v.name)}).map(function(x){return x.v})
+.filter(function(v){if(seen[v.name])return false;seen[v.name]=1;return true}).slice(0,4)}
+function vlabel(v){return v.name.replace(/^Microsoft\s+/i,"").replace(/\s+Online\s*\(Natural\)/i," ✨").replace(/\s*[-–]\s*.*$/,"").replace(/\s*\(.*\)\s*$/,"")+" · "+v.lang.replace("_","-")}
+function pickVoice(l){var L=voicesFor(l),want=(pref().voice||{})[l];return L.filter(function(v){return vid(v)===want})[0]||L[0]}
+function utter(text){var u=new SpeechSynthesisUtterance(text),v=pickVoice(lang);u.lang=v?v.lang:LG(lang).bcp;u.rate=.9;if(v)u.voice=v;return u}
+if(window.speechSynthesis)speechSynthesis.onvoiceschanged=function(){if($("set")&&!$("set").classList.contains("hide"))renderSet()};
 function speak(text,btn){if(!window.speechSynthesis)return;var same=spk===btn;spkOff();if(same)return;
-var u=new SpeechSynthesisUtterance(text);u.lang=lang==="en"?"en-US":"fr-CA";u.rate=.9;
-var v=speechSynthesis.getVoices().filter(function(x){return x.lang.toLowerCase().indexOf(lang==="en"?"en":"fr")===0})[0];if(v)u.voice=v;
-u.onend=u.onerror=function(){if(spk===btn)spkOff()};
+var u=utter(text);u.onend=u.onerror=function(){if(spk===btn)spkOff()};
 spk=btn;btn.classList.add("on");if(btn.dataset.lbl===undefined)btn.dataset.lbl=btn.textContent;if(!btn.classList.contains("mini"))btn.textContent=t("⏹️ Arrêter");speechSynthesis.speak(u)}
 document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest(".spk");if(b)speak(b.dataset.say,b)});
 if(!window.speechSynthesis)document.body.classList.add("nospk");
@@ -323,19 +347,23 @@ save();renderShop();renderStats();checkBadges()}
 
 // ---------- Réglages ----------
 var instEv=null;
+function voiceRow(){var L=voicesFor(lang),c=pickVoice(lang),h='<div class="srow vrow"><span>'+t("Voix")+'</span><div>';
+if(!L.length)h+='<small>'+t("Aucune voix trouvée sur cet appareil.")+'</small>';
+L.forEach(function(v){h+='<button type="button" class="pf" data-v="'+ea(vid(v))+'" aria-pressed="'+!!(c&&vid(v)===vid(c))+'">'+esc(vlabel(v))+'</button>'});
+h+='</div></div>';if(L.length>0&&L.length<3)h+='<p class="mute" style="font-size:.82rem;text-align:start">'+t("Ton appareil propose peu de voix pour cette langue. Tu peux en ajouter dans les réglages de synthèse vocale de ton téléphone.")+'</p>';return h}
 function srow(l,c){return'<div class="srow"><span>'+t(l)+'</span><div>'+c+'</div></div>'}
 function renderSet(){var p=pref(),h='<h2>'+t("Réglages")+'</h2>';
 h+=srow("Sons",'<button type="button" class="pf" id="sSound" aria-pressed="'+p.sound+'">'+(p.sound?"🔔 "+t("oui"):"🔕 "+t("non"))+'</button>');
 h+=srow("Police facile à lire",'<button type="button" class="pf" id="sEasy" aria-pressed="'+p.easy+'">'+(p.easy?t("oui"):t("non"))+'</button>');
 h+=srow("Taille du texte",["A","A+","A++"].map(function(l,i){return'<button type="button" class="pf" data-sz="'+i+'" aria-pressed="'+(p.size===i)+'">'+l+'</button>'}).join(""));
-h+=srow("Langue",["fr","en"].map(function(l){return'<button type="button" class="pf" data-lg="'+l+'" aria-pressed="'+(p.lang===l)+'">'+l.toUpperCase()+'</button>'}).join(""));
+h+=voiceRow();
 h+='<button type="button" class="go'+(instEv?"":" hide")+'" id="inst" style="margin-top:14px">📲 '+t("Installer l'application")+'</button><p class="mute" style="font-size:.85rem">'+t("Sur iPhone : touche Partager, puis « Sur l'écran d'accueil ».")+'</p><button class="again" id="sclose" type="button">'+t("Fermer")+'</button>';
 $("setbox").innerHTML=h;
 function chg(fn){fn(pref());save();applyPrefs();renderSet();renderProfiles();renderStats();renderHist();if(qEnd&&R)endScreen()}
 $("sSound").onclick=function(){chg(function(q){q.sound=!q.sound});sfx("click")};
 $("sEasy").onclick=function(){chg(function(q){q.easy=!q.easy})};
 [].forEach.call($("setbox").querySelectorAll("[data-sz]"),function(b){b.onclick=function(){chg(function(q){q.size=Number(b.dataset.sz)})}});
-[].forEach.call($("setbox").querySelectorAll("[data-lg]"),function(b){b.onclick=function(){chg(function(q){q.lang=b.dataset.lg})}});
+[].forEach.call($("setbox").querySelectorAll("[data-v]"),function(b){b.onclick=function(){pref().voice[lang]=b.dataset.v;save();renderSet();if(window.speechSynthesis){speechSynthesis.cancel();speechSynthesis.speak(utter(LG(lang).sample))}}});
 $("inst").onclick=function(){if(instEv){instEv.prompt();instEv=null;$("inst").classList.add("hide")}};
 $("sclose").onclick=function(){$("set").classList.add("hide")}}
 
@@ -465,7 +493,7 @@ function renderHist(){var ss=db.sessions.filter(function(s){return s.pid===cur.i
 ss.forEach(function(s){if(subj.indexOf(s.matiere)<0)subj.push(s.matiere)});if(subj.indexOf(filt)<0)filt="Toutes";
 $("chips").innerHTML=subj.length>2?subj.map(function(m){return'<button type="button" data-f="'+ea(m)+'" aria-pressed="'+(m===filt)+'"'+(m==="Toutes"?"":' data-sub="1" style="background:'+col(m)+'"')+'>'+esc(t(m))+'</button>'}).join(""):"";
 var shown=ss.filter(function(s){return filt==="Toutes"||s.matiere===filt});
-$("list").innerHTML=shown.length?shown.map(function(s){var dt=new Date(s.date).toLocaleDateString(lang==="en"?"en-CA":"fr-CA",{day:"numeric",month:"short"});
+$("list").innerHTML=shown.length?shown.map(function(s){var dt=new Date(s.date).toLocaleDateString(LG(lang).date,{day:"numeric",month:"short"});
 return'<div class="sess"><button type="button" class="open" data-o="'+s.id+'"><span class="tag" style="background:'+col(s.matiere)+'">'+esc(t(s.matiere))+'</span><b>'+esc(s.titre)+'</b><small>'+dt+(s.score!=null?" · ⭐ "+s.score+"/"+s.res.quiz.length:"")+'</small></button><button type="button" class="x" data-x="'+s.id+'" aria-label="Supprimer cette séance">🗑️</button></div>'}).join(""):'<p class="mute">'+t("Rien ici pour l'instant. Prends ta première leçon en photo et elle apparaîtra ici ! 🦊")+'</p>';
 [].forEach.call($("chips").querySelectorAll("[data-f]"),function(b){b.onclick=function(){filt=b.dataset.f;renderHist()}});
 [].forEach.call($("list").querySelectorAll("[data-o]"),function(b){b.onclick=function(){var s=db.sessions.filter(function(x){return x.id===b.dataset.o})[0];if(s){cs=s;R=s.res;show("err",false);render();$("out").scrollIntoView()}}});
@@ -619,6 +647,7 @@ P.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.vy+=.35;p.r+=.2;p.l--;cx.save();cx.t
 if(P.length)requestAnimationFrame(tick);else run=false}
 if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){})});
 addEventListener("beforeinstallprompt",function(e){e.preventDefault();instEv=e;if($("inst"))$("inst").classList.remove("hide")});
+applyDir();applyLang();
 boot();
 </script>
 </body>
