@@ -134,17 +134,58 @@ body.easy,body.easy h1,body.easy h2,body.easy h3,body.easy button,body.easy inpu
 .agb b{display:block;font-family:'Baloo 2',sans-serif;font-size:1.1rem}
 .agb span{display:block;font-weight:600;color:var(--soft)}
 .bad{color:var(--coral);font-weight:700}
+.chk{width:44px;height:44px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink);display:grid;place-items:center;flex:none;cursor:pointer;padding:0;font-size:1.3rem;font-weight:800}
+.chk.on{background:#0F6B54;border-color:#0F6B54;color:#fff}
+.lk{border:0;background:none;color:var(--violet);font-weight:800;text-decoration:underline;padding:0;font:inherit;cursor:pointer}
+.agh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.agh h2{margin:0;font-size:1.6rem}
+.agnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0 8px}
+.agnav>div{text-align:center}
+.agnav b{font-family:'Baloo 2',sans-serif;font-size:1.2rem;display:block}
+.agnav small{color:var(--soft);font-weight:700}
+.agsum{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:12px 14px;margin-top:10px;text-align:start}
+.agsum.late{border-color:#8F1D1D}
+.agbar2{height:12px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:8px}
+.agbar2 i{display:block;height:100%;background:#0F6B54}
+#agenda h3,#dash h4{text-align:start;margin:16px 0 6px;font-size:1.1rem;font-family:'Baloo 2',sans-serif}
+.sgh{margin-top:12px;text-align:start}
+.agrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);text-align:start}
+.agrow .tt{flex:1;min-width:0;font-weight:800;overflow-wrap:anywhere}
+.agrow small{display:block;color:var(--soft);font-weight:700}
+.agrow.dn .tt{opacity:.65}
+.agrow .x,.exc .x{border:0;background:none;font-size:1.3rem;padding:6px;cursor:pointer;min-width:44px;min-height:44px}
+.stp{display:inline-flex;align-items:center;border-radius:99px;padding:2px 10px;font-weight:800;font-size:.8rem;white-space:nowrap}
+.stp.ok{background:rgba(39,185,148,.22);color:var(--ink)}
+.stp.todo{background:rgba(108,76,241,.18);color:var(--ink)}
+.stp.soon{background:rgba(255,201,60,.4);color:var(--ink)}
+.stp.late{background:#8F1D1D;color:#fff}
+.exc{border:2px solid var(--line);background:var(--card);border-radius:18px;padding:12px 14px;margin-top:8px;text-align:start}
+.exc.soon{border-color:#E6B800;background:rgba(255,201,60,.14)}
+.exh{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ext{font:800 1.15rem 'Baloo 2',sans-serif;margin-top:6px}
+.exd{font-weight:800}
+.exc .prep{color:var(--soft);font-weight:700;font-size:.9rem;margin-top:4px}
+.wk{margin:10px 0;text-align:start}
+.wkh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:8px 0}
+.kpi{border:2px solid var(--line);border-radius:14px;padding:8px 10px;background:var(--card)}
+.kpi small{display:block;color:var(--soft);font-weight:700}
+.kpi b{font:800 1.3rem 'Baloo 2',sans-serif}
+.kpi.late{border-color:#8F1D1D}
+.kpi.late b{color:var(--coral)}
+.kpi.soon{border-color:#E6B800;background:rgba(255,201,60,.14)}
+.strip{overflow-x:auto}
+.stripg{min-width:560px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.day{border:2px solid var(--line);border-radius:12px;padding:6px;background:var(--card);min-height:84px;display:flex;flex-direction:column;gap:4px;font-size:.78rem}
+.day.ex{border-color:#E6B800;background:rgba(255,201,60,.14)}
+.day.today{box-shadow:0 0 0 2px var(--violet)}
+.day .dn{font:800 1.1rem 'Baloo 2',sans-serif}
+.dl{display:flex;gap:4px;align-items:center;font-weight:700;overflow-wrap:anywhere}
+.sq{display:inline-block;width:9px;height:9px;border-radius:3px;flex:none}
+.dm{display:inline-block;width:9px;height:9px;transform:rotate(45deg);background:var(--ink);flex:none}
+.cols2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:10px}
 #agenda h3{text-align:start;margin:14px 0 6px;font-size:1.05rem}
 .agform select,.agform input{width:100%;margin-top:8px;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:12px;font:inherit}
-.task{display:flex;align-items:flex-start;gap:8px;text-align:start;background:var(--card);border:2px solid var(--line);border-radius:18px;padding:8px 10px;margin-top:8px}
-.task.late{border-color:var(--coral)}
-.task.done .tb b{text-decoration:line-through;opacity:.6}
-.task .tk,.task .x{border:0;background:none;font-size:1.5rem;line-height:1;padding:6px;cursor:pointer}
-.task .tb{flex:1;min-width:0}
-.task .tb b{display:block;word-break:break-word}
-.task .tb>span{display:block;font-size:.85rem;color:var(--soft)}
-.task .prep{margin-top:4px}
-.watch{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 12px;margin:10px 0;display:grid;gap:4px}
 .tgcard{margin-top:12px;padding:12px 14px;border-radius:18px;background:var(--bg);border:2px solid var(--line)}
 .pw{position:relative}
 .pw input{padding-right:54px}
@@ -300,7 +341,10 @@ var TR={en:{
 "Aujourd'hui":"Today","Demain":"Tomorrow","Dans":"In","jours":"days","jour":"day","En retard de":"Late by","leçons":"lessons","leçon":"lesson","quiz moyen":"average quiz",
 "Aucune leçon de cette matière pour l'instant.":"No lesson in this subject yet.","📚 Réviser":"📚 Study","Marquer comme fait":"Mark as done","Examen passé":"Exam taken",
 "Supprimer":"Delete","Supprimer cet élément ?":"Delete this item?","Devoir fait !":"Homework done!","devoir en retard":"homework item late","devoirs en retard":"homework items late",
-"à faire aujourd'hui":"to do today","Examen":"Exam","Rien de prévu. Profite ! 🎉":"Nothing planned. Enjoy! 🎉","Ton agenda est vide. Ajoute un devoir ou un examen.":"Your planner is empty. Add homework or an exam."
+"à faire aujourd'hui":"to do today","Examen":"Exam","Rien de prévu. Profite ! 🎉":"Nothing planned. Enjoy! 🎉","Ton agenda est vide. Ajoute un devoir ou un examen.":"Your planner is empty. Add homework or an exam.",
+"Agenda":"Planner","Semaine précédente":"Previous week","Semaine suivante":"Next week","Semaine":"Week","Mois · bientôt":"Month · soon",
+"Aucun devoir cette semaine.":"No homework this week.","À rattraper":"To catch up","Examens de la semaine":"Exams this week","Aucun examen cette semaine.":"No exam this week.",
+"Prochain examen":"Next exam","Devoirs de la semaine":"Homework this week","Fait":"Done","À faire":"To do","Titre":"Title","Ex. : Devoir 1, exercice 3, page 42":"E.g. Homework 1, exercise 3, page 42","Ex. : Les fractions":"E.g. Fractions"
 }};
 function t(s){var d=TR[lang];return d&&d[s]?d[s]:s}
 function applyDir(){var L=LG(lang);document.documentElement.lang=lang;document.documentElement.dir=L.dir;[].forEach.call(document.querySelectorAll("#langseg button"),function(b){b.setAttribute("aria-pressed",b.dataset.l===lang)})}
@@ -456,7 +500,7 @@ else{qs.tries++;sfx("no");b.classList.add("no");setTimeout(function(){b.classLis
 
 // ---------- Profils et séances (sauvegardés sur cet appareil) ----------
 var KEY="studia:v1",db={profiles:[],active:null,sessions:[]},cur=null,cs=null,filt="Toutes",AV=["🦊","🐼","🦁","🐸","🐙","🦄"];
-var COL={"Maths":"#3DA5FF","Français":"#FF6B6B","Sciences":"#27B994","Histoire":"#9B6BFF","Anglais":"#E8920C"};
+var COL={"Maths":"#1F6FD1","Français":"#C93C3C","Sciences":"#167A62","Histoire":"#6B3FD1","Anglais":"#A85A00","Autre":"#5A5683"};
 function col(m){return COL[m]||"#6B6794"}
 function uid(){if(window.crypto&&crypto.randomUUID)return crypto.randomUUID();return"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16)})}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}sched()}
@@ -614,8 +658,8 @@ $("aforgot").onclick=async function(){var e=$("aem").value.trim(),msg=$("amsg");
 if(!e){msg.textContent="Entre d'abord ton courriel dans le champ ci-dessus.";return}
 msg.textContent="Un instant…";var r=await sb.auth.resetPasswordForEmail(e,{redirectTo:location.origin});
 msg.textContent=r.error?fr(r.error.message):"Si un compte existe avec ce courriel, un lien de réinitialisation vient d'être envoyé."};
-// ---------- Agenda : devoirs et examens ----------
-var SUBJ=["Maths","Français","Sciences","Histoire","Anglais","Autre"],agKind="devoir",noTasks=false;
+// ---------- Agenda : devoirs et examens (vue semaine) ----------
+var SUBJ=["Maths","Français","Sciences","Histoire","Anglais","Autre"],agKind="devoir",noTasks=false,agOff=0,agPid=null,agParent=false;
 function dnum(d){return Math.round((new Date(d+"T00:00:00")-new Date(day()+"T00:00:00"))/864e5)}
 function byDue(a,b){return a.due<b.due?-1:a.due>b.due?1:a.created-b.created}
 function relIn(d,tr){var n=dnum(d);return n===0?tr("Aujourd'hui"):n===1?tr("Demain"):n>1?tr("Dans")+" "+n+" "+tr("jours"):tr("En retard de")+" "+(-n)+" "+tr(n<-1?"jours":"jour")}
@@ -625,61 +669,106 @@ function prepInfo(pid,sub){var ss=db.sessions.filter(function(s){return s.pid===
 return{n:ss.length,avg:sc.length?Math.round(sc.reduce(function(a,s){return a+s.score/s.res.quiz.length},0)/sc.length*100):null}}
 function prepText(pid,sub,tr){var p=prepInfo(pid,sub);return p.n?p.n+" "+tr(p.n>1?"leçons":"leçon")+(p.avg==null?"":" · "+tr("quiz moyen")+" "+p.avg+" %"):tr("Aucune leçon de cette matière pour l'instant.")}
 function tasksOf(T){return(T&&!T.error&&T.data?T.data:[]).map(function(x){return{id:x.id,pid:x.profile_id,kind:x.kind,title:x.title,subject:x.subject,due:String(x.due||"").slice(0,10),notes:x.notes||"",done:x.done_at?Date.parse(x.done_at):null,by:x.added_by||"enfant",rw:!!x.rw,created:Date.parse(x.created_at)||Date.now()}})}
-function taskRow(x){var n=dnum(x.due),late=!x.done&&x.kind==="devoir"&&n<0;
-return'<div class="task'+(x.done?" done":"")+(late?" late":"")+'"><button type="button" class="tk" data-tk="'+x.id+'" aria-pressed="'+(!!x.done)+'" aria-label="'+ea(t(x.kind==="devoir"?"Marquer comme fait":"Examen passé"))+'">'+(x.done?"✅":"⬜")+'</button><div class="tb"><b>'+esc(x.title)+'</b><span><span class="tag" style="background:'+col(x.subject)+'">'+esc(t(x.subject))+'</span> '+(x.kind==="examen"?"🎯 ":"")+esc(rel(x.due))+(x.by==="parent"?" · 👨‍👩":"")+'</span>'
-+(x.kind==="examen"&&!x.done?'<span class="prep">'+esc(prepText(cur.id,x.subject,t))+' <button type="button" class="pf" data-rv="'+ea(x.subject)+'">'+t("📚 Réviser")+'</button></span>':"")
-+'</div><button type="button" class="x" data-td="'+x.id+'" aria-label="'+ea(t("Supprimer"))+'">🗑️</button></div>'}
-function agSection(title,arr){return arr.length?'<h3>'+title+'</h3>'+arr.map(taskRow).join(""):""}
-function renderAgList(){var all=db.tasks.filter(function(x){return x.pid===cur.id}),
-open=all.filter(function(x){return!x.done&&!(x.kind==="examen"&&dnum(x.due)<0)}).sort(byDue),
-dev=open.filter(function(x){return x.kind==="devoir"}),exm=open.filter(function(x){return x.kind==="examen"}),
-fait=all.filter(function(x){return x.done}).sort(function(a,b){return b.done-a.done}).slice(0,5),
-h=agSection("🎯 "+t("Examens à venir"),exm)+agSection("⚠️ "+t("En retard"),dev.filter(function(x){return dnum(x.due)<0}))
-+agSection("📌 "+t("Aujourd'hui"),dev.filter(function(x){return dnum(x.due)===0}))
-+agSection("📆 "+t("Cette semaine"),dev.filter(function(x){var n=dnum(x.due);return n>=1&&n<=7}))
-+agSection("🗓️ "+t("Plus tard"),dev.filter(function(x){return dnum(x.due)>7}))+agSection("✅ "+t("Faits récemment"),fait);
-$("aglist").innerHTML=h||'<p class="mute">'+t("Rien de prévu. Profite ! 🎉")+'</p>';renderAgBar()}
-function renderAgBar(){if(!cur||!$("agbar"))return;var mine=db.tasks.filter(function(x){return x.pid===cur.id}),open=mine.filter(function(x){return!x.done}),
-late=open.filter(function(x){return x.kind==="devoir"&&dnum(x.due)<0}).length,today=open.filter(function(x){return x.kind==="devoir"&&dnum(x.due)===0}).length,
-nx=open.filter(function(x){return x.kind==="examen"&&dnum(x.due)>=0}).sort(byDue)[0],L=[];
-if(late)L.push('<span class="bad">⚠️ '+late+" "+t(late>1?"devoirs en retard":"devoir en retard")+'</span>');
-if(today)L.push("📌 "+today+" "+t("à faire aujourd'hui"));
-if(nx)L.push("🎯 "+t("Examen")+" "+esc(t(nx.subject))+" · "+esc(rel(nx.due)));
-$("agbar").innerHTML='<button type="button" class="agb" id="agOpen"><b>'+t("📅 Mon agenda")+'</b><span>'+(L.length?L.join(" · "):(mine.length?t("Rien de prévu. Profite ! 🎉"):t("Ton agenda est vide. Ajoute un devoir ou un examen.")))+'</span></button>';
-$("agOpen").onclick=openAgenda}
-function openAgenda(){var tm=new Date();tm.setDate(tm.getDate()+1);
-$("agbox").innerHTML='<h2>'+t("📅 Mon agenda")+'</h2><div class="agform"><div class="crow">'+[["devoir","📝 Devoir"],["examen","🎯 Examen"]].map(function(k){return'<button type="button" class="pf" data-k="'+k[0]+'" aria-pressed="'+(agKind===k[0])+'">'+t(k[1])+'</button>'}).join("")+'</div>'
-+'<select id="agS" aria-label="'+ea(t("Matière"))+'">'+SUBJ.map(function(s){return'<option value="'+s+'">'+esc(t(s))+'</option>'}).join("")+'</select>'
-+'<input id="agT" type="text" maxlength="80" placeholder="'+ea(t("Ex. : exercices 1 à 5, page 42"))+'">'
+// La semaine va du lundi au dimanche. off = 0 : cette semaine, -1 : la précédente, 1 : la suivante.
+function weekOf(off){var m=new Date();m.setHours(0,0,0,0);m.setDate(m.getDate()-((m.getDay()+6)%7)+7*off);var s=new Date(m);s.setDate(s.getDate()+6);return{m:m,s:s,mon:day(m),sun:day(s)}}
+function weekOffOf(d){var a=weekOf(0).m,b=new Date(d+"T00:00:00");b.setDate(b.getDate()-((b.getDay()+6)%7));return Math.round((b-a)/6048e5)}
+function agData(pid,off){var w=weekOf(off),td=day(),all=db.tasks.filter(function(x){return x.pid===pid}),inW=all.filter(function(x){return x.due>=w.mon&&x.due<=w.sun}).sort(byDue),
+dev=inW.filter(function(x){return x.kind==="devoir"}),exm=inW.filter(function(x){return x.kind==="examen"}),lim=w.mon<td?w.mon:td;
+return{w:w,dev:dev,exm:exm,done:dev.filter(function(x){return x.done}).length,
+over:all.filter(function(x){return x.kind==="devoir"&&!x.done&&x.due<lim}).sort(byDue),
+late:all.filter(function(x){return x.kind==="devoir"&&!x.done&&x.due<td}).length,
+nextEx:all.filter(function(x){return x.kind==="examen"&&!x.done&&x.due>=td}).sort(byDue)[0]}}
+function agLoc(){return agParent?"fr-CA":(lang==="en"?"en-CA":"fr-CA")}
+function rangeLabel(w,en){var loc=en?"en-CA":"fr-CA",a=w.m,b=w.s,sh=function(d){return d.toLocaleDateString(loc,{day:"numeric",month:"short"})};
+if(a.getMonth()!==b.getMonth())return sh(a)+" – "+sh(b);
+return en?b.toLocaleDateString(loc,{month:"long"})+" "+a.getDate()+" – "+b.getDate():a.getDate()+" – "+b.getDate()+" "+b.toLocaleDateString(loc,{month:"long"})}
+function sumText(d,n,en,wk){return en?d+" of "+n+" homework done"+(wk?" this week":""):d+" devoir"+(d>1?"s":"")+" fait"+(d>1?"s":"")+" sur "+n+(wk?" cette semaine":"")}
+function dstr(x,loc){return new Date(x.due+"T00:00:00").toLocaleDateString(loc||agLoc(),{weekday:"short",day:"numeric"})}
+function pill(x,tr){var n=dnum(x.due);
+if(x.kind==="examen"){var past=x.done||n<0;return'<span class="stp '+(past?"ok":n<=3?"soon":"todo")+'">'+esc(past?tr("Examen passé"):relIn(x.due,tr))+'</span>'}
+var s=x.done?"ok":n<0?"late":"todo";return'<span class="stp '+s+'">'+esc(s==="ok"?tr("Fait"):s==="late"?relIn(x.due,tr):tr("À faire"))+'</span>'}
+function devRow(x,tr,o){o=o||{};var ck=o.ro?"":'<button type="button" class="chk'+(x.done?" on":"")+'" data-tk="'+x.id+'" aria-pressed="'+(!!x.done)+'" aria-label="'+ea(tr(x.done?"Fait":"Marquer comme fait")+" : "+x.title)+'">'+(x.done?"✓":"")+'</button>';
+return'<div class="agrow'+(x.done?" dn":"")+'">'+ck+'<div class="tt">'+(o.subj?'<span class="tag" style="background:'+col(x.subject)+'">'+esc(tr(x.subject))+'</span> ':"")+esc(x.title)+'<small>'+esc(dstr(x))+(x.by==="parent"?" · 👨‍👩":"")+'</small></div>'+pill(x,tr)+(o.ro?"":'<button type="button" class="x" data-td="'+x.id+'" aria-label="'+ea(tr("Supprimer"))+'">🗑️</button>')+'</div>'}
+function examCard(x,tr,o){o=o||{};var n=dnum(x.due),soon=!x.done&&n>=0&&n<=3;
+return'<div class="exc'+(soon?" soon":"")+'"><div class="exh"><span class="tag" style="background:'+col(x.subject)+'">'+esc(tr(x.subject))+'</span>'+pill(x,tr)+'</div><div class="ext">'+esc(x.title)+'</div><div class="exd">'+esc(new Date(x.due+"T00:00:00").toLocaleDateString(agLoc(),{weekday:"long",day:"numeric",month:"long"}))+(x.by==="parent"?" · 👨‍👩":"")+'</div>'
++(x.done?"":'<div class="prep">'+esc(prepText(x.pid,x.subject,tr))+'</div>')
++(o.ro?"":'<div class="crow">'+(x.done?"":'<button type="button" class="pf" data-rv="'+ea(x.subject)+'">'+tr("📚 Réviser")+'</button>')+'<button type="button" class="pf" data-tk="'+x.id+'" aria-pressed="'+(!!x.done)+'">'+(x.done?"✓ ":"")+tr("Examen passé")+'</button><button type="button" class="x" data-td="'+x.id+'" aria-label="'+ea(tr("Supprimer"))+'">🗑️</button></div>')+'</div>'}
+function devGroups(list,tr,o){var h="";SUBJ.forEach(function(s){var L=list.filter(function(x){return x.subject===s});if(L.length)h+='<div class="sgh"><span class="tag" style="background:'+col(s)+'">'+esc(tr(s))+'</span></div>'+L.map(function(x){return devRow(x,tr,o)}).join("")});return h}
+function bar(d,n){return'<div class="agbar2"><i style="width:'+(n?Math.round(d/n*100):0)+'%"></i></div>'}
+
+// Vue de l'enfant (ou du parent qui ouvre l'agenda d'un enfant)
+function agViewHtml(){var D=agData(agPid,agOff),tr=agParent?ident:t,en=!agParent&&lang==="en",n=D.dev.length;
+var h='<div class="agnav"><button type="button" class="chk" data-wk="-1" aria-label="'+ea(tr("Semaine précédente"))+'">‹</button><div><b>'+esc(rangeLabel(D.w,en))+'</b><small>'+(agOff===0?esc(tr("Cette semaine")):'<button type="button" class="lk" data-wk="0">'+esc(tr("Cette semaine"))+'</button>')+'</small></div><button type="button" class="chk" data-wk="1" aria-label="'+ea(tr("Semaine suivante"))+'">›</button></div>'
++'<div class="crow"><button type="button" class="pf" aria-pressed="true">'+tr("Semaine")+'</button><button type="button" class="pf" disabled aria-pressed="false">'+tr("Mois · bientôt")+'</button></div>'
++'<div class="agsum">'+(n?'<b>'+esc(sumText(D.done,n,en))+'</b>'+bar(D.done,n):'<b>'+tr("Aucun devoir cette semaine.")+'</b>')+'</div>';
+if(D.over.length)h+='<div class="agsum late"><div class="exh"><span class="stp late">'+tr("En retard")+'</span><b>'+tr("À rattraper")+'</b></div>'+D.over.map(function(x){return devRow(x,tr,{subj:true})}).join("")+'</div>';
+h+='<h3>'+tr("Examens de la semaine")+'</h3>'+(D.exm.length?D.exm.map(function(x){return examCard(x,tr)}).join(""):'<p class="mute">'+tr("Aucun examen cette semaine.")+(D.nextEx?' '+tr("Prochain examen")+' : '+esc(tr(D.nextEx.subject))+' · '+esc(relIn(D.nextEx.due,tr)):"")+'</p>');
+h+='<h3>'+tr("Devoirs de la semaine")+'</h3>'+(n?devGroups(D.dev,tr):'<p class="mute">'+tr("Aucun devoir cette semaine.")+'</p>');
+return h}
+function renderAgView(){$("agview").innerHTML=agViewHtml();renderAgBar()}
+function autoTitle(pid,sub){var w=(!agParent&&lang==="en")?"Homework":"Devoir",re=/^(Devoir|Homework) (\d+)$/,mx=0;
+db.tasks.forEach(function(x){if(x.pid===pid&&x.kind==="devoir"&&x.subject===sub){var m=re.exec(x.title);if(m)mx=Math.max(mx,Number(m[2]))}});return w+" "+(mx+1)}
+function agSuggest(){var i=$("agT");if(!i)return;var auto=agKind==="devoir"?autoTitle(agPid,$("agS").value):"";
+if(i.value===""||i.dataset.auto===i.value){i.value=auto;i.dataset.auto=auto}
+i.placeholder=(agParent?ident:t)(agKind==="devoir"?"Ex. : Devoir 1, exercice 3, page 42":"Ex. : Les fractions")}
+function agFormHtml(){var tm=new Date(),tr=agParent?ident:t;tm.setDate(tm.getDate()+1);
+return'<div class="agform hide" id="agform"><div class="crow">'+[["devoir","📝 Devoir"],["examen","🎯 Examen"]].map(function(k){return'<button type="button" class="pf" data-k="'+k[0]+'" aria-pressed="'+(agKind===k[0])+'">'+tr(k[1])+'</button>'}).join("")+'</div>'
++'<select id="agS" aria-label="'+ea(tr("Matière"))+'">'+SUBJ.map(function(s){return'<option value="'+s+'">'+esc(tr(s))+'</option>'}).join("")+'</select>'
++'<input id="agT" type="text" maxlength="80" placeholder="'+ea(tr("Ex. : Devoir 1, exercice 3, page 42"))+'" aria-label="'+ea(tr("Titre"))+'">'
 +'<input id="agD" type="date" value="'+day(tm)+'" aria-label="Date">'
-+'<div class="crow"><button type="button" class="go" id="agAdd" style="width:auto;margin:0">'+t("➕ Ajouter")+'</button><button type="button" class="pf" id="agPar">'+t("🔒 Ajouter comme parent")+'</button></div><p id="agMsg" class="mute" role="status"></p></div><div id="aglist"></div><button class="again" id="agclose" type="button">'+t("Fermer")+'</button>';
-$("agenda").classList.remove("hide");renderAgList()}
-function addTask(by){var ti=$("agT").value.trim(),d=$("agD").value,m=$("agMsg");if(!ti||!d){m.textContent=t("Donne un titre et une date.");return}
-var x={id:uid(),pid:cur.id,kind:agKind,title:ti.slice(0,80),subject:$("agS").value,due:d,notes:"",done:null,by:by,rw:false,created:Date.now()};
-db.tasks.push(x);dirty[x.id]=1;save();$("agT").value="";m.textContent="";sfx("click");renderAgList()}
++'<div class="crow"><button type="button" class="go" id="agAdd" style="width:auto;margin:0">'+tr("➕ Ajouter")+'</button>'+(agParent?"":'<button type="button" class="pf" id="agPar">'+t("🔒 Ajouter comme parent")+'</button>')+'</div><p id="agMsg" class="mute" role="status"></p></div>'}
+function openAgenda(pid,asParent){if(typeof pid!=="string")pid=null;agPid=pid||cur.id;agParent=!!asParent;agOff=0;
+var who=db.profiles.filter(function(p){return p.id===agPid})[0]||cur;
+$("agbox").innerHTML='<div class="agh"><h2>'+(agParent?"Agenda de "+esc(who.name):t("Agenda"))+'</h2><button type="button" class="pf" id="agPlus">'+t("➕ Ajouter")+'</button></div>'+agFormHtml()+'<div id="agview"></div><button class="again" id="agclose" type="button">'+t("Fermer")+'</button>';
+$("agenda").classList.remove("hide");agSuggest();renderAgView()}
+function addTask(by){var ti=$("agT").value.trim(),d=$("agD").value,m=$("agMsg");if(!ti||!d){m.textContent=(agParent?ident:t)("Donne un titre et une date.");return}
+var x={id:uid(),pid:agPid,kind:agKind,title:ti.slice(0,80),subject:$("agS").value,due:d,notes:"",done:null,by:by,rw:false,created:Date.now()};
+db.tasks.push(x);dirty[x.id]=1;save();$("agT").value="";$("agT").dataset.auto="";m.textContent="";sfx("click");agOff=weekOffOf(d);agSuggest();renderAgView()}
 function toggleTask(id){var x=db.tasks.filter(function(k){return k.id===id})[0];if(!x)return;x.done=x.done?null:Date.now();dirty[x.id]=1;
-if(x.done&&x.kind==="devoir"&&!x.rw){x.rw=true;save();reward(10,t("Devoir fait !"));sfx("ok");burst(innerWidth/2,innerHeight/3,60)}else{save();if(x.done)sfx("click")}
-renderAgList();renderStats()}
+if(x.done&&x.kind==="devoir"&&!x.rw&&!agParent){x.rw=true;save();reward(10,t("Devoir fait !"));sfx("ok");burst(innerWidth/2,innerHeight/3,60)}else{save();if(x.done)sfx("click")}
+renderAgView();renderStats()}
 function delTask(id){var x=db.tasks.filter(function(k){return k.id===id})[0];if(!x)return;
-function go(){if(!confirm(t("Supprimer cet élément ?")))return;cdel("tasks",id);db.tasks=db.tasks.filter(function(k){return k.id!==id});delete dirty[id];save();renderAgList()}
-if(x.by==="parent")gate(go);else go()}
+function go(){if(!confirm((agParent?ident:t)("Supprimer cet élément ?")))return;cdel("tasks",id);db.tasks=db.tasks.filter(function(k){return k.id!==id});delete dirty[id];save();renderAgView()}
+if(x.by==="parent"&&!agParent)gate(go);else go()}
 $("agbox").onclick=function(e){var b=e.target.closest("button");if(!b)return;
 if(b.dataset.tk)toggleTask(b.dataset.tk);
 else if(b.dataset.td)delTask(b.dataset.td);
 else if(b.dataset.rv){$("agenda").classList.add("hide");filt=b.dataset.rv;renderHist();$("hist").scrollIntoView()}
-else if(b.dataset.k){agKind=b.dataset.k;[].forEach.call($("agbox").querySelectorAll("[data-k]"),function(k){k.setAttribute("aria-pressed",k.dataset.k===agKind)})}
-else if(b.id==="agAdd")addTask("enfant");
+else if(b.dataset.wk!==undefined){agOff=b.dataset.wk==="0"?0:agOff+Number(b.dataset.wk);renderAgView()}
+else if(b.dataset.k){agKind=b.dataset.k;[].forEach.call($("agbox").querySelectorAll("[data-k]"),function(k){k.setAttribute("aria-pressed",k.dataset.k===agKind)});agSuggest()}
+else if(b.id==="agPlus"){$("agform").classList.toggle("hide");if(!$("agform").classList.contains("hide"))$("agT").focus()}
+else if(b.id==="agAdd")addTask(agParent?"parent":"enfant");
 else if(b.id==="agPar"){if(user)gate(function(){addTask("parent")},true);else addTask("parent")}
-else if(b.id==="agclose")$("agenda").classList.add("hide")};
-// Espace parent : ce qu'il faut surveiller pour chaque enfant (devoirs en retard, examens proches)
-function watchHtml(p){var all=db.tasks.filter(function(x){return x.pid===p.id}),open=all.filter(function(x){return!x.done}),
-late=open.filter(function(x){return x.kind==="devoir"&&dnum(x.due)<0}).sort(byDue),
-soon=open.filter(function(x){return x.kind==="examen"&&dnum(x.due)>=0&&dnum(x.due)<=7}).sort(byDue),
-wk=all.filter(function(x){return x.kind==="devoir"&&dnum(x.due)>=-6&&dnum(x.due)<=0}),h='<div class="watch"><b>🔔 À surveiller</b>';
-if(!late.length&&!soon.length)h+='<div>✅ Rien à signaler.</div>';
-late.slice(0,5).forEach(function(x){h+='<div class="bad">⚠️ Devoir en retard : '+esc(x.title)+' ('+esc(x.subject)+', '+esc(relIn(x.due,ident))+')</div>'});
-soon.forEach(function(x){h+='<div>🎯 Examen de '+esc(x.subject)+' : '+esc(x.title)+' — '+esc(relIn(x.due,ident))+' · '+esc(prepText(p.id,x.subject,ident))+'</div>'});
-return h+'<small>Devoirs des 7 derniers jours : '+wk.filter(function(x){return x.done}).length+' faits sur '+wk.length+'</small></div>'}
+else if(b.id==="agclose"){$("agenda").classList.add("hide");renderAgBar();if(agParent&&!$("dash").classList.contains("hide"))renderDash()}};
+$("agbox").onchange=function(e){if(e.target.id==="agS")agSuggest()};
+// Bandeau de l'accueil
+function renderAgBar(){if(!cur||!$("agbar"))return;var D=agData(cur.id,0),mine=db.tasks.filter(function(x){return x.pid===cur.id}),open=mine.filter(function(x){return!x.done}),
+today=open.filter(function(x){return x.kind==="devoir"&&dnum(x.due)===0}).length,nx=D.nextEx,L=[];
+if(D.late)L.push('<span class="bad">⚠️ '+D.late+" "+t(D.late>1?"devoirs en retard":"devoir en retard")+'</span>');
+if(today)L.push("📌 "+today+" "+t("à faire aujourd'hui"));
+if(D.dev.length)L.push(esc(sumText(D.done,D.dev.length,lang==="en",true)));
+if(nx)L.push("🎯 "+t("Examen")+" "+esc(t(nx.subject))+" · "+esc(rel(nx.due)));
+$("agbar").innerHTML='<button type="button" class="agb" id="agOpen"><b>'+t("📅 Agenda")+'</b><span>'+(L.length?L.join(" · "):(mine.length?t("Rien de prévu. Profite ! 🎉"):t("Ton agenda est vide. Ajoute un devoir ou un examen.")))+'</span></button>';
+$("agOpen").onclick=openAgenda}
+// Espace parent : la semaine de chaque enfant, en clair
+function stripHtml(D){var h='',td=day();for(var i=0;i<7;i++){var d=new Date(D.w.m);d.setDate(d.getDate()+i);var s=day(d),dv=D.dev.filter(function(x){return x.due===s}),ex=D.exm.filter(function(x){return x.due===s});
+h+='<div class="day'+(ex.length?" ex":"")+(s===td?" today":"")+'"><b>'+esc(d.toLocaleDateString("fr-CA",{weekday:"short"}))+' <span class="dn">'+d.getDate()+'</span></b>'
++dv.map(function(x){return'<span class="dl"><i class="sq" style="background:'+col(x.subject)+'"></i>'+esc(x.subject)+' · '+esc(x.title)+'</span>'}).join("")
++ex.map(function(x){return'<span class="dl"><i class="dm"></i><b>Examen '+esc(x.subject)+'</b></span>'}).join("")
++(dv.length||ex.length?"":'<span class="dl mute">Rien de prévu</span>')+'</div>'}
+return'<div class="strip"><div class="stripg">'+h+'</div></div>'}
+function watchHtml(p){var D=agData(p.id,0),n=D.dev.length,nx=D.nextEx,all=db.tasks.filter(function(x){return x.pid===p.id}),prev=ident,
+h='<div class="wk"><div class="wkh"><b>📅 Agenda de la semaine</b><small>'+esc(rangeLabel(D.w,false))+'</small></div><div class="kpis">'
++'<div class="kpi"><small>Devoirs faits</small><b>'+(n?D.done+" sur "+n:"–")+'</b>'+(n?bar(D.done,n):"")+'</div>'
++'<div class="kpi'+(D.late?" late":"")+'"><small>En retard</small><b>'+(D.late?D.late+" devoir"+(D.late>1?"s":""):"Aucun")+'</b></div>'
++'<div class="kpi"><small>Examens cette semaine</small><b>'+D.exm.length+'</b></div>'
++'<div class="kpi'+(nx&&dnum(nx.due)<=3?" soon":"")+'"><small>Prochain examen</small><b>'+(nx?esc(relIn(nx.due,prev)):"Aucun")+'</b>'+(nx?'<small>'+esc(nx.subject)+' · '+esc(prepText(p.id,nx.subject,prev))+'</small>':"")+'</div></div>'+stripHtml(D)
++'<div class="cols2"><div><h4>Devoirs de la semaine</h4>'+(D.over.length?'<div class="sgh"><span class="stp late">En retard</span> <small class="mute">semaines passées</small></div>'+D.over.map(function(x){return devRow(x,prev,{subj:true,ro:true})}).join(""):"")+(n?devGroups(D.dev,prev,{ro:true}):'<p class="mute">Aucun devoir cette semaine.</p>')+'</div>'
++'<div><h4>Examens</h4>'+(D.exm.length?D.exm.map(function(x){return examCard(x,prev,{ro:true})}).join(""):'<p class="mute">Aucun examen cette semaine.</p>')+'</div></div>'
++'<div class="crow"><button type="button" class="pf" data-agopen="'+p.id+'">Ouvrir l\'agenda de '+esc(p.name)+'</button><button type="button" class="pf" data-agadd="'+p.id+'">➕ Ajouter</button></div></div>';return h}
+$("dash").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;
+if(b.dataset.agopen)openAgenda(b.dataset.agopen,true);
+else if(b.dataset.agadd){openAgenda(b.dataset.agadd,true);$("agform").classList.remove("hide")}});
 // Temps de révision et limite quotidienne
 var lastAct=Date.now(),acc=0,warned="";
 ["pointerdown","keydown","touchstart","scroll"].forEach(function(ev){addEventListener(ev,function(){lastAct=Date.now()},{passive:true})});
@@ -722,7 +811,7 @@ else prompt("Copie ce lien :",u)};
 function tgApi(path,body){return token().then(function(tk){return fetch("/api/tg/"+path,{method:body===undefined?"GET":"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+(tk||"")},body:body===undefined?undefined:JSON.stringify(body)}).then(function(r){return r.json().then(function(j){j._ok=r.ok;return j})})})}
 function tgPanel(){var box=$("tgbox");if(!box)return;var T='<b>🔔 Alertes sur Telegram</b>';box.innerHTML=T+'<p class="mute">Chargement…</p>';
 tgApi("status").then(function(s){var h=T;
-if(!s.enabled)h+='<p class="mute">Les alertes Telegram ne sont pas encore activées sur le serveur.</p>';
+if(!s.enabled)h+='<p class="mute">Les alertes Telegram ne sont pas encore activées sur le serveur.</p>'+(s.missing&&s.missing.length?'<p class="bad">Il manque sur Render : <b>'+s.missing.map(esc).join(", ")+'</b></p><p class="mute">Ajoute-les dans Environment, puis attends « Live ».</p>':'');
 else if(s.erreur)h+='<p class="bad">'+esc(s.erreur)+'</p>';
 else if(s.linked)h+='<p>✅ Connecté. Tu recevras un message quand un devoir est en retard ou qu\'un examen approche.</p><div class="crow"><button type="button" class="pf" id="tgTest">Envoyer un test</button><button type="button" class="pf" id="tgOff">Déconnecter</button></div>'+(s.cron?"":'<p class="mute">Le rappel automatique du soir n\'est pas encore programmé sur le serveur.</p>');
 else h+='<p class="mute">Reçois un message sur Telegram quand un devoir n\'est pas fait ou qu\'un examen approche.</p><div class="crow"><button type="button" class="go" id="tgOn" style="width:auto;margin:0">Connecter Telegram</button><button type="button" class="pf" id="tgRefresh">J\'ai terminé</button></div>';
