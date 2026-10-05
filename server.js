@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 const zlib = require("zlib");
 const crypto = require("crypto");
 
@@ -28,30 +29,32 @@ const MSG = {
   image: { fr: "Image invalide. Utilise une photo JPG, PNG ou WebP.", en: "Invalid image. Use a JPG, PNG or WebP photo." },
   busy: { fr: "L'IA est très sollicitée en ce moment. Réessaie dans une minute ou deux.", en: "The AI is very busy right now. Try again in a minute or two." },
   unreadable: { fr: "Je n'ai pas réussi à lire cette leçon. Essaie avec une photo plus nette.", en: "I couldn't read this lesson. Try a sharper photo." },
+  unreadableCal: { fr: "Je n'ai pas réussi à lire ce calendrier. Essaie avec une photo plus nette, bien éclairée, en cadrant toute la page.", en: "I couldn't read this calendar. Try a sharper, well-lit photo that shows the whole page." },
 };
 
 app.use(express.json({ limit: "12mb" }));
 
 // ---------- Application installable (PWA) : manifeste, service worker, icônes ----------
-app.get("/manifest.webmanifest", (req, res) => {
-  res.type("application/manifest+json").send(
-    JSON.stringify({
-      name: "Studia Kids",
-      short_name: "Studia",
-      description: "Prends ta leçon en photo : fiche, résumé et quiz.",
-      start_url: "/app",
-      scope: "/",
-      display: "standalone",
-      background_color: "#F3F0FF",
-      theme_color: "#6C4CF1",
-      lang: "fr",
-      icons: [
-        { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
-        { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
-      ],
-    })
-  );
-});
+const VERSIONS = {
+  kids: { name: "Studia Kids", short: "Studia Kids", desc: "Prends ta leçon en photo : fiche, résumé et quiz pour les enfants.", bg: "#F6F4FF", theme: "#6C4CF1", icon: "icon" },
+  studia: { name: "Studia", short: "Studia", desc: "Prends une leçon en photo : résumé, fiches, quiz et agenda.", bg: "#F6F4FF", theme: "#2F5BD6", icon: "studia-icon" },
+};
+function manifestFor(k) {
+  const v = VERSIONS[k];
+  return JSON.stringify({
+    name: v.name, short_name: v.short, description: v.desc,
+    id: `/${k}/app`, start_url: `/${k}/app`, scope: `/${k}/`, display: "standalone", lang: "fr",
+    background_color: v.bg, theme_color: v.theme,
+    icons: [
+      { src: `/${v.icon}-192.png`, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+      { src: `/${v.icon}-512.png`, sizes: "512x512", type: "image/png", purpose: "any maskable" },
+    ],
+  });
+}
+for (const k of Object.keys(VERSIONS)) {
+  app.get(`/${k}/manifest.webmanifest`, (req, res) => res.type("application/manifest+json").send(manifestFor(k)));
+}
+app.get("/manifest.webmanifest", (req, res) => res.type("application/manifest+json").send(manifestFor("kids"))); // anciens liens
 
 // Réseau d'abord (les mises à jour du site apparaissent tout de suite), cache en secours hors ligne
 const SW_JS = `const V = "studia-v1";
@@ -66,7 +69,7 @@ self.addEventListener("fetch", (e) => {
   if (u.origin !== location.origin || u.pathname.startsWith("/api/")) return;
   e.respondWith(
     fetch(r).then((res) => { if (res.ok) { const c = res.clone(); caches.open(V).then((ca) => ca.put(r, c)); } return res; })
-      .catch(() => caches.match(r).then((m) => m || caches.match("/app")))
+      .catch(() => caches.match(r).then((m) => m || caches.match(u.pathname.startsWith("/studia") ? "/studia/app" : "/kids/app")))
   );
 });`;
 app.get("/sw.js", (req, res) => res.type("application/javascript").set("Cache-Control", "no-cache").send(SW_JS));
@@ -99,26 +102,47 @@ function foxColor(x, y) {
   if (inTri(x, y, [14, 12], [48, 34], [22, 64]) || inTri(x, y, [106, 12], [72, 34], [98, 64])) return orange;
   return null;
 }
+const inPoly = (x, y, p) => { let c = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { if ((p[i][1] > y) !== (p[j][1] > y) && x < ((p[j][0] - p[i][0]) * (y - p[i][1])) / (p[j][1] - p[i][1]) + p[i][0]) c = !c; } return c; };
+// La toque de Studia, dans un repère 120 x 120
+function capColor(x, y) {
+  if (inEll(x, y, 108, 90, 6, 6) || (x > 105.5 && x < 110.5 && y > 52 && y < 90)) return [255, 176, 32];
+  if (inPoly(x, y, [[60, 22], [116, 50], [60, 78], [4, 50]])) return [92, 160, 255];
+  if (inPoly(x, y, [[26, 62], [60, 78], [94, 62], [94, 88], [60, 104], [26, 88]])) return [140, 104, 255];
+  return null;
+}
 const iconCache = {};
-function renderIcon(size) {
-  if (iconCache[size]) return iconCache[size];
-  const px = Buffer.alloc(size * size * 4), S = 2, sc = (size * 0.6) / 120, off = (size - 120 * sc) / 2, bg = [108, 76, 241];
+function renderIcon(size, kind) {
+  const key = kind + size;
+  if (iconCache[key]) return iconCache[key];
+  const px = Buffer.alloc(size * size * 4), S = 2, sc = (size * 0.6) / 120, off = (size - 120 * sc) / 2, bg = kind === "studia" ? [36, 31, 74] : [108, 76, 241], draw = kind === "studia" ? capColor : foxColor;
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     let r = 0, g = 0, b = 0;
     for (let i = 0; i < S; i++) for (let j = 0; j < S; j++) {
-      const c = foxColor((x + (i + 0.5) / S - off) / sc, (y + (j + 0.5) / S - off) / sc) || bg;
+      const c = draw((x + (i + 0.5) / S - off) / sc, (y + (j + 0.5) / S - off) / sc) || bg;
       r += c[0]; g += c[1]; b += c[2];
     }
     const o = (y * size + x) * 4, n = S * S;
     px[o] = r / n; px[o + 1] = g / n; px[o + 2] = b / n; px[o + 3] = 255;
   }
-  return (iconCache[size] = pngRGBA(size, size, px));
+  return (iconCache[key] = pngRGBA(size, size, px));
 }
-for (const [name, size] of [["icon-192.png", 192], ["icon-512.png", 512], ["apple-touch-icon.png", 180]]) {
-  app.get("/" + name, (req, res) => res.type("image/png").set("Cache-Control", "public, max-age=86400").send(renderIcon(size)));
+for (const [name, size, kind] of [["icon-192.png", 192, "kids"], ["icon-512.png", 512, "kids"], ["apple-touch-icon.png", 180, "kids"], ["studia-icon-192.png", 192, "studia"], ["studia-icon-512.png", 512, "studia"], ["studia-apple-touch-icon.png", 180, "studia"]]) {
+  app.get("/" + name, (req, res) => res.type("image/png").set("Cache-Control", "public, max-age=86400").send(renderIcon(size, kind)));
 }
 
-// « / » = page d'accueil publique, « /app » = l'application, « /confidentialite » et « /conditions » = pages légales
+// Une seule adresse, deux versions : « / » = choix, « /kids » et « /studia » = présentations,
+// « /kids/app » et « /studia/app » = les applications, « /confidentialite » et « /conditions » = pages légales (communes)
+const APP_HTML = fs.readFileSync(path.join(__dirname, "public", "app.html"), "utf8");
+const APP_PAGES = {
+  kids: APP_HTML,
+  studia: APP_HTML.replace("<title>Studia Kids — Apprends. Explore. Brille à ta façon.</title>", "<title>Studia — Étudie à ton rythme</title>").replace('href="/apple-touch-icon.png"', 'href="/studia-apple-touch-icon.png"').replace('<meta name="theme-color" content="#6C4CF1">', '<meta name="theme-color" content="#2F5BD6">'),
+};
+for (const k of Object.keys(APP_PAGES)) {
+  APP_PAGES[k] = APP_PAGES[k].replace('href="/manifest.webmanifest"', `href="/${k}/manifest.webmanifest"`);
+  app.get(`/${k}/app`, (req, res) => res.type("html").set("Cache-Control", "no-cache").send(APP_PAGES[k]));
+}
+// Ancienne adresse de l'application : on garde les liens et les installations existants
+app.get("/app", (req, res) => res.redirect(301, "/kids/app" + (req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "")));
 app.use(express.static(path.join(__dirname, "public"), { extensions: ["html"] }));
 
 // Réglages publics pour les comptes parents (la clé anon est faite pour être publique)
@@ -173,7 +197,7 @@ function prompt(mode, lang) {
   const kids = mode === "kids";
   const L = LANG_NAME[lang] ? lang : "fr";
   return `Tu es Studia, un assistant de révision pour élèves. Analyse la photo d'une leçon (cahier ou manuel).
-Public : ${kids ? "enfant du primaire (6 à 12 ans). Phrases très courtes, mots simples, ton très encourageant." : "adolescent de 12 à 17 ans. Ton direct et clair."}
+Public : ${kids ? "enfant du primaire (6 à 12 ans). Phrases très courtes, mots simples, ton très encourageant." : "personne de tout âge (élève, étudiant ou adulte en formation). Ton direct, clair et neutre."}
 Écris le titre, le résumé, les fiches et le quiz en ${LANG_NAME[L]}. Base-toi uniquement sur ce qui est visible sur la photo. Si la photo est illisible, réponds {"erreur":"courte explication en ${LANG_ERR[L]}"}.
 Réponds UNIQUEMENT avec ce JSON, sans aucun texte autour :
 {"matiere":"Maths|Français|Sciences|Histoire|Anglais|Autre","titre":"titre court de la leçon","resume":"résumé en 3 à 5 phrases","fiches":[{"q":"question ou mot clé","r":"réponse courte"}],"quiz":[{"t":"qcm","q":"question","choix":["a","b","c"],"bonne":0,"explication":"une phrase"},{"t":"qcm","q":"question","choix":["a","b","c"],"bonne":1,"explication":"une phrase"},{"t":"qcm","q":"question","choix":["a","b","c"],"bonne":2,"explication":"une phrase"},{"t":"vf","q":"affirmation à juger vraie ou fausse","bonne":true,"explication":"une phrase"},{"t":"assoc","q":"consigne courte pour associer","paires":[{"a":"mot","b":"partenaire"},{"a":"mot","b":"partenaire"},{"a":"mot","b":"partenaire"}],"explication":"une phrase"}]}
@@ -181,13 +205,13 @@ Règles : 4 à 6 fiches ; exactement 5 questions dans cet ordre : 3 "qcm", 1 "vf
 }
 
 // ---------- Les trois fournisseurs : Gemini (2 modèles), puis Claude ----------
-async function callGemini(model, tries, m, mode, lang) {
+async function callGemini(model, tries, m, promptText, temp = 0.4) {
   const r = await withRetry(() => fetch(`${GEMINI_BASE}/v1beta/models/${model}:generateContent`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": KEY },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt(mode, lang) }, { inline_data: { mime_type: m[1], data: m[2] } }] }],
-      generationConfig: { responseMimeType: "application/json", temperature: 0.4 },
+      contents: [{ parts: [{ text: promptText }, { inline_data: { mime_type: m[1], data: m[2] } }] }],
+      generationConfig: { responseMimeType: "application/json", temperature: temp },
     }),
   }), tries);
   if (!r.ok) { console.error("Gemini", model, r.status, (await r.text()).slice(0, 200)); return { ok: false, status: r.status }; }
@@ -195,7 +219,7 @@ async function callGemini(model, tries, m, mode, lang) {
   return { ok: true, text: data?.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("") || "" };
 }
 
-async function callClaude(tries, m, mode, lang) {
+async function callClaude(tries, m, promptText) {
   const r = await withRetry(() => fetch(`${CLAUDE_BASE}/v1/messages`, {
     method: "POST",
     headers: { "content-type": "application/json", "x-api-key": CLAUDE_KEY, "anthropic-version": "2023-06-01" },
@@ -204,7 +228,7 @@ async function callClaude(tries, m, mode, lang) {
       max_tokens: 3000,
       messages: [{ role: "user", content: [
         { type: "image", source: { type: "base64", media_type: m[1], data: m[2] } },
-        { type: "text", text: prompt(mode, lang) },
+        { type: "text", text: promptText },
       ] }],
     }),
   }), tries);
@@ -243,48 +267,101 @@ function parseLesson(text) {
   return { matiere: SUBJECTS[str(raw.matiere).trim()] || "Autre", titre: str(raw.titre) || "Leçon", resume: str(raw.resume), fiches, quiz };
 }
 
-app.post("/api/analyze", async (req, res) => {
-  if (!KEY && !CLAUDE_KEY) return res.status(500).json({ erreur: "Aucune clé d'IA n'est configurée sur le serveur." });
-  const lg = LANG_NAME[(req.body || {}).lang] ? req.body.lang : "fr";
+// ---------- Lecture d'un calendrier scolaire manuscrit ----------
+const JOURS = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+const isoOk = (d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !isNaN(Date.parse(d + "T00:00:00Z")) && new Date(d + "T00:00:00Z").toISOString().slice(0, 10) === d;
+const shiftDay = (d, n) => new Date(Date.parse(d + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);
+function agendaPrompt(lang, today) {
+  const L = LANG_NAME[lang] ? lang : "fr";
+  const jour = JOURS[new Date(today + "T12:00:00Z").getUTCDay()];
+  return `Tu es Studia. Tu lis la photo d'un calendrier ou d'un agenda scolaire (souvent écrit à la main) rapporté de l'école, pour une semaine ou un mois.
+Aujourd'hui, nous sommes le ${today} (${jour}). Les dates s'écrivent AAAA-MM-JJ.
+Pour chaque devoir ou examen écrit sur le calendrier, donne une entrée :
+- "kind" : "examen" pour un examen, un contrôle, un test, une évaluation, une épreuve ou un quiz noté ; "devoir" pour un devoir, des exercices, une leçon à étudier, une lecture ou un travail à remettre. Ignore tout le reste (congés, sorties, rappels de matériel, photo scolaire…).
+- "due" : la date exacte où le devoir est à remettre ou où l'examen a lieu. Déduis-la de la case, du jour de la semaine et de la date écrite. Si l'année n'est pas écrite, prends celle qui rend la date la plus proche d'aujourd'hui. Si seul un jour de la semaine est écrit, prends la semaine indiquée sur le calendrier, sinon la prochaine fois que ce jour revient à partir d'aujourd'hui. Si tu n'es pas sûr de la date, mets "due":null et "incertain":true.
+- "subject" : Maths|Français|Sciences|Histoire|Anglais|Autre, selon le contenu.
+- "title" : ce qui est écrit, recopié fidèlement dans la langue du calendrier, court (80 caractères au maximum). Ne le traduis pas.
+- Si un mot est difficile à lire, fais de ton mieux et mets "incertain":true.
+Réponds UNIQUEMENT avec ce JSON, sans aucun texte autour :
+{"semaine":"courte description de la période lue, ou vide","items":[{"kind":"devoir","subject":"Maths","title":"Exercices page 42","due":"AAAA-MM-JJ","incertain":false}]}
+Si tu ne vois aucun devoir ni examen, réponds {"items":[]}. Si la photo n'est pas un calendrier lisible, réponds {"erreur":"courte explication en ${LANG_ERR[L]}"}.`;
+}
+const KIND_EXAM = /exam|contr[oô]le|test|[ée]valuation|[ée]preuve|quiz/i;
+function parseAgenda(text, today) {
+  const raw = JSON.parse(text.replace(/```json|```/g, "").trim());
+  if (raw.erreur) return { erreur: str(raw.erreur) };
+  const lo = shiftDay(today, -60), hi = shiftDay(today, 400), items = [], seen = new Set();
+  for (const x of Array.isArray(raw.items) ? raw.items : []) {
+    if (!x || !str(x.title).trim()) continue;
+    const kind = KIND_EXAM.test(str(x.kind)) ? "examen" : "devoir";
+    const title = str(x.title).replace(/\s+/g, " ").trim().slice(0, 80);
+    const due = isoOk(str(x.due)) ? str(x.due) : null;
+    const incertain = Boolean(x.incertain) || due === null || due < lo || due > hi; // date absente ou peu plausible : à vérifier
+    const key = [kind, title.toLowerCase(), due].join("|");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    items.push({ kind, subject: SUBJECTS[str(x.subject).trim()] || "Autre", title, due, incertain });
+    if (items.length >= 60) break;
+  }
+  return { semaine: str(raw.semaine).slice(0, 80), items };
+}
+
+// Vérifications communes : clé d'IA, connexion, limite par heure, image valide
+async function guard(req, res) {
+  if (!KEY && !CLAUDE_KEY) { res.status(500).json({ erreur: "Aucune clé d'IA n'est configurée sur le serveur." }); return null; }
+  const body = req.body || {};
+  const lg = LANG_NAME[body.lang] ? body.lang : "fr";
   let who = req.ip;
   if (needLogin) {
     const m = /^Bearer (.+)$/.exec(req.headers.authorization || "");
     const id = m ? await whoIs(m[1]).catch(() => null) : null;
-    if (!id) return res.status(401).json({ erreur: MSG.login[lg] });
+    if (!id) { res.status(401).json({ erreur: MSG.login[lg] }); return null; }
     who = "u:" + id;
   }
   const wait = limited(who);
-  if (wait) {
-    return res.status(429).json({ erreur: MSG.limit[lg](MAX_PER_HOUR, wait) });
-  }
+  if (wait) { res.status(429).json({ erreur: MSG.limit[lg](MAX_PER_HOUR, wait) }); return null; }
+  const m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(body.image || "");
+  if (!m) { res.status(400).json({ erreur: MSG.image[lg] }); return null; }
+  return { lg, m, mode: body.mode === "kids" ? "kids" : "studia", body };
+}
 
-  const { image, mode } = req.body || {};
-  const m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(image || "");
-  if (!m) return res.status(400).json({ erreur: MSG.image[lg] });
-
-  // Ordre d'essai : Gemini, Gemini (modèle de secours), puis Claude
+// Ordre d'essai : Gemini, Gemini (modèle de secours), puis Claude
+async function runAI(m, promptText, parse, temp) {
   const steps = [];
   if (KEY) {
-    steps.push([MODEL, () => callGemini(MODEL, 2, m, mode, lg)]);
-    if (FALLBACK && FALLBACK !== MODEL) steps.push([FALLBACK, () => callGemini(FALLBACK, 2, m, mode, lg)]);
+    steps.push([MODEL, () => callGemini(MODEL, 2, m, promptText, temp)]);
+    if (FALLBACK && FALLBACK !== MODEL) steps.push([FALLBACK, () => callGemini(FALLBACK, 2, m, promptText, temp)]);
   }
-  if (CLAUDE_KEY) steps.push([CLAUDE_MODEL, () => callClaude(2, m, mode, lg)]);
-
+  if (CLAUDE_KEY) steps.push([CLAUDE_MODEL, () => callClaude(2, m, promptText)]);
   let busy = false;
   for (const [name, run] of steps) {
     try {
       const r = await run();
       if (!r.ok) { if ([429, 503, 529].includes(r.status)) busy = true; continue; }
-      const out = parseLesson(r.text);
-      if (out.erreur) return res.status(422).json({ erreur: out.erreur });
-      console.log("analyse via", name);
-      return res.json(out);
+      const out = parse(r.text);
+      console.log("IA :", name);
+      return { ok: true, out };
     } catch (e) {
       console.error("Réponse inutilisable de", name, e.message);
     }
   }
-  if (busy) return res.status(503).json({ erreur: MSG.busy[lg] });
-  res.status(502).json({ erreur: MSG.unreadable[lg] });
+  return { ok: false, busy };
+}
+
+app.post("/api/agenda", async (req, res) => {
+  const g = await guard(req, res); if (!g) return;
+  const t0 = String((g.body || {}).today || "");
+  const today = isoOk(t0) && Math.abs(Date.parse(t0 + "T12:00:00Z") - Date.now()) < 3 * 864e5 ? t0 : new Date().toISOString().slice(0, 10);
+  const r = await runAI(g.m, agendaPrompt(g.lg, today), (text) => parseAgenda(text, today), 0.2);
+  if (r.ok) return r.out.erreur ? res.status(422).json({ erreur: r.out.erreur }) : res.json(r.out);
+  res.status(r.busy ? 503 : 502).json({ erreur: r.busy ? MSG.busy[g.lg] : MSG.unreadableCal[g.lg] });
+});
+
+app.post("/api/analyze", async (req, res) => {
+  const g = await guard(req, res); if (!g) return;
+  const r = await runAI(g.m, prompt(g.mode, g.lg), parseLesson, 0.4);
+  if (r.ok) return r.out.erreur ? res.status(422).json({ erreur: r.out.erreur }) : res.json(r.out);
+  res.status(r.busy ? 503 : 502).json({ erreur: r.busy ? MSG.busy[g.lg] : MSG.unreadable[g.lg] });
 });
 
 // ---------- Alertes aux parents par Telegram ----------
@@ -429,7 +506,7 @@ const frIn = (n) => (n === 0 ? "aujourd'hui" : n === 1 ? "demain" : `dans ${n} j
 async function buildAlerts(link, today) {
   const pid = link.parent_id, sent = { ...(link.sent || {}) }, marks = {};
   const [profiles, tasks] = await Promise.all([
-    sbRest(`profiles?select=id,name,av&parent_id=eq.${pid}`),
+    sbRest(`profiles?select=id,name,av&parent_id=eq.${pid}&app=eq.kids`).catch(() => sbRest(`profiles?select=id,name,av&parent_id=eq.${pid}`)),
     sbRest(`tasks?select=id,profile_id,kind,title,subject,due&parent_id=eq.${pid}&done_at=is.null`),
   ]);
   const kids = new Map((profiles || []).map((p) => [p.id, p]));
