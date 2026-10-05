@@ -39,7 +39,7 @@ app.get("/manifest.webmanifest", (req, res) => {
       name: "Studia Kids",
       short_name: "Studia",
       description: "Prends ta leçon en photo : fiche, résumé et quiz.",
-      start_url: "/",
+      start_url: "/app",
       scope: "/",
       display: "standalone",
       background_color: "#F3F0FF",
@@ -66,7 +66,7 @@ self.addEventListener("fetch", (e) => {
   if (u.origin !== location.origin || u.pathname.startsWith("/api/")) return;
   e.respondWith(
     fetch(r).then((res) => { if (res.ok) { const c = res.clone(); caches.open(V).then((ca) => ca.put(r, c)); } return res; })
-      .catch(() => caches.match(r).then((m) => m || caches.match("/")))
+      .catch(() => caches.match(r).then((m) => m || caches.match("/app")))
   );
 });`;
 app.get("/sw.js", (req, res) => res.type("application/javascript").set("Cache-Control", "no-cache").send(SW_JS));
@@ -118,7 +118,8 @@ for (const [name, size] of [["icon-192.png", 192], ["icon-512.png", 512], ["appl
   app.get("/" + name, (req, res) => res.type("image/png").set("Cache-Control", "public, max-age=86400").send(renderIcon(size)));
 }
 
-app.use(express.static(path.join(__dirname, "public")));
+// « / » = page d'accueil publique, « /app » = l'application, « /confidentialite » et « /conditions » = pages légales
+app.use(express.static(path.join(__dirname, "public"), { extensions: ["html"] }));
 
 // Réglages publics pour les comptes parents (la clé anon est faite pour être publique)
 app.get("/api/config", (req, res) =>
@@ -338,8 +339,11 @@ const noTg = (res) => res.status(503).json({ erreur: "Les alertes Telegram ne so
 const noLogin = (res) => res.status(401).json({ erreur: MSG.login.fr });
 
 app.get("/api/tg/status", async (req, res) => {
-  if (!tgEnabled) return res.json({ enabled: false });
   const id = await parentId(req); if (!id) return noLogin(res);
+  if (!tgEnabled) { // on dit seulement QUELS réglages manquent sur Render, jamais leurs valeurs
+    const missing = [["TELEGRAM_BOT_TOKEN", TG_TOKEN], ["SUPABASE_URL", SB_URL], ["SUPABASE_SERVICE_KEY", SB_SERVICE]].filter(([, v]) => !v).map(([k]) => k);
+    return res.json({ enabled: false, missing });
+  }
   try {
     const row = await myLink(id);
     res.json({ enabled: true, linked: Boolean(row && row.chat_id), bot: tgBot, cron: Boolean(CRON_SECRET) });
