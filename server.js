@@ -71,6 +71,23 @@ self.addEventListener("fetch", (e) => {
     fetch(r).then((res) => { if (res.ok) { const c = res.clone(); caches.open(V).then((ca) => ca.put(r, c)); } return res; })
       .catch(() => caches.match(r).then((m) => m || caches.match(u.pathname.startsWith("/studia") ? "/studia/app" : "/kids/app")))
   );
+});
+self.addEventListener("push", (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (_) { d = { b: e.data ? e.data.text() : "" }; }
+  e.waitUntil(self.registration.showNotification(d.t || "Studia", {
+    body: d.b || "", icon: d.i || "/icon-192.png", badge: d.i || "/icon-192.png", tag: d.g || "studia", renotify: true, lang: d.l || "fr", data: { u: d.u || "/" },
+  }));
+});
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.u) || "/", self.location.origin);
+  const prefix = url.pathname.startsWith("/studia") ? "/studia" : "/kids";
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((cs) => {
+    const c = cs.find((x) => new URL(x.url).pathname.startsWith(prefix));
+    if (c) return c.navigate(url.href).then((w) => (w || c).focus()).catch(() => c.focus());
+    return self.clients.openWindow(url.href);
+  }));
 });`;
 app.get("/sw.js", (req, res) => res.type("application/javascript").set("Cache-Control", "no-cache").send(SW_JS));
 
@@ -205,15 +222,20 @@ Règles : 4 à 6 fiches ; exactement 5 questions dans cet ordre : 3 "qcm", 1 "vf
 }
 
 // ---------- Les trois fournisseurs : Gemini (2 modèles), puis Claude ----------
-async function callGemini(model, tries, m, promptText, temp = 0.4) {
-  const r = await withRetry(() => fetch(`${GEMINI_BASE}/v1beta/models/${model}:generateContent`, {
+async function callGemini(model, tries, m, promptText, temp = 0.4, cfg = {}) {
+  const go = (extra) => withRetry(() => fetch(`${GEMINI_BASE}/v1beta/models/${model}:generateContent`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": KEY },
     body: JSON.stringify({
       contents: [{ parts: [{ text: promptText }, { inline_data: { mime_type: m[1], data: m[2] } }] }],
-      generationConfig: { responseMimeType: "application/json", temperature: temp },
+      generationConfig: { responseMimeType: "application/json", temperature: temp, ...extra },
     }),
   }), tries);
+  let r = await go(cfg);
+  if (!r.ok && r.status === 400 && Object.keys(cfg).length) {
+    console.warn("Gemini", model, "a refusé les options", Object.keys(cfg).join(", "), "→ nouvel essai sans elles");
+    r = await go({});
+  }
   if (!r.ok) { console.error("Gemini", model, r.status, (await r.text()).slice(0, 200)); return { ok: false, status: r.status }; }
   const data = await r.json();
   return { ok: true, text: data?.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("") || "" };
@@ -268,39 +290,89 @@ function parseLesson(text) {
 }
 
 // ---------- Lecture d'un calendrier scolaire manuscrit ----------
+// Modèle Gemini réservé à la lecture des calendriers (facultatif) : GEMINI_AGENDA_MODEL sur Render
+const AGENDA_MODEL = process.env.GEMINI_AGENDA_MODEL || "";
 const JOURS = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
 const isoOk = (d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !isNaN(Date.parse(d + "T00:00:00Z")) && new Date(d + "T00:00:00Z").toISOString().slice(0, 10) === d;
 const shiftDay = (d, n) => new Date(Date.parse(d + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);
 function agendaPrompt(lang, today) {
   const L = LANG_NAME[lang] ? lang : "fr";
   const jour = JOURS[new Date(today + "T12:00:00Z").getUTCDay()];
-  return `Tu es Studia. Tu lis la photo d'un calendrier ou d'un agenda scolaire (souvent écrit à la main) rapporté de l'école, pour une semaine ou un mois.
-Aujourd'hui, nous sommes le ${today} (${jour}). Les dates s'écrivent AAAA-MM-JJ.
-Pour chaque devoir ou examen écrit sur le calendrier, donne une entrée :
-- "kind" : "examen" pour un examen, un contrôle, un test, une évaluation, une épreuve ou un quiz noté ; "devoir" pour un devoir, des exercices, une leçon à étudier, une lecture ou un travail à remettre. Ignore tout le reste (congés, sorties, rappels de matériel, photo scolaire…).
-- "due" : la date exacte où le devoir est à remettre ou où l'examen a lieu. Déduis-la de la case, du jour de la semaine et de la date écrite. Si l'année n'est pas écrite, prends celle qui rend la date la plus proche d'aujourd'hui. Si seul un jour de la semaine est écrit, prends la semaine indiquée sur le calendrier, sinon la prochaine fois que ce jour revient à partir d'aujourd'hui. Si tu n'es pas sûr de la date, mets "due":null et "incertain":true.
+  return `Tu es Studia. Tu lis la photo d'un calendrier ou d'un agenda scolaire, souvent écrit à la main, rapporté de l'école (une semaine, parfois un mois).
+Aujourd'hui, nous sommes le ${today} (${jour}). Les dates "due" s'écrivent AAAA-MM-JJ.
+Procède dans cet ordre :
+1. Repère la structure : une colonne ou une ligne par jour ? les noms des jours (lundi, mardi…) ? des dates imprimées ou écrites ? le mois et l'année ?
+2. "periode" : la première date visible sur le calendrier (par exemple le lundi d'une semaine) : son jour de la semaine ("jour"), son numéro ("jj"), son mois en chiffres ("mm") et son année ("aaaa"), seulement s'ils sont écrits, sinon null.
+3. Pour chaque devoir ou examen écrit, donne une entrée. Recopie ce qui est écrit, n'invente rien.
+- "kind" : "examen" pour un examen, un contrôle, un test, une évaluation, une épreuve, un quiz noté, une dictée notée ou une présentation orale évaluée ; "devoir" pour un devoir, des exercices, une leçon à étudier, une lecture, un travail ou un projet à remettre. Ignore le reste (congés, sorties, rappels de matériel, photo scolaire, activités sans travail à faire).
+- "jour" : le jour de la semaine où le travail est à remettre ou où l'examen a lieu. C'est celui de la case, sauf si le texte précise une échéance ("pour jeudi", "à remettre le 12") : prends alors cette échéance.
+- "jj", "mm", "aaaa" : le numéro du jour, le mois (1 à 12) et l'année, SEULEMENT s'ils sont écrits ou imprimés pour cette entrée ; sinon null.
+- "due" : ta meilleure date AAAA-MM-JJ si tu peux la déduire, sinon null.
 - "subject" : Maths|Français|Sciences|Histoire|Anglais|Autre, selon le contenu.
 - "title" : ce qui est écrit, recopié fidèlement dans la langue du calendrier, court (80 caractères au maximum). Ne le traduis pas.
-- Si un mot est difficile à lire, fais de ton mieux et mets "incertain":true.
+- "incertain" : true si un mot ou un chiffre est difficile à lire. Ne devine pas : donne ta meilleure lecture et mets true.
+Abréviations courantes : dev. = devoir ; ex. ou exo = exercices ; p. = page ; lect. = lecture ; ctrl ou contr. = contrôle ; éval. = évaluation ; dict. = dictée ; Fr = Français ; Sc ou Sci = Sciences ; Hist ou Géo = Histoire ; Ang = Anglais ; ÉPS, Arts, Musique, Éthique = Autre.
 Réponds UNIQUEMENT avec ce JSON, sans aucun texte autour :
-{"semaine":"courte description de la période lue, ou vide","items":[{"kind":"devoir","subject":"Maths","title":"Exercices page 42","due":"AAAA-MM-JJ","incertain":false}]}
+{"periode":{"jour":"lundi","jj":6,"mm":10,"aaaa":2026},"semaine":"courte description de la période lue, ou vide","items":[{"kind":"devoir","subject":"Maths","title":"Exercices page 42","jour":"mardi","jj":7,"mm":10,"aaaa":null,"due":"AAAA-MM-JJ","incertain":false}]}
 Si tu ne vois aucun devoir ni examen, réponds {"items":[]}. Si la photo n'est pas un calendrier lisible, réponds {"erreur":"courte explication en ${LANG_ERR[L]}"}.`;
 }
 const KIND_EXAM = /exam|contr[oô]le|test|[ée]valuation|[ée]preuve|quiz/i;
+const JOUR_NUM = { dimanche: 0, lundi: 1, mardi: 2, mercredi: 3, jeudi: 4, vendredi: 5, samedi: 6, sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
+const JOUR_ABR = { dim: 0, lun: 1, mar: 2, mer: 3, jeu: 4, ven: 5, sam: 6, sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+function jourNum(x) {
+  const k = str(x).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, "");
+  if (k in JOUR_NUM) return JOUR_NUM[k];
+  return k.length >= 3 && k.slice(0, 3) in JOUR_ABR ? JOUR_ABR[k.slice(0, 3)] : null;
+}
+const dowOf = (d) => new Date(d + "T00:00:00Z").getUTCDay();
+const intOr = (x) => { const n = Number(x); return Number.isInteger(n) && n > 0 ? n : null; };
+const pad2 = (n) => String(n).padStart(2, "0");
+// Jour + mois (+ année si écrite) -> date. Sans année : celle qui rend la date la plus proche d'aujourd'hui.
+function fromParts(jj, mm, aaaa, today) {
+  if (!jj || !mm) return null;
+  if (aaaa && aaaa >= 2000 && aaaa <= 2100) { const d = `${aaaa}-${pad2(mm)}-${pad2(jj)}`; return isoOk(d) ? d : null; }
+  const y = Number(today.slice(0, 4));
+  let best = null;
+  for (const yy of [y - 1, y, y + 1]) {
+    const d = `${yy}-${pad2(mm)}-${pad2(jj)}`;
+    if (!isoOk(d)) continue;
+    const gap = Math.abs(Date.parse(d + "T00:00:00Z") - Date.parse(today + "T00:00:00Z"));
+    if (!best || gap < best.gap) best = { d, gap };
+  }
+  return best ? best.d : null;
+}
+// Les dates sont calculées ici, pas par l'IA : on lui demande seulement ce qui est écrit sur la photo.
+function resolveDate(it, per, today) {
+  const want = jourNum(it.jour);
+  const jj = intOr(it.jj), mm = intOr(it.mm) || per.mm, aaaa = intOr(it.aaaa) || per.aaaa;
+  const own = isoOk(str(it.due)) ? str(it.due) : null;
+  let due = fromParts(jj, mm, aaaa, today);                                   // 1. jour et mois écrits
+  if (!due && own && (want === null || dowOf(own) === want)) due = own;        // 2. date de l'IA, si elle correspond au jour écrit
+  if (!due && want !== null && per.iso) {                                      // 3. seulement un jour de la semaine : on le cherche dans la semaine de départ
+    for (let k = 0; k < 7; k++) { const d = shiftDay(per.iso, k); if (dowOf(d) === want) { due = d; break; } }
+  }
+  if (!due) due = own;                                                         // 4. dernier recours : la date de l'IA, à vérifier
+  const conflict = own !== null && want !== null && dowOf(own) !== want;      // l'IA et le jour écrit se contredisent
+  return { due, want, conflict };
+}
 function parseAgenda(text, today) {
   const raw = JSON.parse(text.replace(/```json|```/g, "").trim());
   if (raw.erreur) return { erreur: str(raw.erreur) };
+  const p = raw.periode || {};
+  const per = { mm: intOr(p.mm), aaaa: intOr(p.aaaa) };
+  per.iso = fromParts(intOr(p.jj), per.mm, per.aaaa, today);
   const lo = shiftDay(today, -60), hi = shiftDay(today, 400), items = [], seen = new Set();
   for (const x of Array.isArray(raw.items) ? raw.items : []) {
     if (!x || !str(x.title).trim()) continue;
     const kind = KIND_EXAM.test(str(x.kind)) ? "examen" : "devoir";
     const title = str(x.title).replace(/\s+/g, " ").trim().slice(0, 80);
-    const due = isoOk(str(x.due)) ? str(x.due) : null;
-    const incertain = Boolean(x.incertain) || due === null || due < lo || due > hi; // date absente ou peu plausible : à vérifier
+    const { due, want, conflict } = resolveDate(x, per, today);
+    const mismatch = due !== null && want !== null && dowOf(due) !== want;       // le jour écrit ne correspond pas à la date trouvée
+    const incertain = Boolean(x.incertain) || due === null || mismatch || conflict || due < lo || due > hi;
     const key = [kind, title.toLowerCase(), due].join("|");
     if (seen.has(key)) continue;
     seen.add(key);
-    items.push({ kind, subject: SUBJECTS[str(x.subject).trim()] || "Autre", title, due, incertain });
+    items.push({ kind, subject: SUBJECTS[str(x.subject).trim()] || "Autre", title, due, incertain, js: want });
     if (items.length >= 60) break;
   }
   return { semaine: str(raw.semaine).slice(0, 80), items };
@@ -326,11 +398,12 @@ async function guard(req, res) {
 }
 
 // Ordre d'essai : Gemini, Gemini (modèle de secours), puis Claude
-async function runAI(m, promptText, parse, temp) {
+async function runAI(m, promptText, parse, temp, opt = {}) {
   const steps = [];
   if (KEY) {
-    steps.push([MODEL, () => callGemini(MODEL, 2, m, promptText, temp)]);
-    if (FALLBACK && FALLBACK !== MODEL) steps.push([FALLBACK, () => callGemini(FALLBACK, 2, m, promptText, temp)]);
+    if (opt.model && opt.model !== MODEL) steps.push([opt.model, () => callGemini(opt.model, 2, m, promptText, temp, opt.cfg)]);
+    steps.push([MODEL, () => callGemini(MODEL, 2, m, promptText, temp, opt.cfg)]);
+    if (FALLBACK && FALLBACK !== MODEL) steps.push([FALLBACK, () => callGemini(FALLBACK, 2, m, promptText, temp, opt.cfg)]);
   }
   if (CLAUDE_KEY) steps.push([CLAUDE_MODEL, () => callClaude(2, m, promptText)]);
   let busy = false;
@@ -352,7 +425,7 @@ app.post("/api/agenda", async (req, res) => {
   const g = await guard(req, res); if (!g) return;
   const t0 = String((g.body || {}).today || "");
   const today = isoOk(t0) && Math.abs(Date.parse(t0 + "T12:00:00Z") - Date.now()) < 3 * 864e5 ? t0 : new Date().toISOString().slice(0, 10);
-  const r = await runAI(g.m, agendaPrompt(g.lg, today), (text) => parseAgenda(text, today), 0.2);
+  const r = await runAI(g.m, agendaPrompt(g.lg, today), (text) => parseAgenda(text, today), 0.2, { model: AGENDA_MODEL, cfg: { mediaResolution: "MEDIA_RESOLUTION_HIGH" } });
   if (r.ok) return r.out.erreur ? res.status(422).json({ erreur: r.out.erreur }) : res.json(r.out);
   res.status(r.busy ? 503 : 502).json({ erreur: r.busy ? MSG.busy[g.lg] : MSG.unreadableCal[g.lg] });
 });
@@ -503,30 +576,43 @@ const ymdInTz = (d = new Date()) => new Intl.DateTimeFormat("en-CA", { timeZone:
 const dayNum = (s) => Math.round(Date.parse(String(s).slice(0, 10) + "T00:00:00Z") / 864e5);
 const frIn = (n) => (n === 0 ? "aujourd'hui" : n === 1 ? "demain" : `dans ${n} jours`);
 
-async function buildAlerts(link, today) {
-  const pid = link.parent_id, sent = { ...(link.sent || {}) }, marks = {};
+// Données d'un compte (profils de la version choisie + devoirs/examens non faits)
+async function loadAlertData(pid, appName) {
+  const base = `profiles?select=id,name,av&parent_id=eq.${pid}`;
   const [profiles, tasks] = await Promise.all([
-    sbRest(`profiles?select=id,name,av&parent_id=eq.${pid}&app=eq.kids`).catch(() => sbRest(`profiles?select=id,name,av&parent_id=eq.${pid}`)),
+    sbRest(`${base}&app=eq.${appName}`).catch(() => sbRest(base)),
     sbRest(`tasks?select=id,profile_id,kind,title,subject,due&parent_id=eq.${pid}&done_at=is.null`),
   ]);
-  const kids = new Map((profiles || []).map((p) => [p.id, p]));
-  const lines = new Map(); // enfant -> lignes du message
-  const exams = [];
-  for (const x of tasks || []) {
-    const kid = kids.get(x.profile_id); if (!kid) continue;
+  return { pid, kids: new Map((profiles || []).map((p) => [p.id, p])), tasks: tasks || [] };
+}
+// Les règles : devoir en retard (au 1er puis au 3e jour) ; examen à 7, 3, 1 jour(s) et le jour même. Chaque rappel n'est envoyé qu'une fois.
+function gatherAlerts(data, sentIn, today) {
+  const sent = sentIn || {}, marks = {}, late = [], exams = [];
+  for (const x of data.tasks) {
+    const kid = data.kids.get(x.profile_id); if (!kid) continue;
     const n = dayNum(x.due) - dayNum(today);
     if (x.kind === "devoir" && n < 0) {
-      const late = -n, k1 = `late:${x.id}:1`, k3 = `late:${x.id}:3`;
-      const fire = late >= 3 && !sent[k3] ? [k1, k3] : late >= 1 && !sent[k1] && late < 3 ? [k1] : null;
+      const lt = -n, k1 = `late:${x.id}:1`, k3 = `late:${x.id}:3`;
+      const fire = lt >= 3 && !sent[k3] ? [k1, k3] : lt >= 1 && !sent[k1] && lt < 3 ? [k1] : null;
       if (!fire) continue;
       fire.forEach((k) => { marks[k] = today; });
-      lines.set(kid.id, [...(lines.get(kid.id) || []), `⚠️ Devoir en retard : <b>${eh(x.title)}</b> (${eh(x.subject)}) — en retard de ${late} jour${late > 1 ? "s" : ""}`]);
+      late.push({ kid, x, late: lt });
     } else if (x.kind === "examen" && n >= 0) {
       const bands = [0, 1, 3, 7], T = bands.find((b) => b >= n);
       if (T === undefined || sent[`exam:${x.id}:${T}`]) continue;
       bands.filter((b) => b >= T).forEach((b) => { marks[`exam:${x.id}:${b}`] = today; });
       exams.push({ kid, x, n });
     }
+  }
+  return { late, exams, marks };
+}
+
+async function buildAlerts(link, today) {
+  const pid = link.parent_id, data = await loadAlertData(pid, "kids"), sent = { ...(link.sent || {}) };
+  const { late, exams, marks } = gatherAlerts(data, sent, today);
+  const kids = data.kids, lines = new Map(); // enfant -> lignes du message
+  for (const { kid, x, late: lt } of late) {
+    lines.set(kid.id, [...(lines.get(kid.id) || []), `⚠️ Devoir en retard : <b>${eh(x.title)}</b> (${eh(x.subject)}) — en retard de ${lt} jour${lt > 1 ? "s" : ""}`]);
   }
   if (exams.length) { // ce que l'enfant a déjà révisé dans ces matières
     const subs = [...new Set(exams.map((e) => e.x.subject))].map((s) => `"${s}"`).join(",");
@@ -540,14 +626,151 @@ async function buildAlerts(link, today) {
   }
   if (!lines.size) return { text: null, marks };
   const blocks = [...lines].map(([id, l]) => `<b>${eh(kids.get(id).av || "🦊")} ${eh(kids.get(id).name)}</b>\n${l.join("\n")}`);
-  const late = blocks.some((b) => b.includes("Devoir en retard"));
-  const text = `🔔 <b>Studia Kids</b>\n\n${blocks.join("\n\n")}${late ? "\n\n<i>« En retard » veut dire que le devoir n'est pas marqué comme fait dans Studia.</i>" : ""}${PUBLIC_URL ? `\n${PUBLIC_URL}` : ""}`;
+  const lateTxt = blocks.some((b) => b.includes("Devoir en retard"));
+  const text = `🔔 <b>Studia Kids</b>\n\n${blocks.join("\n\n")}${lateTxt ? "\n\n<i>« En retard » veut dire que le devoir n'est pas marqué comme fait dans Studia.</i>" : ""}${PUBLIC_URL ? `\n${PUBLIC_URL}` : ""}`;
   return { text, marks, sent };
 }
 
+// ---------- Notifications sur le téléphone (Web Push, gratuit) ----------
+// Réglages sur Render : VAPID_PUBLIC_KEY et VAPID_PRIVATE_KEY (générées par /api/push/keys), SUPABASE_SERVICE_KEY, CRON_SECRET.
+let webpush = null;
+try { webpush = require("web-push"); } catch (e) { console.warn("Module web-push absent : notifications du téléphone désactivées."); }
+const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || "", VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || "";
+const pushEnabled = Boolean(webpush && VAPID_PUBLIC && VAPID_PRIVATE && SB_URL && SB_SERVICE);
+if (webpush && VAPID_PUBLIC && VAPID_PRIVATE) {
+  try { webpush.setVapidDetails(process.env.VAPID_SUBJECT || PUBLIC_URL || "https://studia-nouveau.onrender.com", VAPID_PUBLIC, VAPID_PRIVATE); }
+  catch (e) { console.error("Clés VAPID invalides :", e.message); }
+}
+// On n'accepte que les adresses des vrais services de notification (Google, Apple, Mozilla, Microsoft)
+const PUSH_HOSTS = /^https:\/\/([a-z0-9-]+\.)*(googleapis\.com|push\.services\.mozilla\.com|push\.apple\.com|notify\.windows\.com)(:\d+)?\//i;
+const SUBJ_EN = { Maths: "Maths", "Français": "French", Sciences: "Science", Histoire: "History", Anglais: "English", Autre: "Other" };
+const enIn = (n) => (n === 0 ? "today" : n === 1 ? "tomorrow" : `in ${n} days`);
+function pushMessage(g, lang, appName) {
+  const en = lang === "en", per = new Map();
+  const get = (kid) => { if (!per.has(kid.id)) per.set(kid.id, { kid, late: [], exams: [] }); return per.get(kid.id); };
+  g.late.forEach((a) => get(a.kid).late.push(a));
+  g.exams.forEach((a) => get(a.kid).exams.push(a));
+  if (!per.size) return null;
+  const parts = [];
+  for (const { kid, late, exams } of per.values()) {
+    const bits = [];
+    if (late.length === 1) { const { x } = late[0]; bits.push(en ? `Late homework: ${x.title} (${SUBJ_EN[x.subject] || x.subject})` : `Devoir en retard : ${x.title} (${x.subject})`); }
+    else if (late.length > 1) bits.push(en ? `${late.length} late homework` : `${late.length} devoirs en retard`);
+    exams.sort((a, b) => a.n - b.n);
+    for (const { x, n } of exams.slice(0, 2)) bits.push(en ? `${SUBJ_EN[x.subject] || x.subject} exam ${enIn(n)}` : `Examen de ${x.subject} ${frIn(n)}`);
+    if (exams.length > 2) bits.push(en ? `+${exams.length - 2} more exams` : `+${exams.length - 2} autres examens`);
+    parts.push(appName === "kids" ? `${kid.name} : ${bits.join(" · ")}` : bits.join(" · "));
+  }
+  const body = parts.join("\n");
+  return body.length > 220 ? body.slice(0, 217) + "…" : body;
+}
+const pushPayload = (sub, body) => ({ t: sub.app === "studia" ? "Studia" : "Studia Kids", b: body, u: `/${sub.app === "studia" ? "studia" : "kids"}/app?open=agenda`, i: sub.app === "studia" ? "/studia-icon-192.png" : "/icon-192.png", g: "studia-alertes", l: sub.lang === "en" ? "en" : "fr" });
+const sendPush = (sub, payload) => webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, JSON.stringify(payload), { TTL: 12 * 3600, urgency: "normal" });
+const goneErr = (e) => Boolean(e && (e.statusCode === 404 || e.statusCode === 410));
+const noPush = (res) => res.status(503).json({ erreur: "Les notifications du téléphone ne sont pas activées sur le serveur." });
+
+async function runPush(dry, today) {
+  const out = { subs: 0, messages: 0, removed: 0, details: [] };
+  if (!pushEnabled) return out;
+  const subs = (await sbRest("push_subs?select=id,parent_id,endpoint,p256dh,auth,app,lang,sent")) || [], cache = new Map();
+  for (const sub of subs) {
+    out.subs++;
+    try {
+      const key = `${sub.parent_id}:${sub.app}`;
+      if (!cache.has(key)) cache.set(key, await loadAlertData(sub.parent_id, sub.app));
+      const g = gatherAlerts(cache.get(key), sub.sent, today), body = pushMessage(g, sub.lang, sub.app);
+      if (!body) continue;
+      const payload = pushPayload(sub, body);
+      if (dry) { out.messages++; out.details.push({ sub: String(sub.id).slice(0, 8), app: sub.app, title: payload.t, body }); continue; }
+      try { await sendPush(sub, payload); }
+      catch (e) {
+        if (goneErr(e)) { await sbRest(`push_subs?id=eq.${sub.id}`, { method: "DELETE", prefer: "return=minimal" }); out.removed++; continue; }
+        throw e;
+      }
+      const keep = Date.now() - 90 * 864e5, old = Object.fromEntries(Object.entries(sub.sent || {}).filter(([, d]) => Date.parse(d) > keep));
+      await sbRest(`push_subs?id=eq.${sub.id}`, { method: "PATCH", prefer: "return=minimal", body: { sent: { ...old, ...g.marks }, last_ok: new Date().toISOString() } });
+      out.messages++;
+    } catch (e) { console.error("Notification pour un appareil :", e.message); }
+  }
+  return out;
+}
+
+app.get("/api/push/config", (req, res) => res.json({ enabled: pushEnabled, publicKey: pushEnabled ? VAPID_PUBLIC : "" }));
+
+app.post("/api/push/status", async (req, res) => {
+  const id = await parentId(req); if (!id) return noLogin(res);
+  if (!pushEnabled) { // on dit seulement QUELS réglages manquent, jamais leurs valeurs
+    const missing = [["web-push (package.json)", webpush], ["VAPID_PUBLIC_KEY", VAPID_PUBLIC], ["VAPID_PRIVATE_KEY", VAPID_PRIVATE], ["SUPABASE_URL", SB_URL], ["SUPABASE_SERVICE_KEY", SB_SERVICE]].filter(([, v]) => !v).map(([k]) => k);
+    return res.json({ enabled: false, missing });
+  }
+  try {
+    const ep = String((req.body || {}).endpoint || ""), rows = (await sbRest(`push_subs?select=endpoint&parent_id=eq.${id}`)) || [];
+    res.json({ enabled: true, subscribed: Boolean(ep) && rows.some((r) => r.endpoint === ep), count: rows.length, cron: Boolean(CRON_SECRET) });
+  } catch (e) {
+    console.error(e.message);
+    res.status(500).json({ enabled: true, erreur: "Impossible de lire l'état des notifications. Le SQL des notifications est-il lancé dans Supabase ?" });
+  }
+});
+
+app.post("/api/push/subscribe", async (req, res) => {
+  if (!pushEnabled) return noPush(res);
+  const id = await parentId(req); if (!id) return noLogin(res);
+  if (!rateOk("psub:" + id, 20, 3600000)) return res.status(429).json({ erreur: "Trop d'essais. Réessaie dans un moment." });
+  const b = req.body || {}, s = b.subscription || {}, k = s.keys || {};
+  const ep = String(s.endpoint || ""), p256 = String(k.p256dh || ""), au = String(k.auth || "");
+  if (ep.length > 1000 || !PUSH_HOSTS.test(ep) || !/^[\w-]{20,200}$/.test(p256) || !/^[\w-]{10,60}$/.test(au)) return res.status(400).json({ erreur: "Abonnement invalide." });
+  try {
+    await sbRest("push_subs?on_conflict=endpoint", { method: "POST", prefer: "resolution=merge-duplicates,return=minimal", body: { parent_id: id, endpoint: ep, p256dh: p256, auth: au, app: b.app === "studia" ? "studia" : "kids", lang: b.lang === "en" ? "en" : "fr" } });
+    const rows = (await sbRest(`push_subs?select=id&parent_id=eq.${id}&order=created_at.desc`)) || []; // au plus 10 appareils par compte
+    for (const r of rows.slice(10)) await sbRest(`push_subs?id=eq.${r.id}`, { method: "DELETE", prefer: "return=minimal" });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e.message);
+    res.status(502).json({ erreur: "Impossible d'enregistrer cet appareil. Le SQL des notifications est-il lancé dans Supabase ?" });
+  }
+});
+
+app.post("/api/push/unsubscribe", async (req, res) => {
+  if (!pushEnabled) return noPush(res);
+  const id = await parentId(req); if (!id) return noLogin(res);
+  try {
+    await sbRest(`push_subs?parent_id=eq.${id}&endpoint=eq.${encodeURIComponent(String((req.body || {}).endpoint || ""))}`, { method: "DELETE", prefer: "return=minimal" });
+    res.json({ ok: true });
+  } catch (e) { console.error(e.message); res.status(500).json({ erreur: "Impossible de désactiver les notifications." }); }
+});
+
+app.post("/api/push/test", async (req, res) => {
+  if (!pushEnabled) return noPush(res);
+  const id = await parentId(req); if (!id) return noLogin(res);
+  if (!rateOk("ptest:" + id, 10, 3600000)) return res.status(429).json({ erreur: "Trop d'essais. Réessaie dans un moment." });
+  try {
+    const rows = await sbRest(`push_subs?select=id,endpoint,p256dh,auth,app,lang&parent_id=eq.${id}&endpoint=eq.${encodeURIComponent(String((req.body || {}).endpoint || ""))}`), sub = rows && rows[0];
+    if (!sub) return res.status(409).json({ erreur: "Cet appareil n'est pas encore abonné." });
+    const en = sub.lang === "en";
+    try { await sendPush(sub, pushPayload(sub, en ? "🔔 Notifications are on. You'll get a reminder when homework is late or an exam is coming up." : "🔔 Les notifications fonctionnent. Tu recevras un rappel quand un devoir est en retard ou qu'un examen approche.")); }
+    catch (e) {
+      if (goneErr(e)) { await sbRest(`push_subs?id=eq.${sub.id}`, { method: "DELETE", prefer: "return=minimal" }); return res.status(410).json({ erreur: "Cet appareil n'est plus abonné. Réactive les notifications." }); }
+      throw e;
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e.message);
+    res.status(502).json({ erreur: "Le service de notification n'a pas livré le message. Désactive puis réactive les notifications." });
+  }
+});
+
+// Génère les deux clés à copier dans Render (une seule fois). Réservé à la personne qui connaît CRON_SECRET.
+app.get("/api/push/keys", (req, res) => {
+  const q = new URL(req.url, "http://x").searchParams, a = Buffer.from(String(q.get("key") || "")), b = Buffer.from(CRON_SECRET);
+  if (!CRON_SECRET || a.length !== b.length || !crypto.timingSafeEqual(a, b)) return res.status(403).json({ erreur: "Clé invalide." });
+  if (VAPID_PUBLIC || VAPID_PRIVATE) return res.status(409).json({ erreur: "Les clés des notifications existent déjà sur ce serveur." });
+  const jwk = crypto.generateKeyPairSync("ec", { namedCurve: "prime256v1" }).privateKey.export({ format: "jwk" });
+  res.set("Cache-Control", "no-store").json({ VAPID_PUBLIC_KEY: Buffer.concat([Buffer.from([4]), Buffer.from(jwk.x, "base64url"), Buffer.from(jwk.y, "base64url")]).toString("base64url"), VAPID_PRIVATE_KEY: jwk.d });
+});
+
 async function runAlerts(dry) {
   const today = ymdInTz(), out = { today, parents: 0, messages: 0, details: [] };
-  const links = (await sbRest("tg_links?select=parent_id,chat_id,sent&chat_id=not.is.null")) || [];
+  const links = tgEnabled ? (await sbRest("tg_links?select=parent_id,chat_id,sent&chat_id=not.is.null")) || [] : [];
   for (const link of links) {
     out.parents++;
     try {
@@ -564,11 +787,12 @@ async function runAlerts(dry) {
       out.messages++;
     } catch (e) { console.error("Alerte pour un parent :", e.message); }
   }
+  out.push = await runPush(dry, today).catch((e) => { console.error("Notifications :", e.message); return { subs: 0, messages: 0, removed: 0, details: [], erreur: true }; });
   return out;
 }
 
 app.get("/api/cron/alerts", async (req, res) => {
-  if (!tgEnabled || !CRON_SECRET) return res.status(503).json({ erreur: "Alertes non configurées sur le serveur." });
+  if ((!tgEnabled && !pushEnabled) || !CRON_SECRET) return res.status(503).json({ erreur: "Alertes non configurées sur le serveur." });
   const q = new URL(req.url, "http://x").searchParams;
   const a = Buffer.from(String(req.headers["x-cron-key"] || q.get("key") || "")), b = Buffer.from(CRON_SECRET);
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return res.status(403).json({ erreur: "Clé invalide." });
