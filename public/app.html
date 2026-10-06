@@ -929,11 +929,13 @@ function token(){return sb?sb.auth.getSession().then(function(r){return r.data.s
 function sched(){if(!sb||!user)return;clearTimeout(pt);pt=setTimeout(push,700)}
 function cdel(t,id){if(sb&&user)sb.from(t).delete().eq("id",id).then(function(r){if(r.error)console.error(r.error)})}
 async function pull(){var P=await sb.from("profiles").select("*").eq("app",APP).order("created_at");
-if(P.error&&/\bapp\b|column/i.test(P.error.message||"")){if(APP!=="kids")throw new Error("pull");P=await sb.from("profiles").select("*").order("created_at")}
+if(P.error&&/\bapp\b|column/i.test(P.error.message||"")){ // colonne « app » pas encore créée : on sépare Kids et Studia avec la colonne « mode »
+P=await sb.from("profiles").select("*").order("created_at");
+if(!P.error)P={data:P.data.filter(function(p){return(p.mode==="studia")===(APP==="studia")}),error:null}}
 var SL=60,S=await sb.from("sessions").select("*").order("created_at",{ascending:false}).limit(SL),S2={data:[],error:null};
 if(!S.error&&S.data.length>=SL)S2=await sb.from("sessions").select("id,profile_id,created_at,matiere,titre,score,qn").order("created_at",{ascending:false}).range(SL,1999);
 if(S2.error&&/\bqn\b|column/i.test(S2.error.message||""))S2=await sb.from("sessions").select("id,profile_id,created_at,matiere,titre,score").order("created_at",{ascending:false}).range(SL,1999);
-if(P.error||S.error||S2.error)throw new Error("pull");
+if(P.error||S.error||S2.error){var pe=P.error||S.error||S2.error;throw new Error("pull: "+(pe.message||pe.code||"?"))}
 var T=await sb.from("tasks").select("*").order("due");noTasks=!!T.error;var ids={},seenS={};P.data.forEach(function(p){ids[p.id]=1});
 db={active:db.active,profiles:P.data.map(function(p){return{id:p.id,name:p.name,av:p.av,mode:p.mode,xp:p.xp,streak:p.streak,last:p.last,best:p.best,study:p.study||{},limit:p.daily_limit||0,extra:p.extra||{}}}),
 sessions:S.data.concat(S2.data).filter(function(s){if(!ids[s.profile_id]||seenS[s.id])return false;seenS[s.id]=1;return true}).map(function(s){return{id:s.id,pid:s.profile_id,date:Date.parse(s.created_at),matiere:s.matiere,titre:s.titre,res:s.res||null,score:s.score,qn:s.qn||(s.res&&s.res.quiz?s.res.quiz.length:null)}}),tasks:tasksOf(T).filter(function(x){return ids[x.pid]})}}
@@ -956,7 +958,7 @@ function migrate(l){var m={};db.profiles=l.profiles.map(function(p){var n=uid();
 db.sessions=(l.sessions||[]).filter(function(s){return m[s.pid]}).map(function(s){s.id=uid();s.pid=m[s.pid];dirty[s.id]=1;return s});
 db.active=db.profiles[0].id;push().then(function(ok){if(ok){try{localStorage.removeItem("studia:v1")}catch(e){}}})}
 async function enter(u){user=u;eyeReset();$("auth").classList.add("hide");var lg=null;try{lg=APP==="kids"?JSON.parse(localStorage.getItem("studia:v1")):null}catch(e){}
-try{await pull()}catch(e){user=null;toast("Connexion impossible. Réessaie dans un instant.");$("auth").classList.remove("hide");return}
+try{await pull()}catch(e){user=null;console.error(e);toast("Connexion impossible. Réessaie dans un instant."+(e&&/^pull: /.test(e.message)?" ("+e.message.slice(6,100)+")":""));$("auth").classList.remove("hide");return}
 if(!db.profiles.length&&lg&&lg.profiles&&lg.profiles.length)migrate(lg);
 if(/access_token|[?&]code=/.test(location.hash+location.search))history.replaceState(null,"",location.pathname);
 if(!hasConsent(u)){askConsent(u,function(){finishEnter(u)});return}
@@ -1022,7 +1024,7 @@ $("pin1").onkeydown=$("pin2").onkeydown=function(e){if(e.key==="Enter")$("pok").
 var authM="login";
 function eyeReset(){$("apw").type="password";$("aeye").textContent="👁️";$("aeye").setAttribute("aria-label","Afficher le mot de passe")}
 $("aeye").onclick=function(){var i=$("apw"),show=i.type==="password";i.type=show?"text":"password";this.textContent=show?"🙈":"👁️";this.setAttribute("aria-label",show?"Masquer le mot de passe":"Afficher le mot de passe")};
-$("agoogle").onclick=async function(){var r=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+"/"+APP+"/app"}});if(r.error)$("amsg").textContent=fr(r.error.message)};
+$("agoogle").onclick=async function(){try{localStorage.setItem("studia:oauthApp",APP)}catch(e){}var r=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+"/"+APP+"/app"}});if(r.error)$("amsg").textContent=fr(r.error.message)};
 function authMode(m){authM=m;var r=m==="reset";$("aeml").classList.toggle("hide",r);$("agoogle").classList.toggle("hide",r);$("aor").classList.toggle("hide",r);$("areg").classList.toggle("hide",r);$("aforgot").classList.toggle("hide",r);
 $("atitle").textContent=r?"Nouveau mot de passe":(APP==="kids"?"Espace parent":"Connexion");
 $("apl").textContent=r?"Nouveau mot de passe (8 caractères ou plus)":"Mot de passe (8 caractères ou plus)";
