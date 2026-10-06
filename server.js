@@ -21,7 +21,7 @@ const MAX_PER_HOUR = 20;
 const LANG_NAME = { fr: "FRANÇAIS", en: "ANGLAIS" };
 const LANG_ERR = { fr: "français", en: "anglais" };
 const MSG = {
-  login: { fr: "Connecte-toi avec ton compte parent pour utiliser Studia.", en: "Sign in with your parent account to use Studia." },
+  login: { fr: "Connecte-toi avec ton compte parent pour utiliser Révifox.", en: "Sign in with your parent account to use Révifox." },
   limit: {
     fr: (n, w) => `Tu as atteint la limite de ${n} analyses par heure. Réessaie dans environ ${w} minute${w > 1 ? "s" : ""}.`,
     en: (n, w) => `You reached the limit of ${n} scans per hour. Try again in about ${w} minute${w > 1 ? "s" : ""}.`,
@@ -36,23 +36,25 @@ app.use(express.json({ limit: "12mb" }));
 
 // ---------- Application installable (PWA) : manifeste, service worker, icônes ----------
 const VERSIONS = {
-  kids: { name: "Studia Kids", short: "Studia Kids", desc: "Prends ta leçon en photo : fiche, résumé et quiz pour les enfants.", bg: "#F6F4FF", theme: "#6C4CF1", icon: "icon" },
-  studia: { name: "Studia", short: "Studia", desc: "Prends une leçon en photo : résumé, fiches, quiz et agenda.", bg: "#F6F4FF", theme: "#2F5BD6", icon: "studia-icon" },
+  kids: { path: "kids", name: "Révifox Kids", short: "Révifox Kids", desc: "Prends ta leçon en photo : fiche, résumé et quiz pour les enfants.", bg: "#F6F4FF", theme: "#6C4CF1", icon: "icon" },
+  studia: { path: "revifox", name: "Révifox", short: "Révifox", desc: "Prends une leçon en photo : résumé, fiches, quiz et agenda.", bg: "#F6F4FF", theme: "#2F5BD6", icon: "studia-icon" },
 };
 function manifestFor(k) {
   const v = VERSIONS[k];
   return JSON.stringify({
     name: v.name, short_name: v.short, description: v.desc,
-    id: `/${k}/app`, start_url: `/${k}/app`, scope: `/${k}/`, display: "standalone", lang: "fr",
-    background_color: v.bg, theme_color: v.theme,
+    id: `/${v.path}/app`, start_url: `/${v.path}/app`, scope: `/${v.path}/`, display: "standalone", lang: "fr",
+    background_color: v.bg, theme_color: v.theme, categories: ["education"],
     icons: [
       { src: `/${v.icon}-192.png`, sizes: "192x192", type: "image/png", purpose: "any maskable" },
       { src: `/${v.icon}-512.png`, sizes: "512x512", type: "image/png", purpose: "any maskable" },
     ],
   });
 }
+// Adresses : /kids et /revifox (l'ancienne /studia fonctionne toujours pour les installations existantes)
+const WEB_PATHS = { kids: ["kids"], studia: ["revifox", "studia"] };
 for (const k of Object.keys(VERSIONS)) {
-  app.get(`/${k}/manifest.webmanifest`, (req, res) => res.type("application/manifest+json").send(manifestFor(k)));
+  for (const p of WEB_PATHS[k]) app.get(`/${p}/manifest.webmanifest`, (req, res) => res.type("application/manifest+json").send(manifestFor(k)));
 }
 app.get("/manifest.webmanifest", (req, res) => res.type("application/manifest+json").send(manifestFor("kids"))); // anciens liens
 
@@ -69,22 +71,22 @@ self.addEventListener("fetch", (e) => {
   if (u.origin !== location.origin || u.pathname.startsWith("/api/")) return;
   e.respondWith(
     fetch(r).then((res) => { if (res.ok) { const c = res.clone(); caches.open(V).then((ca) => ca.put(r, c)); } return res; })
-      .catch(() => caches.match(r).then((m) => m || caches.match(u.pathname.startsWith("/studia") ? "/studia/app" : "/kids/app")))
+      .catch(() => caches.match(r).then((m) => m || caches.match(/^\/(revifox|studia)/.test(u.pathname) ? "/revifox/app" : "/kids/app")))
   );
 });
 self.addEventListener("push", (e) => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (_) { d = { b: e.data ? e.data.text() : "" }; }
-  e.waitUntil(self.registration.showNotification(d.t || "Studia", {
+  e.waitUntil(self.registration.showNotification(d.t || "Révifox", {
     body: d.b || "", icon: d.i || "/icon-192.png", badge: d.i || "/icon-192.png", tag: d.g || "studia", renotify: true, lang: d.l || "fr", data: { u: d.u || "/" },
   }));
 });
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
   const url = new URL((e.notification.data && e.notification.data.u) || "/", self.location.origin);
-  const prefix = url.pathname.startsWith("/studia") ? "/studia" : "/kids";
+  const general = /^\/(revifox|studia)/.test(url.pathname);
   e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((cs) => {
-    const c = cs.find((x) => new URL(x.url).pathname.startsWith(prefix));
+    const c = cs.find((x) => (general ? /^\/(revifox|studia)/ : /^\/kids/).test(new URL(x.url).pathname));
     if (c) return c.navigate(url.href).then((w) => (w || c).focus()).catch(() => c.focus());
     return self.clients.openWindow(url.href);
   }));
@@ -111,7 +113,7 @@ function inTri(x, y, a, b, c) {
   const p = [x, y], d1 = s(p, a, b), d2 = s(p, b, c), d3 = s(p, c, a);
   return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0));
 }
-// Le renard de Studia, dessiné dans un repère 120 x 120
+// Le renard de Révifox, dessiné dans un repère 120 x 120
 function foxColor(x, y) {
   const dark = [36, 31, 74], orange = [255, 138, 43];
   if (inEll(x, y, 60, 82, 7, 5) || inEll(x, y, 42, 62, 6, 6) || inEll(x, y, 78, 62, 6, 6)) return dark;
@@ -120,7 +122,7 @@ function foxColor(x, y) {
   return null;
 }
 const inPoly = (x, y, p) => { let c = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { if ((p[i][1] > y) !== (p[j][1] > y) && x < ((p[j][0] - p[i][0]) * (y - p[i][1])) / (p[j][1] - p[i][1]) + p[i][0]) c = !c; } return c; };
-// La toque de Studia, dans un repère 120 x 120
+// La toque de Révifox, dans un repère 120 x 120
 function capColor(x, y) {
   if (inEll(x, y, 108, 90, 6, 6) || (x > 105.5 && x < 110.5 && y > 52 && y < 90)) return [255, 176, 32];
   if (inPoly(x, y, [[60, 22], [116, 50], [60, 78], [4, 50]])) return [92, 160, 255];
@@ -147,17 +149,28 @@ for (const [name, size, kind] of [["icon-192.png", 192, "kids"], ["icon-512.png"
   app.get("/" + name, (req, res) => res.type("image/png").set("Cache-Control", "public, max-age=86400").send(renderIcon(size, kind)));
 }
 
-// Une seule adresse, deux versions : « / » = choix, « /kids » et « /studia » = présentations,
-// « /kids/app » et « /studia/app » = les applications, « /confidentialite » et « /conditions » = pages légales (communes)
-const APP_HTML = fs.readFileSync(path.join(__dirname, "public", "app.html"), "utf8");
+// Une seule adresse, deux versions : « / » = choix, « /kids » et « /revifox » = présentations,
+// « /kids/app » et « /revifox/app » = les applications, « /confidentialite » et « /conditions » = pages légales (communes)
+// Filet de sécurité : si « app.html » manque (ex. un téléchargement renommé « app (4).html »), on prend la copie au plus grand numéro.
+function findAppHtml() {
+  const dir = path.join(__dirname, "public"), exact = path.join(dir, "app.html");
+  if (fs.existsSync(exact)) return exact;
+  const num = (f) => Number((/\((\d+)\)/.exec(f) || [0, 0])[1]);
+  const alt = fs.readdirSync(dir).filter((f) => /^app\b.*\.html$/i.test(f)).sort((x, y) => num(y) - num(x));
+  if (!alt.length) { console.error("ERREUR : le fichier public/app.html est introuvable."); process.exit(1); }
+  console.warn(`ATTENTION : public/app.html est absent, j'utilise « ${alt[0]} ». Renomme-le en app.html sur GitHub.`);
+  return path.join(dir, alt[0]);
+}
+const APP_HTML = fs.readFileSync(findAppHtml(), "utf8");
 const APP_PAGES = {
   kids: APP_HTML,
-  studia: APP_HTML.replace("<title>Studia Kids — Apprends. Explore. Brille à ta façon.</title>", "<title>Studia — Étudie à ton rythme</title>").replace('href="/apple-touch-icon.png"', 'href="/studia-apple-touch-icon.png"').replace('<meta name="theme-color" content="#6C4CF1">', '<meta name="theme-color" content="#2F5BD6">'),
+  studia: APP_HTML.replace("<title>Révifox Kids — Apprends. Explore. Brille à ta façon.</title>", "<title>Révifox — Étudie à ton rythme</title>").replace('href="/apple-touch-icon.png"', 'href="/studia-apple-touch-icon.png"').replace('<meta name="theme-color" content="#6C4CF1">', '<meta name="theme-color" content="#2F5BD6">'),
 };
 for (const k of Object.keys(APP_PAGES)) {
-  APP_PAGES[k] = APP_PAGES[k].replace('href="/manifest.webmanifest"', `href="/${k}/manifest.webmanifest"`);
-  app.get(`/${k}/app`, (req, res) => res.type("html").set("Cache-Control", "no-cache").send(APP_PAGES[k]));
+  APP_PAGES[k] = APP_PAGES[k].replace('href="/manifest.webmanifest"', `href="/${VERSIONS[k].path}/manifest.webmanifest"`);
+  for (const p of WEB_PATHS[k]) app.get(`/${p}/app`, (req, res) => res.type("html").set("Cache-Control", "no-cache").send(APP_PAGES[k]));
 }
+app.get("/studia", (req, res) => res.redirect(301, "/revifox")); // ancienne adresse de la présentation
 // Ancienne adresse de l'application : on garde les liens et les installations existants
 app.get("/app", (req, res) => res.redirect(301, "/kids/app" + (req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "")));
 app.use(express.static(path.join(__dirname, "public"), { extensions: ["html"] }));
@@ -214,7 +227,7 @@ function prompt(mode, lang, n = 10) {
   const kids = mode === "kids";
   const na = Math.max(1, Math.round(n / 5)), nv = na, nq = n - na - nv; // 5 -> 3+1+1 ; 10 -> 6+2+2 ; 15 -> 9+3+3
   const L = LANG_NAME[lang] ? lang : "fr";
-  return `Tu es Studia, un assistant de révision pour élèves. Analyse la photo d'une leçon (cahier ou manuel).
+  return `Tu es Révifox, un assistant de révision pour élèves. Analyse la photo d'une leçon (cahier ou manuel).
 Public : ${kids ? "enfant du primaire (6 à 12 ans). Phrases très courtes, mots simples, ton très encourageant." : "personne de tout âge (élève, étudiant ou adulte en formation). Ton direct, clair et neutre."}
 Écris le titre, le résumé, les fiches et le quiz en ${LANG_NAME[L]}. Base-toi uniquement sur ce qui est visible sur la photo. Si la photo est illisible, réponds {"erreur":"courte explication en ${LANG_ERR[L]}"}.
 Réponds UNIQUEMENT avec ce JSON, sans aucun texte autour :
@@ -304,7 +317,7 @@ const shiftDay = (d, n) => new Date(Date.parse(d + "T00:00:00Z") + n * 864e5).to
 function agendaPrompt(lang, today) {
   const L = LANG_NAME[lang] ? lang : "fr";
   const jour = JOURS[new Date(today + "T12:00:00Z").getUTCDay()];
-  return `Tu es Studia. Tu lis la photo d'un calendrier ou d'un agenda scolaire, souvent écrit à la main, rapporté de l'école (une semaine, parfois un mois).
+  return `Tu es Révifox. Tu lis la photo d'un calendrier ou d'un agenda scolaire, souvent écrit à la main, rapporté de l'école (une semaine, parfois un mois).
 Aujourd'hui, nous sommes le ${today} (${jour}). Les dates "due" s'écrivent AAAA-MM-JJ.
 Procède dans cet ordre :
 1. Repère la structure : une colonne ou une ligne par jour ? les noms des jours (lundi, mardi…) ? des dates imprimées ou écrites ? le mois et l'année ?
@@ -534,11 +547,11 @@ app.post("/api/tg/test", async (req, res) => {
   try {
     const row = await myLink(id);
     if (!row || !row.chat_id) return res.status(409).json({ erreur: "Telegram n'est pas encore connecté." });
-    await sendTg(row.chat_id, "🔔 <b>Test de Studia Kids</b>\nLes alertes fonctionnent. Tu recevras un message ici quand un devoir est en retard ou qu'un examen approche.");
+    await sendTg(row.chat_id, "🔔 <b>Test de Révifox Kids</b>\nLes alertes fonctionnent. Tu recevras un message ici quand un devoir est en retard ou qu'un examen approche.");
     res.json({ ok: true });
   } catch (e) {
     console.error(e.message);
-    res.status(502).json({ erreur: "Telegram n'a pas livré le message. Reconnecte-le depuis Studia." });
+    res.status(502).json({ erreur: "Telegram n'a pas livré le message. Reconnecte-le depuis Révifox." });
   }
 });
 
@@ -564,20 +577,20 @@ async function onTgUpdate(u) {
   const start = /^\/start(?:@\w+)?(?:\s+(\S+))?$/.exec(text);
   if (start) {
     const token = start[1];
-    if (!token) return void (await sendTg(chat, "👋 Pour connecter ton compte, ouvre l'espace parent de Studia Kids et touche « Connecter Telegram »."));
+    if (!token) return void (await sendTg(chat, "👋 Pour connecter ton compte, ouvre l'espace parent de Révifox Kids et touche « Connecter Telegram »."));
     const rows = await sbRest(`tg_links?select=parent_id,token_at&token=eq.${encodeURIComponent(token)}`);
     const row = rows && rows[0];
     if (!row || Date.now() - Date.parse(row.token_at) > 30 * 60000) {
-      return void (await sendTg(chat, "⌛ Ce lien a expiré. Retourne dans l'espace parent de Studia Kids et touche de nouveau « Connecter Telegram »."));
+      return void (await sendTg(chat, "⌛ Ce lien a expiré. Retourne dans l'espace parent de Révifox Kids et touche de nouveau « Connecter Telegram »."));
     }
     await sbRest(`tg_links?parent_id=eq.${row.parent_id}`, { method: "PATCH", prefer: "return=minimal", body: { chat_id: chat, linked_at: new Date().toISOString(), token: null, sent: {} } });
-    return void (await sendTg(chat, "✅ <b>Connecté !</b>\nTu recevras ici les alertes de Studia Kids : devoirs en retard et examens qui approchent.\nEnvoie /stop pour les arrêter."));
+    return void (await sendTg(chat, "✅ <b>Connecté !</b>\nTu recevras ici les alertes de Révifox Kids : devoirs en retard et examens qui approchent.\nEnvoie /stop pour les arrêter."));
   }
   if (/^\/stop\b/.test(text)) {
     await sbRest(`tg_links?chat_id=eq.${chat}`, { method: "PATCH", prefer: "return=minimal", body: { chat_id: null } });
-    return void (await sendTg(chat, "🔕 Alertes arrêtées. Tu peux les rebrancher depuis l'espace parent de Studia Kids."));
+    return void (await sendTg(chat, "🔕 Alertes arrêtées. Tu peux les rebrancher depuis l'espace parent de Révifox Kids."));
   }
-  await sendTg(chat, "Je suis le robot d'alertes de Studia Kids. Les réglages se font dans l'espace parent de l'application. Envoie /stop pour arrêter les alertes.");
+  await sendTg(chat, "Je suis le robot d'alertes de Révifox Kids. Les réglages se font dans l'espace parent de l'application. Envoie /stop pour arrêter les alertes.");
 }
 
 // ---------- Les alertes : appelées chaque soir par un déclencheur planifié ----------
@@ -589,7 +602,7 @@ const frIn = (n) => (n === 0 ? "aujourd'hui" : n === 1 ? "demain" : `dans ${n} j
 async function loadAlertData(pid, appName) {
   const base = `profiles?select=id,name,av&parent_id=eq.${pid}`;
   const [profiles, tasks] = await Promise.all([
-    sbRest(`${base}&app=eq.${appName}`).catch(() => sbRest(base)),
+    sbRest(`${base}&app=eq.${appName}`).catch(async () => ((await sbRest(`profiles?select=id,name,av,mode&parent_id=eq.${pid}`)) || []).filter((p) => (p.mode === "studia") === (appName === "studia"))),
     sbRest(`tasks?select=id,profile_id,kind,title,subject,due&parent_id=eq.${pid}&done_at=is.null`),
   ]);
   return { pid, kids: new Map((profiles || []).map((p) => [p.id, p])), tasks: tasks || [] };
@@ -636,7 +649,7 @@ async function buildAlerts(link, today) {
   if (!lines.size) return { text: null, marks };
   const blocks = [...lines].map(([id, l]) => `<b>${eh(kids.get(id).av || "🦊")} ${eh(kids.get(id).name)}</b>\n${l.join("\n")}`);
   const lateTxt = blocks.some((b) => b.includes("Devoir en retard"));
-  const text = `🔔 <b>Studia Kids</b>\n\n${blocks.join("\n\n")}${lateTxt ? "\n\n<i>« En retard » veut dire que le devoir n'est pas marqué comme fait dans Studia.</i>" : ""}${PUBLIC_URL ? `\n${PUBLIC_URL}` : ""}`;
+  const text = `🔔 <b>Révifox Kids</b>\n\n${blocks.join("\n\n")}${lateTxt ? "\n\n<i>« En retard » veut dire que le devoir n'est pas marqué comme fait dans Révifox.</i>" : ""}${PUBLIC_URL ? `\n${PUBLIC_URL}` : ""}`;
   return { text, marks, sent };
 }
 
@@ -673,7 +686,7 @@ function pushMessage(g, lang, appName) {
   const body = parts.join("\n");
   return body.length > 220 ? body.slice(0, 217) + "…" : body;
 }
-const pushPayload = (sub, body) => ({ t: sub.app === "studia" ? "Studia" : "Studia Kids", b: body, u: `/${sub.app === "studia" ? "studia" : "kids"}/app?open=agenda`, i: sub.app === "studia" ? "/studia-icon-192.png" : "/icon-192.png", g: "studia-alertes", l: sub.lang === "en" ? "en" : "fr" });
+const pushPayload = (sub, body) => ({ t: sub.app === "studia" ? "Révifox" : "Révifox Kids", b: body, u: `/${sub.app === "studia" ? "revifox" : "kids"}/app?open=agenda`, i: sub.app === "studia" ? "/studia-icon-192.png" : "/icon-192.png", g: "studia-alertes", l: sub.lang === "en" ? "en" : "fr" });
 const sendPush = (sub, payload) => webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, JSON.stringify(payload), { TTL: 12 * 3600, urgency: "normal" });
 const goneErr = (e) => Boolean(e && (e.statusCode === 404 || e.statusCode === 410));
 const noPush = (res) => res.status(503).json({ erreur: "Les notifications du téléphone ne sont pas activées sur le serveur." });
@@ -777,6 +790,41 @@ app.get("/api/push/keys", (req, res) => {
   res.set("Cache-Control", "no-store").json({ VAPID_PUBLIC_KEY: Buffer.concat([Buffer.from([4]), Buffer.from(jwk.x, "base64url"), Buffer.from(jwk.y, "base64url")]).toString("base64url"), VAPID_PRIVATE_KEY: jwk.d });
 });
 
+// ---------- Suppression de compte (exigée par Google Play et par la loi) ----------
+app.post("/api/account/delete", async (req, res) => {
+  if (!SB_URL || !SB_SERVICE) return res.status(503).json({ erreur: "La suppression de compte n'est pas activée sur le serveur." });
+  const id = await parentId(req); if (!id) return noLogin(res);
+  if (!rateOk("delacc:" + id, 5, 3600000)) return res.status(429).json({ erreur: "Trop d'essais. Réessaie dans un moment." });
+  const c = String((req.body || {}).confirm || "").trim().toUpperCase();
+  if (c !== "SUPPRIMER" && c !== "DELETE") return res.status(400).json({ erreur: "Écris SUPPRIMER pour confirmer." });
+  try {
+    for (const t of ["push_subs", "tg_links"]) { // tables facultatives : une table absente n'empêche pas la suppression
+      await sbRest(`${t}?parent_id=eq.${id}`, { method: "DELETE", prefer: "return=minimal" }).catch((e) => console.warn("Suppression", t, e.message));
+    }
+    for (const t of ["tasks", "sessions", "profiles"]) await sbRest(`${t}?parent_id=eq.${id}`, { method: "DELETE", prefer: "return=minimal" });
+    const r = await fetch(`${SB_URL}/auth/v1/admin/users/${id}`, { method: "DELETE", headers: sbHeaders({}) }); // en dernier : le compte de connexion
+    if (!r.ok && r.status !== 404) throw new Error(`Auth ${r.status}`);
+    console.log("Compte supprimé :", String(id).slice(0, 8));
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("Suppression de compte :", e.message);
+    res.status(502).json({ erreur: "La suppression n'a pas pu être terminée. Réessaie, ou écris-nous pour la demander." });
+  }
+});
+
+// Vérification de l'application Android (Digital Asset Links).
+// Réglages sur Render : ANDROID_PACKAGE et ANDROID_SHA256 (Révifox), ANDROID_PACKAGE_KIDS et ANDROID_SHA256_KIDS (Révifox Kids).
+// Plusieurs empreintes possibles, séparées par des virgules (clé de téléversement et clé de signature de Google Play).
+app.get("/.well-known/assetlinks.json", (req, res) => {
+  const out = [];
+  for (const [pkg, fp] of [[process.env.ANDROID_PACKAGE, process.env.ANDROID_SHA256], [process.env.ANDROID_PACKAGE_KIDS, process.env.ANDROID_SHA256_KIDS]]) {
+    const prints = String(fp || "").split(",").map((x) => x.trim().toUpperCase()).filter((x) => /^([0-9A-F]{2}:){31}[0-9A-F]{2}$/.test(x));
+    const name = String(pkg || "").trim();
+    if (/^[a-zA-Z]\w*(\.[a-zA-Z]\w*)+$/.test(name) && prints.length) out.push({ relation: ["delegate_permission/common.handle_all_urls"], target: { namespace: "android_app", package_name: name, sha256_cert_fingerprints: prints } });
+  }
+  res.type("application/json").set("Cache-Control", "no-cache").send(JSON.stringify(out));
+});
+
 async function runAlerts(dry) {
   const today = ymdInTz(), out = { today, parents: 0, messages: 0, details: [] };
   const links = tgEnabled ? (await sbRest("tg_links?select=parent_id,chat_id,sent&chat_id=not.is.null")) || [] : [];
@@ -817,4 +865,4 @@ if (tgEnabled && PUBLIC_URL) {
 }
 if (tgEnabled && !tgBot) tg("getMe").then((b) => { tgBot = b.username; }).catch((e) => console.error(e.message));
 
-app.listen(process.env.PORT || 3000, () => console.log("Studia prêt"));
+app.listen(process.env.PORT || 3000, () => console.log("Révifox prêt"));
