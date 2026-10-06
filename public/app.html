@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Studia Kids — Apprends. Explore. Brille à ta façon.</title>
+<title>Révifox Kids — Apprends. Explore. Brille à ta façon.</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700&family=Lexend:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F3F0FF;--card:#fff;--ink:#241F4A;--soft:#6B6794;--violet:#6C4CF1;--sun:#FFC93C;--mint:#27B994;--coral:#FF6B6B;--line:#E2DCFA;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -117,9 +117,10 @@ body.easy,body.easy h1,body.easy h2,body.easy h3,body.easy button,body.easy inpu
 .bdg{display:flex;gap:12px;flex-wrap:wrap;font-size:1.7rem}
 .bdg span{filter:grayscale(1);opacity:.3}
 .bdg span.on{filter:none;opacity:1}
-#auth,#pin,#qr,#stop,#crop,#shop,#set,#agenda,#consent,#agimp{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:20px;overflow:auto}
+#auth,#pin,#qr,#stop,#crop,#shop,#set,#agenda,#consent,#agimp,#delacc{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:20px;overflow:auto}
 #crop{z-index:24}
 #agimp{z-index:23}
+#delacc{z-index:26}
 #stop{z-index:25}
 #pin{z-index:30}
 .abox{max-width:380px;width:100%;text-align:center}
@@ -342,6 +343,8 @@ body.studia #shopBtn,body.studia #parBtn,body.studia #gam,body.studia #profiles,
 .cnh{margin:2px 0 8px;font-size:.85rem}
 .capn{margin:4px 0 0}
 .finsc{font-size:1.4rem;margin-top:2px}
+.pf.danger{border-color:#8F1D1D;color:#8F1D1D}
+.go.danger{background:#8F1D1D;color:#fff}
 .pw{position:relative}
 .pw input{padding-right:54px}
 .pw button{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;font-size:1.3rem;line-height:1;padding:6px;cursor:pointer}
@@ -411,11 +414,11 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 </defs></svg>
 <div class="shell" id="shell">
 <header class="mbar">
-<a class="mbrand" href="/" aria-label="Studia Kids"><span class="bico"><svg width="34" height="34" viewBox="0 0 120 120" aria-hidden="true"><polygon points="14,12 48,34 22,64" fill="#FF8A2B"/><polygon points="106,12 72,34 98,64" fill="#FF8A2B"/><ellipse cx="60" cy="68" rx="46" ry="42" fill="#FF8A2B"/><path d="M14 76 Q60 126 106 76 Q90 60 60 84 Q30 60 14 76Z" fill="#fff"/><circle cx="42" cy="62" r="6" fill="#241F4A"/><circle cx="78" cy="62" r="6" fill="#241F4A"/><ellipse cx="60" cy="82" rx="7" ry="5" fill="#241F4A"/></svg></span><span class="bname">Studia Kids</span></a>
+<a class="mbrand" href="/" aria-label="Révifox Kids"><span class="bico"><svg width="34" height="34" viewBox="0 0 120 120" aria-hidden="true"><polygon points="14,12 48,34 22,64" fill="#FF8A2B"/><polygon points="106,12 72,34 98,64" fill="#FF8A2B"/><ellipse cx="60" cy="68" rx="46" ry="42" fill="#FF8A2B"/><path d="M14 76 Q60 126 106 76 Q90 60 60 84 Q30 60 14 76Z" fill="#fff"/><circle cx="42" cy="62" r="6" fill="#241F4A"/><circle cx="78" cy="62" r="6" fill="#241F4A"/><ellipse cx="60" cy="82" rx="7" ry="5" fill="#241F4A"/></svg></span><span class="bname">Révifox Kids</span></a>
 <button type="button" class="mbtn" id="menuBtn" aria-expanded="false" aria-controls="side" aria-label="Menu"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
 </header>
 <aside class="side" id="side" aria-label="Navigation">
-<a class="sbrand" href="/"><span class="bico"><svg width="40" height="40" viewBox="0 0 120 120" aria-hidden="true"><polygon points="14,12 48,34 22,64" fill="#FF8A2B"/><polygon points="106,12 72,34 98,64" fill="#FF8A2B"/><ellipse cx="60" cy="68" rx="46" ry="42" fill="#FF8A2B"/><path d="M14 76 Q60 126 106 76 Q90 60 60 84 Q30 60 14 76Z" fill="#fff"/><circle cx="42" cy="62" r="6" fill="#241F4A"/><circle cx="78" cy="62" r="6" fill="#241F4A"/><ellipse cx="60" cy="82" rx="7" ry="5" fill="#241F4A"/></svg></span><span class="bname">Studia Kids</span></a>
+<a class="sbrand" href="/"><span class="bico"><svg width="40" height="40" viewBox="0 0 120 120" aria-hidden="true"><polygon points="14,12 48,34 22,64" fill="#FF8A2B"/><polygon points="106,12 72,34 98,64" fill="#FF8A2B"/><ellipse cx="60" cy="68" rx="46" ry="42" fill="#FF8A2B"/><path d="M14 76 Q60 126 106 76 Q90 60 60 84 Q30 60 14 76Z" fill="#fff"/><circle cx="42" cy="62" r="6" fill="#241F4A"/><circle cx="78" cy="62" r="6" fill="#241F4A"/><ellipse cx="60" cy="82" rx="7" ry="5" fill="#241F4A"/></svg></span><span class="bname">Révifox Kids</span></a>
 <nav class="snav">
 <button type="button" class="nav2 on" id="navHome" aria-current="page"><svg class="ci " aria-hidden="true"><use href="#c-home"/></svg><span data-t>Accueil</span></button>
 <button type="button" class="nav2" id="agBtn"><svg class="ci " aria-hidden="true"><use href="#c-cal"/></svg><span data-t>Agenda</span><b class="nbadge hide" id="agN"></b></button>
@@ -459,7 +462,7 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 <section class="card hide" id="dash" dir="ltr" aria-label="Espace parent"></section>
 
 <div class="g2"><section class="card" id="hist"><h2 class="h2i"><svg class="ci m" aria-hidden="true"><use href="#c-books"/></svg><span data-t>Dernières séances</span></h2><div class="chips" id="chips"></div><div id="list"></div></section><section id="gam" aria-label="Ma progression"></section></div>
-<footer data-t>Studia utilise l'IA et peut se tromper : vérifie avec ton cahier. Ne mets aucune donnée personnelle sur tes photos.</footer>
+<footer data-t>Révifox utilise l'IA et peut se tromper : vérifie avec ton cahier. Ne mets aucune donnée personnelle sur tes photos.</footer>
 </main></div>
 <div id="auth" class="hide" dir="ltr" role="dialog" aria-modal="true" aria-labelledby="atitle"><div class="abox">
 <div style="font-size:2.6rem" id="alogo">🦊</div><h2 id="atitle">Espace parent</h2>
@@ -488,8 +491,8 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 <button class="again" id="pcancel" type="button">Annuler</button>
 </div></div>
 <div id="qr" class="hide" dir="ltr" role="dialog" aria-modal="true" aria-labelledby="qtitle"><div class="abox">
-<h2 id="qtitle">Partager Studia Kids</h2>
-<p class="mute">Scanne ce code avec un téléphone pour ouvrir Studia.</p>
+<h2 id="qtitle">Partager Révifox Kids</h2>
+<p class="mute">Scanne ce code avec un téléphone pour ouvrir Révifox.</p>
 <div id="qrimg" style="display:inline-block;margin:6px 0"></div>
 <p class="mute" id="qurl" style="word-break:break-all;margin:4px 0 0"></p>
 <button class="go" id="qcopy" type="button">Copier le lien</button>
@@ -502,7 +505,7 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 <div class="crow"><button type="button" class="pf" id="crl" aria-label="Tourner à gauche">↺</button><button type="button" class="pf" id="crr" aria-label="Tourner à droite">↻</button><button type="button" class="pf" id="cclear" data-t>Tout garder</button></div>
 <div class="cropn" id="cropn"><span id="cnl" data-t>Nombre de fiches et de questions</span><div class="seg" id="cnseg" role="group" aria-labelledby="cnl"><button type="button" data-qn="5" aria-pressed="false">5</button><button type="button" data-qn="10" aria-pressed="true">10</button><button type="button" data-qn="15" aria-pressed="false">15</button></div></div>
 <p class="mute cnh" id="cnh" data-t>Plus il y en a, plus la séance est longue.</p>
-<button class="go" id="csend" type="button" data-t>Envoyer à Studia ✨</button>
+<button class="go" id="csend" type="button" data-t>Envoyer à Révifox ✨</button>
 <button class="again" id="ccancel" type="button" data-t>Annuler</button>
 </div></div>
 <div id="shop" class="hide" role="dialog" aria-modal="true"><div class="abox" id="shopbox" style="max-width:520px"></div></div>
@@ -511,6 +514,15 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 <div id="agimp" class="hide" role="dialog" aria-modal="true" aria-labelledby="impT"><div class="abox" id="impbox" style="max-width:640px"></div></div>
 <input type="file" id="fileAg" class="hide" accept="image/jpeg,image/png,image/webp" aria-label="Photo du calendrier">
 <div id="lib" class="hide" role="dialog" aria-modal="true" aria-labelledby="libT"><div class="abox libbox" id="libbox"></div></div>
+<div id="delacc" class="hide" dir="ltr" role="dialog" aria-modal="true" aria-labelledby="delT"><div class="abox">
+<h2 id="delT">Supprimer mon compte</h2>
+<p class="mute" id="delTxt"></p>
+<label for="delIn" class="mute" id="delL"></label>
+<input type="text" id="delIn" autocomplete="off" autocapitalize="characters" spellcheck="false">
+<p id="delMsg" class="bad" role="alert"></p>
+<button class="go danger" id="delGo" type="button" disabled>Supprimer définitivement</button>
+<button class="again" id="delNo" type="button">Annuler</button>
+</div></div>
 <div id="consent" class="hide" dir="ltr" role="dialog" aria-modal="true" aria-labelledby="cnsT"><div class="abox">
 <h2 id="cnsT">Avant de continuer</h2>
 <p class="mute" id="cnsP"></p>
@@ -527,7 +539,7 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 var $=function(i){return document.getElementById(i)},mode="kids",R=null,qi=0,sc=0,lock=false,qs={tries:0};
 function esc(s){var d=document.createElement("div");d.textContent=s==null?"":s;return d.innerHTML}
 function ea(s){return esc(s).replace(/"/g,"&quot;")}
-var APP=/^\/studia(\/|$)/.test(location.pathname)?"studia":"kids"; // "kids" = Studia Kids ; "studia" = Studia (tout public)
+var APP=/^\/(revifox|studia)(\/|$)/.test(location.pathname)?"studia":"kids"; // "kids" = Révifox Kids ; "studia" = Révifox (tout public)
 function show(id,on){$(id).classList.toggle("hide",!on)}
 function fail(m){show("load",false);show("err",true);$("err").textContent=m}
 
@@ -540,10 +552,10 @@ var lang=devLang();
 var TR={en:{
 "Prends ta leçon en photo. Je prépare ta fiche et ton quiz.":"Take a photo of your lesson. I'll make your summary, flashcards and quiz.",
 "📸 Photographier ma leçon":"📸 Take a photo of my lesson","📝 Résumé":"📝 Summary","🃏 Fiches":"🃏 Flashcards","🎯 Quiz":"🎯 Quiz","📚 Mes séances":"📚 My sessions",
-"Studia utilise l'IA et peut se tromper : vérifie avec ton cahier. Ne mets aucune donnée personnelle sur tes photos.":"Studia uses AI and can make mistakes: check with your notebook. Don't put any personal information on your photos.",
+"Révifox utilise l'IA et peut se tromper : vérifie avec ton cahier. Ne mets aucune donnée personnelle sur tes photos.":"Révifox uses AI and can make mistakes: check with your notebook. Don't put any personal information on your photos.",
 "Je regarde ta leçon… 🔍":"I'm looking at your lesson… 🔍","Impossible de lire cette photo. Essaie encore.":"Couldn't read this photo. Try again.",
 "Cadre bien ta leçon":"Frame your lesson","Tourne la photo si besoin, puis glisse ton doigt pour entourer la partie à lire. Évite les reflets et le flou.":"Turn the photo if needed, then drag your finger around the part to read. Avoid glare and blur.",
-"Tout garder":"Keep all","Envoyer à Studia ✨":"Send to Studia ✨","Annuler":"Cancel","Fermer":"Close",
+"Tout garder":"Keep all","Envoyer à Révifox ✨":"Send to Révifox ✨","Annuler":"Cancel","Fermer":"Close",
 "Toutes":"All","Maths":"Math","Français":"French","Sciences":"Science","Histoire":"History","Anglais":"English","Autre":"Other",
 "Rien ici pour l'instant. Prends ta première leçon en photo et elle apparaîtra ici ! 🦊":"Nothing here yet. Take your first lesson photo and it will show up here! 🦊",
 "+ Profil":"+ Profile","📱 Partager":"📱 Share","⚙️ Réglages":"⚙️ Settings","🎨 Mon renard":"🎨 My fox",
@@ -580,8 +592,8 @@ var TR={en:{
 "Prochain examen":"Next exam","Devoirs de la semaine":"Homework this week","Fait":"Done","À faire":"To do","Titre":"Title","Ex. : Devoir 1, exercice 3, page 42":"E.g. Homework 1, exercise 3, page 42","Ex. : Les fractions":"E.g. Fractions",
 "Accueil":"Home","Mes séances":"My sessions","Partager":"Share","Espace parent":"Parent area","Photographier":"Take a photo","Devoir ou examen":"Homework or exam","Mes matières":"My subjects","séances":"sessions","Se déconnecter":"Log out","Connexion":"Log in","Déconnexion":"Log out","Choisir une photo":"Choose a photo","Prendre une photo":"Take a photo","Glisse une photo ici ou choisis-la sur l'ordinateur.":"Drag a photo here or choose one on your computer.","Prends ta leçon en photo":"Take a photo of your lesson","Ajouter un élève":"Add a student","Dépose une photo (JPG, PNG ou WebP).":"Drop a photo (JPG, PNG or WebP).","Ton niveau":"Your level",
 "Avant de continuer":"Before you continue",
-"Studia Kids est conçu pour les enfants, avec un compte géré par un parent ou un tuteur.":"Studia Kids is designed for children, with an account managed by a parent or guardian.",
-"Pour utiliser Studia, nous avons besoin de ton accord.":"To use Studia, we need your agreement.",
+"Révifox Kids est conçu pour les enfants, avec un compte géré par un parent ou un tuteur.":"Révifox Kids is designed for children, with an account managed by a parent or guardian.",
+"Pour utiliser Révifox, nous avons besoin de ton accord.":"To use Révifox, we need your agreement.",
 "Je suis le parent ou le tuteur légal des enfants pour qui je crée des profils, et j'accepte la politique de confidentialité et les conditions d'utilisation.":"I am the parent or legal guardian of the children I create profiles for, and I accept the privacy policy and the terms of use.",
 "J'ai 14 ans ou plus, ou j'ai l'accord d'un parent ou d'un tuteur, et j'accepte la politique de confidentialité et les conditions d'utilisation.":"I am 14 or older, or I have a parent's or guardian's permission, and I accept the privacy policy and the terms of use.",
 "Politique de confidentialité":"Privacy policy",
@@ -639,7 +651,7 @@ var TR={en:{
 "Calendriers":"Calendars",
 "Retirer ce calendrier de la bibliothèque ? Les devoirs et examens restent dans l'agenda.":"Remove this calendar from the library? The homework and exams stay in the planner.",
 "Notifications sur ce téléphone":"Notifications on this phone",
-"Sur iPhone et iPad : touche Partager, puis « Sur l'écran d'accueil », ouvre Studia depuis son icône, puis reviens ici pour activer les notifications.":"On iPhone and iPad: tap Share, then “Add to Home Screen”, open Studia from its icon, then come back here to turn notifications on.",
+"Sur iPhone et iPad : touche Partager, puis « Sur l'écran d'accueil », ouvre Révifox depuis son icône, puis reviens ici pour activer les notifications.":"On iPhone and iPad: tap Share, then “Add to Home Screen”, open Révifox from its icon, then come back here to turn notifications on.",
 "Ce navigateur ne gère pas les notifications. Essaie Chrome (Android) ou installe l'application sur l'écran d'accueil.":"This browser doesn't support notifications. Try Chrome (Android) or install the app on your home screen.",
 "Chargement…":"Loading…",
 "Les notifications du téléphone ne sont pas encore activées sur le serveur.":"Phone notifications aren't turned on on the server yet.",
@@ -664,7 +676,16 @@ var TR={en:{
 "Réussis un quiz avec au moins 80 % de bonnes réponses":"Pass a quiz with at least 80% correct answers",
 "Cette photo ne peut pas être ouverte. Essaie une photo JPG ou PNG (certains téléphones enregistrent en HEIC).":"This photo can't be opened. Try a JPG or PNG photo (some phones save in HEIC).",
 "Le serveur ne répond pas. Il se réveille peut-être : attends une minute, puis réessaie.":"The server isn't responding. It may be waking up: wait a minute, then try again.",
-"Le serveur a mis trop de temps à répondre. Réessaie dans une minute ou choisis moins de questions.":"The server took too long to answer. Try again in a minute or choose fewer questions."
+"Le serveur a mis trop de temps à répondre. Réessaie dans une minute ou choisis moins de questions.":"The server took too long to answer. Try again in a minute or choose fewer questions.",
+"Supprimer mon compte":"Delete my account",
+"Supprimer mon compte…":"Delete my account…",
+"Efface définitivement le compte et toutes les données. Tu pourras tout relire avant de confirmer.":"Permanently erases the account and all data. You can read everything again before confirming.",
+"Cela efface définitivement ton compte et toutes les données qui y sont liées : les profils des enfants, les séances, l'agenda, les rappels et la bibliothèque. Révifox Kids et Révifox sont toutes deux concernées. Cette action est irréversible.":"This permanently erases your account and all the data linked to it: the children's profiles, sessions, planner, reminders and library. Both Révifox Kids and Révifox are affected. This cannot be undone.",
+"Cela efface définitivement ton compte et toutes les données qui y sont liées : tes séances, ton agenda, tes rappels et ta bibliothèque. Révifox et Révifox Kids sont toutes deux concernées. Cette action est irréversible.":"This permanently erases your account and all the data linked to it: your sessions, planner, reminders and library. Both Révifox and Révifox Kids are affected. This cannot be undone.",
+"Pour confirmer, écris":"To confirm, type",
+"Supprimer définitivement":"Delete permanently",
+"Suppression en cours…":"Deleting…",
+"Connecte-toi pour supprimer ton compte.":"Sign in to delete your account."
 }};
 function t(s){var d=TR[lang];return d&&d[s]?d[s]:s}
 function applyDir(){var L=LG(lang);document.documentElement.lang=lang;document.documentElement.dir=L.dir;[].forEach.call(document.querySelectorAll("#langseg button"),function(b){b.setAttribute("aria-pressed",b.dataset.l===lang)})}
@@ -686,12 +707,12 @@ function applyPrefs(){if(!cur)return;var p=pref();lang=LG(p.lang).c;applyDir();
 document.body.classList.toggle("kids",APP==="kids");document.body.classList.toggle("studia",APP==="studia");document.body.classList.toggle("easy",p.easy);
 document.documentElement.style.fontSize=["100%","115%","130%"][p.size]||"100%";applyLang();renderFox();paintQn()}
 function paintBrand(){document.body.classList.add(APP);if(APP==="kids")return;
-[].forEach.call(document.querySelectorAll(".bname"),function(e){e.textContent="Studia"});
+[].forEach.call(document.querySelectorAll(".bname"),function(e){e.textContent="Révifox"});
 [].forEach.call(document.querySelectorAll(".mbrand .bico"),function(e){e.innerHTML='<svg width="34" height="34" aria-hidden="true"><use href="#c-cap"/></svg>'});
 [].forEach.call(document.querySelectorAll(".sbrand .bico"),function(e){e.innerHTML='<svg width="40" height="40" aria-hidden="true"><use href="#c-cap"/></svg>'});
 $("alogo").innerHTML='<svg style="width:56px;height:56px" aria-hidden="true"><use href="#c-cap"/></svg>';$("atitle").textContent="Connexion";
 $("aintro").textContent="Connecte-toi pour retrouver tes séances et ton agenda sur tous tes appareils.";
-$("qtitle").textContent="Partager Studia";document.title="Studia — Étudie à ton rythme"}
+$("qtitle").textContent="Partager Révifox";document.title="Révifox — Étudie à ton rythme"}
 function setMode(){mode=APP;applyPrefs();if(!ex().seen)ex().seen=seenNow()}
 
 // ---------- Petits sons (créés par le navigateur, sans fichier) ----------
@@ -761,7 +782,7 @@ h+=srow("Taille du texte",["A","A+","A++"].map(function(l,i){return'<button type
 h+=srow("Fiches et questions",[5,10,15].map(function(n){return'<button type="button" class="pf" data-qn="'+n+'" aria-pressed="'+(p.qn===n)+'">'+n+'</button>'}).join(""));
 h+=voiceRow();
 h+='<button type="button" class="go'+(instEv?"":" hide")+'" id="inst" style="margin-top:14px">📲 '+t("Installer l'application")+'</button><p class="mute" style="font-size:.85rem">'+t("Sur iPhone : touche Partager, puis « Sur l'écran d'accueil ».")+'</p><button class="again" id="sclose" type="button">'+t("Fermer")+'</button>';
-$("setbox").innerHTML=h;if(APP==="studia"){var pb=document.createElement("div");pb.className="tgcard";pb.id="pushbox2";$("setbox").insertBefore(pb,$("inst"));pushPanel("pushbox2",t)}
+$("setbox").innerHTML=h;if(APP==="studia"){var pb=document.createElement("div");pb.className="tgcard";pb.id="pushbox2";$("setbox").insertBefore(pb,$("inst"));pushPanel("pushbox2",t);var db2=document.createElement("div");db2.className="tgcard";db2.id="delbox2";db2.innerHTML=delBoxHtml(t);$("setbox").insertBefore(db2,$("inst"));$("delOpen").onclick=function(){openDel(t)}}
 function chg(fn){fn(pref());save();applyPrefs();renderSet();renderProfiles();renderStats();renderHist();if(qEnd&&R)endScreen()}
 $("sSound").onclick=function(){chg(function(q){q.sound=!q.sound});sfx("click")};
 $("sEasy").onclick=function(){chg(function(q){q.easy=!q.easy})};
@@ -852,7 +873,7 @@ function slimDb(){var o=Object.assign({},db);o.sessions=db.sessions.map(function
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){try{localStorage.setItem(KEY,JSON.stringify(slimDb()))}catch(e2){}}sched()}
 function newProfile(name){var p={id:uid(),name:name,av:AV[db.profiles.length%AV.length],mode:APP,app:APP,extra:{}};db.profiles.push(p);db.active=p.id;cur=p;save();return p}
 function load(){if(!user){try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&s.profiles&&s.profiles.length)db=s}catch(e){}}
-if(!db.profiles.length){newProfile((prompt("Bienvenue sur Studia ! Quel est ton prénom ?")||"").trim().slice(0,20)||"Élève")}
+if(!db.profiles.length){newProfile((prompt("Bienvenue sur Révifox ! Quel est ton prénom ?")||"").trim().slice(0,20)||"Élève")}
 db.tasks=db.tasks||[];cur=db.profiles.filter(function(p){return p.id===db.active})[0]||db.profiles[0];db.active=cur.id;setMode()}
 function switchTo(p){cur=p;db.active=p.id;save();setMode();show("out",false);show("err",false);filt="Toutes";renderProfiles();renderHist();checkLimit()}
 function greet(){return lang==="en"?"Hi "+cur.name+"! What are we studying today?":"Salut "+cur.name+" ! On révise quoi aujourd'hui ?"}
@@ -929,7 +950,7 @@ function token(){return sb?sb.auth.getSession().then(function(r){return r.data.s
 function sched(){if(!sb||!user)return;clearTimeout(pt);pt=setTimeout(push,700)}
 function cdel(t,id){if(sb&&user)sb.from(t).delete().eq("id",id).then(function(r){if(r.error)console.error(r.error)})}
 async function pull(){var P=await sb.from("profiles").select("*").eq("app",APP).order("created_at");
-if(P.error&&/\bapp\b|column/i.test(P.error.message||"")){ // colonne « app » pas encore créée : on sépare Kids et Studia avec la colonne « mode »
+if(P.error&&/\bapp\b|column/i.test(P.error.message||"")){ // colonne « app » pas encore créée : on sépare Kids et Révifox avec la colonne « mode »
 P=await sb.from("profiles").select("*").order("created_at");
 if(!P.error)P={data:P.data.filter(function(p){return(p.mode==="studia")===(APP==="studia")}),error:null}}
 var SL=60,S=await sb.from("sessions").select("*").order("created_at",{ascending:false}).limit(SL),S2={data:[],error:null};
@@ -967,7 +988,7 @@ function finishEnter(u){KEY=(APP==="kids"?"studia:v1:":"studia:s1:")+u.id;$("log
 var CONSENT_V=1;
 function hasConsent(u){var c=u.user_metadata&&u.user_metadata.consent&&u.user_metadata.consent[APP];return!!(c&&c.v>=CONSENT_V)}
 function askConsent(u,cb){var kd=APP==="kids";$("cnsT").textContent=t("Avant de continuer");
-$("cnsP").textContent=t(kd?"Studia Kids est conçu pour les enfants, avec un compte géré par un parent ou un tuteur.":"Pour utiliser Studia, nous avons besoin de ton accord.");
+$("cnsP").textContent=t(kd?"Révifox Kids est conçu pour les enfants, avec un compte géré par un parent ou un tuteur.":"Pour utiliser Révifox, nous avons besoin de ton accord.");
 $("cnsL").textContent=t(kd?"Je suis le parent ou le tuteur légal des enfants pour qui je crée des profils, et j'accepte la politique de confidentialité et les conditions d'utilisation.":"J'ai 14 ans ou plus, ou j'ai l'accord d'un parent ou d'un tuteur, et j'accepte la politique de confidentialité et les conditions d'utilisation.");
 $("cnsLk").innerHTML='<a href="/confidentialite" target="_blank" rel="noopener">'+t("Politique de confidentialité")+'</a> · <a href="/conditions" target="_blank" rel="noopener">'+t("Conditions d'utilisation")+'</a>';
 $("cnsOk").textContent=t("Continuer");$("cnsOut").textContent=t("Se déconnecter");$("cnsMsg").textContent="";
@@ -1024,14 +1045,15 @@ $("pin1").onkeydown=$("pin2").onkeydown=function(e){if(e.key==="Enter")$("pok").
 var authM="login";
 function eyeReset(){$("apw").type="password";$("aeye").textContent="👁️";$("aeye").setAttribute("aria-label","Afficher le mot de passe")}
 $("aeye").onclick=function(){var i=$("apw"),show=i.type==="password";i.type=show?"text":"password";this.textContent=show?"🙈":"👁️";this.setAttribute("aria-label",show?"Masquer le mot de passe":"Afficher le mot de passe")};
-$("agoogle").onclick=async function(){try{localStorage.setItem("studia:oauthApp",APP)}catch(e){}var r=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+"/"+APP+"/app"}});if(r.error)$("amsg").textContent=fr(r.error.message)};
+function webPath(){return"/"+(APP==="studia"?"revifox":"kids")+"/app"}
+$("agoogle").onclick=async function(){try{localStorage.setItem("studia:oauthApp",APP)}catch(e){}var r=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+webPath()}});if(r.error)$("amsg").textContent=fr(r.error.message)};
 function authMode(m){authM=m;var r=m==="reset";$("aeml").classList.toggle("hide",r);$("agoogle").classList.toggle("hide",r);$("aor").classList.toggle("hide",r);$("areg").classList.toggle("hide",r);$("aforgot").classList.toggle("hide",r);
 $("atitle").textContent=r?"Nouveau mot de passe":(APP==="kids"?"Espace parent":"Connexion");
 $("apl").textContent=r?"Nouveau mot de passe (8 caractères ou plus)":"Mot de passe (8 caractères ou plus)";
 $("alog").textContent=r?"Enregistrer":"Se connecter";$("apw").autocomplete=r?"new-password":"current-password"}
 $("aforgot").onclick=async function(){var e=$("aem").value.trim(),msg=$("amsg");
 if(!e){msg.textContent="Entre d'abord ton courriel dans le champ ci-dessus.";return}
-msg.textContent="Un instant…";var r=await sb.auth.resetPasswordForEmail(e,{redirectTo:location.origin+"/"+APP+"/app"});
+msg.textContent="Un instant…";var r=await sb.auth.resetPasswordForEmail(e,{redirectTo:location.origin+webPath()});
 msg.textContent=r.error?fr(r.error.message):"Si un compte existe avec ce courriel, un lien de réinitialisation vient d'être envoyé."};
 // ---------- Agenda : devoirs et examens (vue semaine) ----------
 var SUBJ=["Maths","Français","Sciences","Histoire","Anglais","Autre"],agKind="devoir",noTasks=false,agOff=0,agPid=null,agParent=false;
@@ -1322,6 +1344,24 @@ if($("tgRefresh"))$("tgRefresh").onclick=tgPanel;
 if($("tgTest"))$("tgTest").onclick=function(){msg("Envoi…");tgApi("test",{}).then(function(j){msg(j.ok?"Message envoyé : regarde ton Telegram.":(j.erreur||"Échec de l\'envoi."))})};
 if($("tgOff"))$("tgOff").onclick=function(){if(confirm("Arrêter les alertes Telegram ?"))tgApi("unlink",{}).then(tgPanel)}
 }).catch(function(){box.innerHTML=T+'<p class="mute">Le serveur ne répond pas.</p>'})}
+// ---------- Supprimer son compte (Google Play et la loi l'exigent) ----------
+function openDel(tr){var word=(tr===ident||lang!=="en")?"SUPPRIMER":"DELETE",box=$("delacc");
+$("delT").textContent=tr("Supprimer mon compte");
+$("delTxt").textContent=tr(APP==="kids"?"Cela efface définitivement ton compte et toutes les données qui y sont liées : les profils des enfants, les séances, l'agenda, les rappels et la bibliothèque. Révifox Kids et Révifox sont toutes deux concernées. Cette action est irréversible.":"Cela efface définitivement ton compte et toutes les données qui y sont liées : tes séances, ton agenda, tes rappels et ta bibliothèque. Révifox et Révifox Kids sont toutes deux concernées. Cette action est irréversible.");
+$("delL").textContent=tr("Pour confirmer, écris")+" "+word+" :";$("delIn").value="";$("delMsg").textContent="";
+$("delGo").textContent=tr("Supprimer définitivement");$("delGo").disabled=true;$("delNo").textContent=tr("Annuler");
+box.classList.remove("hide");$("delIn").focus();
+$("delIn").oninput=function(){$("delGo").disabled=this.value.trim().toUpperCase()!==word};
+$("delNo").onclick=function(){box.classList.add("hide")};
+$("delGo").onclick=async function(){var go=this;go.disabled=true;$("delMsg").textContent=tr("Suppression en cours…");
+var tk=await token();if(!tk){$("delMsg").textContent=tr("Connecte-toi pour supprimer ton compte.");return}
+try{var r=await fetch("/api/account/delete",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+tk},body:JSON.stringify({confirm:word})}),j=await r.json().catch(function(){return{}});
+if(!r.ok)throw new Error(j.erreur||"Erreur");
+try{await sb.auth.signOut()}catch(e){}
+try{Object.keys(localStorage).filter(function(k){return k.indexOf("studia:")===0&&k!=="studia:lang"}).forEach(function(k){localStorage.removeItem(k)})}catch(e){}
+location.replace("/?compte-supprime=1")}
+catch(er){$("delMsg").textContent=er.message&&er.message!=="Failed to fetch"?er.message:tr("Le serveur ne répond pas. Il se réveille peut-être : attends une minute, puis réessaie.");go.disabled=false}}}
+function delBoxHtml(tr){return'<b>🗑️ '+tr("Supprimer mon compte")+'</b><p class="mute">'+tr("Efface définitivement le compte et toutes les données. Tu pourras tout relire avant de confirmer.")+'</p><button type="button" class="pf danger" id="delOpen">'+tr("Supprimer mon compte…")+'</button>'}
 // ---------- Notifications sur le téléphone (Web Push) ----------
 function pushApi(path,body){return token().then(function(tk){return fetch("/api/push/"+path,{method:body===undefined?"GET":"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+(tk||"")},body:body===undefined?undefined:JSON.stringify(body)}).then(function(r){return r.json().then(function(j){j._ok=r.ok;return j})})})}
 function pushSupported(){return!!(navigator.serviceWorker&&navigator.serviceWorker.ready&&"PushManager"in window&&"Notification"in window)}
@@ -1342,7 +1382,7 @@ async function pushDisable(){var sub=await pushCurrent();if(sub){await pushApi("
 function pushPanel(id,tr){var box=$(id);if(!box)return;var T='<b>🔔 '+tr("Notifications sur ce téléphone")+'</b>';
 function paint(h){box.innerHTML=T+h+'<p id="'+id+'Msg" class="mute" role="status"></p>'}
 function msg(m){var e=$(id+"Msg");if(e)e.textContent=m}
-if(!pushSupported()){paint('<p class="mute">'+tr(isIOS()?"Sur iPhone et iPad : touche Partager, puis « Sur l'écran d'accueil », ouvre Studia depuis son icône, puis reviens ici pour activer les notifications.":"Ce navigateur ne gère pas les notifications. Essaie Chrome (Android) ou installe l'application sur l'écran d'accueil.")+'</p>');return}
+if(!pushSupported()){paint('<p class="mute">'+tr(isIOS()?"Sur iPhone et iPad : touche Partager, puis « Sur l'écran d'accueil », ouvre Révifox depuis son icône, puis reviens ici pour activer les notifications.":"Ce navigateur ne gère pas les notifications. Essaie Chrome (Android) ou installe l'application sur l'écran d'accueil.")+'</p>');return}
 paint('<p class="mute">'+tr("Chargement…")+'</p>');
 pushCurrent().catch(function(){return null}).then(function(sub){var ep=sub?sub.endpoint:"";return pushApi("status",{endpoint:ep}).then(function(s){return{s:s,ep:ep}})}).then(function(r){var s=r.s,h="";
 if(!s._ok&&s.erreur)h='<p class="bad">'+esc(s.erreur)+'</p>';
@@ -1358,7 +1398,7 @@ if($(id+"Off"))$(id+"Off").onclick=function(){pushDisable().catch(function(){}).
 }).catch(function(){paint('<p class="mute">'+tr("Le serveur ne répond pas.")+'</p>')})}
 // Tableau de bord parent
 function streakOf(p){return(p.last===day()||p.last===yest())?p.streak||0:0}
-function renderDash(){var h='<h2>📊 Espace parent</h2><p class="mute">'+esc(user.email)+'</p>'+(noTasks?'<p class="bad">⚠️ L\'agenda n\'est pas encore relié à la base de données (le SQL de l\'agenda reste à lancer dans Supabase).</p>':'')+'<div class="tgcard" id="tgbox"></div><div class="tgcard" id="pushbox"></div>';
+function renderDash(){var h='<h2>📊 Espace parent</h2><p class="mute">'+esc(user.email)+'</p>'+(noTasks?'<p class="bad">⚠️ L\'agenda n\'est pas encore relié à la base de données (le SQL de l\'agenda reste à lancer dans Supabase).</p>':'')+'<div class="tgcard" id="tgbox"></div><div class="tgcard" id="pushbox"></div><div class="tgcard" id="delbox"></div>';
 db.profiles.forEach(function(p){var ss=db.sessions.filter(function(s){return s.pid===p.id}),wk=ss.filter(function(s){return Date.now()-s.date<6048e5}),
 sc=ss.filter(function(s){return s.score!=null&&s.res&&s.res.quiz}),by={},L=lvl(p.xp||0),
 avg=sc.length?Math.round(sc.reduce(function(a,s){return a+s.score/s.res.quiz.length},0)/sc.length*100):null;
@@ -1368,7 +1408,7 @@ h+='<div class="dp"><b>'+p.av+' '+esc(p.name)+'</b><small>Niveau '+(L.i+1)+' · 
 +Object.keys(by).map(function(m){var v=Math.round(by[m].reduce(function(a,b){return a+b},0)/by[m].length*100);
 return '<div><div class="r"><span>'+esc(m)+'</span><span>'+v+' %</span></div><div class="track"><i style="width:'+v+'%;background:'+col(m)+'"></i></div></div>'}).join("")+'</div>'});
 $("dash").innerHTML=h+'<button class="again" id="dclose" type="button">Fermer</button> <button class="pf" id="dpin" type="button">Changer mon code</button>';
-tgPanel();pushPanel("pushbox",ident);
+tgPanel();pushPanel("pushbox",ident);$("delbox").innerHTML=delBoxHtml(ident);$("delOpen").onclick=function(){openDel(ident)};
 $("dclose").onclick=function(){show("dash",false)};
 $("dpin").onclick=function(){openPin("set",null)};
 [].forEach.call($("dash").querySelectorAll("[data-lm]"),function(b){b.onclick=function(){var p=db.profiles.filter(function(x){return x.id===b.dataset.lm})[0];
