@@ -210,15 +210,16 @@ async function withRetry(call, tries = 3) {
   return r;
 }
 
-function prompt(mode, lang) {
+function prompt(mode, lang, n = 10) {
   const kids = mode === "kids";
+  const na = Math.max(1, Math.round(n / 5)), nv = na, nq = n - na - nv; // 5 -> 3+1+1 ; 10 -> 6+2+2 ; 15 -> 9+3+3
   const L = LANG_NAME[lang] ? lang : "fr";
   return `Tu es Studia, un assistant de révision pour élèves. Analyse la photo d'une leçon (cahier ou manuel).
 Public : ${kids ? "enfant du primaire (6 à 12 ans). Phrases très courtes, mots simples, ton très encourageant." : "personne de tout âge (élève, étudiant ou adulte en formation). Ton direct, clair et neutre."}
 Écris le titre, le résumé, les fiches et le quiz en ${LANG_NAME[L]}. Base-toi uniquement sur ce qui est visible sur la photo. Si la photo est illisible, réponds {"erreur":"courte explication en ${LANG_ERR[L]}"}.
 Réponds UNIQUEMENT avec ce JSON, sans aucun texte autour :
-{"matiere":"Maths|Français|Sciences|Histoire|Anglais|Autre","titre":"titre court de la leçon","resume":"résumé en 3 à 5 phrases","fiches":[{"q":"question ou mot clé","r":"réponse courte"}],"quiz":[{"t":"qcm","q":"question","choix":["a","b","c"],"bonne":0,"explication":"une phrase"},{"t":"qcm","q":"question","choix":["a","b","c"],"bonne":1,"explication":"une phrase"},{"t":"qcm","q":"question","choix":["a","b","c"],"bonne":2,"explication":"une phrase"},{"t":"vf","q":"affirmation à juger vraie ou fausse","bonne":true,"explication":"une phrase"},{"t":"assoc","q":"consigne courte pour associer","paires":[{"a":"mot","b":"partenaire"},{"a":"mot","b":"partenaire"},{"a":"mot","b":"partenaire"}],"explication":"une phrase"}]}
-Règles : 4 à 6 fiches ; exactement 5 questions dans cet ordre : 3 "qcm", 1 "vf", 1 "assoc". Pour "qcm", "bonne" est l'index (0, 1 ou 2) de la bonne réponse et il change d'une question à l'autre. "matiere" reste toujours l'une des valeurs françaises listées, même si le texte est en anglais.`;
+{"matiere":"Maths|Français|Sciences|Histoire|Anglais|Autre","titre":"titre court de la leçon","resume":"résumé en 3 à 5 phrases","fiches":[{"q":"question ou mot clé","r":"réponse courte"}],"quiz":[{"t":"qcm","q":"question","choix":["a","b","c"],"bonne":0,"explication":"une phrase"},{"t":"vf","q":"affirmation à juger vraie ou fausse","bonne":true,"explication":"une phrase"},{"t":"assoc","q":"consigne courte pour associer","paires":[{"a":"mot","b":"partenaire"},{"a":"mot","b":"partenaire"},{"a":"mot","b":"partenaire"}],"explication":"une phrase"}]}
+Règles : ${n - 1} à ${n + 1} fiches ; exactement ${n} questions dans cet ordre : ${nq} "qcm", ${nv} "vf", ${na} "assoc" (chaque type est répété autant de fois que demandé, sans jamais répéter la même question). Si la leçon est trop courte pour autant de fiches ou de questions, fais-en moins, mais au moins 5 questions. Pour "qcm", "bonne" est l'index (0, 1 ou 2) de la bonne réponse et il change d'une question à l'autre. "matiere" reste toujours l'une des valeurs françaises listées, même si le texte est en anglais.`;
 }
 
 // ---------- Les trois fournisseurs : Gemini (2 modèles), puis Claude ----------
@@ -241,13 +242,13 @@ async function callGemini(model, tries, m, promptText, temp = 0.4, cfg = {}) {
   return { ok: true, text: data?.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("") || "" };
 }
 
-async function callClaude(tries, m, promptText) {
+async function callClaude(tries, m, promptText, maxTokens = 3000) {
   const r = await withRetry(() => fetch(`${CLAUDE_BASE}/v1/messages`, {
     method: "POST",
     headers: { "content-type": "application/json", "x-api-key": CLAUDE_KEY, "anthropic-version": "2023-06-01" },
     body: JSON.stringify({
       model: CLAUDE_MODEL,
-      max_tokens: 3000,
+      max_tokens: maxTokens,
       messages: [{ role: "user", content: [
         { type: "image", source: { type: "base64", media_type: m[1], data: m[2] } },
         { type: "text", text: promptText },
@@ -280,11 +281,11 @@ function cleanQuiz(arr) {
   }
   return out;
 }
-function parseLesson(text) {
+function parseLesson(text, n = 10) {
   const raw = JSON.parse(text.replace(/```json|```/g, "").trim());
   if (raw.erreur) return { erreur: str(raw.erreur) };
-  const fiches = (Array.isArray(raw.fiches) ? raw.fiches : []).filter((f) => f && f.q && f.r).map((f) => ({ q: str(f.q), r: str(f.r) }));
-  const quiz = cleanQuiz(raw.quiz);
+  const fiches = (Array.isArray(raw.fiches) ? raw.fiches : []).filter((f) => f && f.q && f.r).map((f) => ({ q: str(f.q), r: str(f.r) })).slice(0, n + 1);
+  const quiz = cleanQuiz(raw.quiz).slice(0, n);
   if (quiz.length < 3 || !fiches.length) throw new Error("format");
   return { matiere: SUBJECTS[str(raw.matiere).trim()] || "Autre", titre: str(raw.titre) || "Leçon", resume: str(raw.resume), fiches, quiz };
 }
@@ -405,7 +406,7 @@ async function runAI(m, promptText, parse, temp, opt = {}) {
     steps.push([MODEL, () => callGemini(MODEL, 2, m, promptText, temp, opt.cfg)]);
     if (FALLBACK && FALLBACK !== MODEL) steps.push([FALLBACK, () => callGemini(FALLBACK, 2, m, promptText, temp, opt.cfg)]);
   }
-  if (CLAUDE_KEY) steps.push([CLAUDE_MODEL, () => callClaude(2, m, promptText)]);
+  if (CLAUDE_KEY) steps.push([CLAUDE_MODEL, () => callClaude(2, m, promptText, opt.maxTokens)]);
   let busy = false;
   for (const [name, run] of steps) {
     try {
@@ -432,7 +433,8 @@ app.post("/api/agenda", async (req, res) => {
 
 app.post("/api/analyze", async (req, res) => {
   const g = await guard(req, res); if (!g) return;
-  const r = await runAI(g.m, prompt(g.mode, g.lg), parseLesson, 0.4);
+  const n = [5, 10, 15].includes(Number(g.body.n)) ? Number(g.body.n) : 10; // 10 par défaut
+  const r = await runAI(g.m, prompt(g.mode, g.lg, n), (text) => parseLesson(text, n), 0.4, { maxTokens: 3000 + (n - 5) * 300 });
   if (r.ok) return r.out.erreur ? res.status(422).json({ erreur: r.out.erreur }) : res.json(r.out);
   res.status(r.busy ? 503 : 502).json({ erreur: r.busy ? MSG.busy[g.lg] : MSG.unreadable[g.lg] });
 });
