@@ -223,15 +223,19 @@ Règles : ${n - 1} à ${n + 1} fiches ; exactement ${n} questions dans cet ordre
 }
 
 // ---------- Les trois fournisseurs : Gemini (2 modèles), puis Claude ----------
-async function callGemini(model, tries, m, promptText, temp = 0.4, cfg = {}) {
-  const go = (extra) => withRetry(() => fetch(`${GEMINI_BASE}/v1beta/models/${model}:generateContent`, {
+const GEMINI_TIMEOUT = Number(process.env.GEMINI_TIMEOUT_MS) || 70000, AI_BUDGET = Number(process.env.AI_BUDGET_MS) || 85000;
+// Une IA qui ne répond pas à temps devient une erreur « occupée » (504), pas une connexion coupée
+const timed = (p) => p.catch((e) => ({ ok: false, status: 504, text: async () => String(e && e.name), json: async () => ({}) }));
+async function callGemini(model, tries, m, promptText, temp = 0.4, cfg = {}, timeoutMs = GEMINI_TIMEOUT) {
+  const go = (extra) => withRetry(() => timed(fetch(`${GEMINI_BASE}/v1beta/models/${model}:generateContent`, {
+    signal: AbortSignal.timeout(timeoutMs),
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": KEY },
     body: JSON.stringify({
       contents: [{ parts: [{ text: promptText }, { inline_data: { mime_type: m[1], data: m[2] } }] }],
       generationConfig: { responseMimeType: "application/json", temperature: temp, ...extra },
     }),
-  }), tries);
+  })), tries);
   let r = await go(cfg);
   if (!r.ok && r.status === 400 && Object.keys(cfg).length) {
     console.warn("Gemini", model, "a refusé les options", Object.keys(cfg).join(", "), "→ nouvel essai sans elles");
@@ -242,8 +246,9 @@ async function callGemini(model, tries, m, promptText, temp = 0.4, cfg = {}) {
   return { ok: true, text: data?.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("") || "" };
 }
 
-async function callClaude(tries, m, promptText, maxTokens = 3000) {
-  const r = await withRetry(() => fetch(`${CLAUDE_BASE}/v1/messages`, {
+async function callClaude(tries, m, promptText, maxTokens = 3000, timeoutMs = GEMINI_TIMEOUT) {
+  const r = await withRetry(() => timed(fetch(`${CLAUDE_BASE}/v1/messages`, {
+    signal: AbortSignal.timeout(timeoutMs),
     method: "POST",
     headers: { "content-type": "application/json", "x-api-key": CLAUDE_KEY, "anthropic-version": "2023-06-01" },
     body: JSON.stringify({
@@ -254,7 +259,7 @@ async function callClaude(tries, m, promptText, maxTokens = 3000) {
         { type: "text", text: promptText },
       ] }],
     }),
-  }), tries);
+  })), tries);
   if (!r.ok) { console.error("Claude", CLAUDE_MODEL, r.status, (await r.text()).slice(0, 200)); return { ok: false, status: r.status }; }
   const data = await r.json();
   return { ok: true, text: (data.content || []).map((b) => b.text || "").join("") };
@@ -400,20 +405,22 @@ async function guard(req, res) {
 
 // Ordre d'essai : Gemini, Gemini (modèle de secours), puis Claude
 async function runAI(m, promptText, parse, temp, opt = {}) {
-  const steps = [];
+  const t0 = Date.now(), steps = [];
   if (KEY) {
-    if (opt.model && opt.model !== MODEL) steps.push([opt.model, () => callGemini(opt.model, 2, m, promptText, temp, opt.cfg)]);
-    steps.push([MODEL, () => callGemini(MODEL, 2, m, promptText, temp, opt.cfg)]);
-    if (FALLBACK && FALLBACK !== MODEL) steps.push([FALLBACK, () => callGemini(FALLBACK, 2, m, promptText, temp, opt.cfg)]);
+    if (opt.model && opt.model !== MODEL) steps.push([opt.model, (ms) => callGemini(opt.model, 2, m, promptText, temp, opt.cfg, ms)]);
+    steps.push([MODEL, (ms) => callGemini(MODEL, 2, m, promptText, temp, opt.cfg, ms)]);
+    if (FALLBACK && FALLBACK !== MODEL) steps.push([FALLBACK, (ms) => callGemini(FALLBACK, 2, m, promptText, temp, opt.cfg, ms)]);
   }
-  if (CLAUDE_KEY) steps.push([CLAUDE_MODEL, () => callClaude(2, m, promptText, opt.maxTokens)]);
+  if (CLAUDE_KEY) steps.push([CLAUDE_MODEL, (ms) => callClaude(2, m, promptText, opt.maxTokens, ms)]);
   let busy = false;
   for (const [name, run] of steps) {
+    const left = AI_BUDGET - (Date.now() - t0);                // on répond toujours avant que Render coupe la connexion (~100 s)
+    if (left < Math.min(8000, AI_BUDGET / 3)) { busy = true; console.error("Délai total atteint avant", name); break; }
     try {
-      const r = await run();
-      if (!r.ok) { if ([429, 503, 529].includes(r.status)) busy = true; continue; }
+      const r = await run(Math.min(GEMINI_TIMEOUT, left));
+      if (!r.ok) { if ([429, 503, 504, 529].includes(r.status)) busy = true; continue; }
       const out = parse(r.text);
-      console.log("IA :", name);
+      console.log("IA :", name, `(${Math.round((Date.now() - t0) / 1000)} s)`);
       return { ok: true, out };
     } catch (e) {
       console.error("Réponse inutilisable de", name, e.message);
