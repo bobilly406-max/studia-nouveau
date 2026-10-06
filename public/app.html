@@ -659,7 +659,10 @@ var TR={en:{
 "Nombre de fiches et de questions":"Number of flashcards and questions",
 "Plus il y en a, plus la séance est longue.":"The more there are, the longer the session.",
 "Fiches et questions":"Flashcards and questions",
-"Réussis un quiz avec au moins 80 % de bonnes réponses":"Pass a quiz with at least 80% correct answers"
+"Réussis un quiz avec au moins 80 % de bonnes réponses":"Pass a quiz with at least 80% correct answers",
+"Cette photo ne peut pas être ouverte. Essaie une photo JPG ou PNG (certains téléphones enregistrent en HEIC).":"This photo can't be opened. Try a JPG or PNG photo (some phones save in HEIC).",
+"Le serveur ne répond pas. Il se réveille peut-être : attends une minute, puis réessaie.":"The server isn't responding. It may be waking up: wait a minute, then try again.",
+"Le serveur a mis trop de temps à répondre. Réessaie dans une minute ou choisis moins de questions.":"The server took too long to answer. Try again in a minute or choose fewer questions."
 }};
 function t(s){var d=TR[lang];return d&&d[s]?d[s]:s}
 function applyDir(){var L=LG(lang);document.documentElement.lang=lang;document.documentElement.dir=L.dir;[].forEach.call(document.querySelectorAll("#langseg button"),function(b){b.setAttribute("aria-pressed",b.dataset.l===lang)})}
@@ -775,7 +778,7 @@ $("chint").textContent=t(ag?"Prends la page bien droite, avec une bonne lumière
 $("cropn").classList.toggle("hide",ag);$("cnh").classList.toggle("hide",ag);paintQn();
 var im=new Image(),u=URL.createObjectURL(file);
 im.onload=function(){URL.revokeObjectURL(u);var s=Math.min(1,(ag?2600:1500)/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext("2d").drawImage(im,0,0,c.width,c.height);src=c;sel=null;$("crop").classList.remove("hide");drawCrop()};
-im.onerror=function(){fail(t("Impossible de lire cette photo. Essaie encore."))};im.src=u}
+im.onerror=function(){fail(t("Cette photo ne peut pas être ouverte. Essaie une photo JPG ou PNG (certains téléphones enregistrent en HEIC)."))};im.src=u}
 function drawCrop(){var cv=$("ccv"),s=Math.min(1,640/Math.max(src.width,src.height));cv.width=Math.round(src.width*s);cv.height=Math.round(src.height*s);var c=cv.getContext("2d");c.drawImage(src,0,0,cv.width,cv.height);
 if(sel){c.fillStyle="rgba(0,0,0,.5)";c.fillRect(0,0,cv.width,cv.height);c.drawImage(src,sel.x,sel.y,sel.w,sel.h,sel.x*s,sel.y*s,sel.w*s,sel.h*s);c.strokeStyle="#FFC93C";c.lineWidth=3;c.setLineDash([8,6]);c.strokeRect(sel.x*s,sel.y*s,sel.w*s,sel.h*s)}}
 function spot(e){var r=$("ccv").getBoundingClientRect();return{x:Math.max(0,Math.min(src.width,(e.clientX-r.left)/r.width*src.width)),y:Math.max(0,Math.min(src.height,(e.clientY-r.top)/r.height*src.height))}}
@@ -790,8 +793,8 @@ $("csend").onclick=function(){if(!src)return;var o=document.createElement("canva
 if(sel){o.width=Math.round(sel.w);o.height=Math.round(sel.h);o.getContext("2d").drawImage(src,sel.x,sel.y,sel.w,sel.h,0,0,o.width,o.height)}else{o.width=src.width;o.height=src.height;o.getContext("2d").drawImage(src,0,0)}
 var ag=cropFor==="agenda",d=o.toDataURL("image/jpeg",ag?.92:.85);src=null;if(ag)analyzeAgenda(d);else analyze(d)};
 function analyze(img){$("crop").classList.add("hide");show("err",false);show("out",false);show("load",true);$("loadT").textContent=t("Je regarde ta leçon… 🔍");
-token().then(function(tk){var hd={"Content-Type":"application/json"};if(tk)hd.Authorization="Bearer "+tk;return fetch("/api/analyze",{method:"POST",headers:hd,body:JSON.stringify({image:img,mode:mode,lang:lang,n:qnPref()})})})
-.then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.erreur||"Erreur");return j})})
+token().then(function(tk){var hd={"Content-Type":"application/json"};if(tk)hd.Authorization="Bearer "+tk;return fetch("/api/analyze",{method:"POST",headers:hd,body:JSON.stringify({image:img,mode:mode,lang:lang,n:qnPref()})}).catch(function(){throw new Error(t("Le serveur ne répond pas. Il se réveille peut-être : attends une minute, puis réessaie."))})})
+.then(function(r){return r.json().catch(function(){throw new Error(t("Le serveur a mis trop de temps à répondre. Réessaie dans une minute ou choisis moins de questions."))}).then(function(j){if(!r.ok)throw new Error(j.erreur||"Erreur");return j})})
 .then(function(d){R=d;show("load",false);cs=addSession(d);render();celebrate();sfx("up");daily("lesson")})
 .catch(function(er){fail(er.message&&er.message!=="Failed to fetch"?er.message:t("Impossible de lire cette photo. Essaie encore."))})}
 function pickFile(e){var f=e.target.files[0];e.target.value="";if(f)openCrop(f)}
@@ -1123,8 +1126,8 @@ function impMis(x){return x.js!=null&&!!x.due&&new Date(x.due+"T00:00:00").getDa
 function analyzeAgenda(img){$("crop").classList.add("hide");var tr=impTr(),more=impAppend;impAppend=false;
 if(more)impPhotos.push(img);else{impPhotos=[img];impItems=[];impWeek=""}
 impOpen('<div class="load" role="status"><span class="spin"><svg class="ci" style="width:56px;height:56px" aria-hidden="true"><use href="#c-cal"/></svg></span><div>'+tr("Je lis ton calendrier…")+'</div></div>');
-token().then(function(tk){var hd={"Content-Type":"application/json"};if(tk)hd.Authorization="Bearer "+tk;return fetch("/api/agenda",{method:"POST",headers:hd,body:JSON.stringify({image:img,mode:mode,lang:impBy==="parent"?"fr":lang,today:day()})})})
-.then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.erreur||"Erreur");return j})})
+token().then(function(tk){var hd={"Content-Type":"application/json"};if(tk)hd.Authorization="Bearer "+tk;return fetch("/api/agenda",{method:"POST",headers:hd,body:JSON.stringify({image:img,mode:mode,lang:impBy==="parent"?"fr":lang,today:day()})}).catch(function(){throw new Error(tr("Le serveur ne répond pas. Il se réveille peut-être : attends une minute, puis réessaie."))})})
+.then(function(r){return r.json().catch(function(){throw new Error(tr("Le serveur a mis trop de temps à répondre. Réessaie dans une minute ou choisis moins de questions."))}).then(function(j){if(!r.ok)throw new Error(j.erreur||"Erreur");return j})})
 .then(function(d){showImport(d,more)})
 .catch(function(er){var msg=er.message&&er.message!=="Failed to fetch"?er.message:tr("Je n'ai pas réussi à lire ce calendrier. Essaie avec une photo plus nette, bien éclairée, en cadrant toute la page.");
 if(more&&impItems.length){impPhotos.pop();renderImport();toast(msg);return}
