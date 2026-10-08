@@ -247,6 +247,21 @@ body.easy,body.easy h1,body.easy h2,body.easy h3,body.easy button,body.easy inpu
 .txtbox textarea:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .txtbox .txrow{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:10px}
 .txtbox .btn2[disabled]{opacity:.5;cursor:not-allowed}
+.txbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.txres{margin-top:14px;display:grid;gap:10px}
+.txres .txwait{display:flex;align-items:center;gap:10px;font-weight:700}
+.txres .txwait .spin{font-size:1.8rem}
+.txv{border:2px solid var(--line);border-radius:16px;padding:12px 14px;background:var(--bg)}
+.txv h3{margin:0 0 6px;font-size:1.05rem}
+.txv .nat{color:var(--soft);font-weight:600;font-style:italic;font-size:.95rem}
+.txv p{margin:0 0 8px;white-space:pre-wrap;overflow-wrap:anywhere}
+.txv .lab{font-weight:800;margin:8px 0 4px;font-size:.95rem;color:var(--soft)}
+.txact{display:flex;gap:8px;flex-wrap:wrap}
+.txchips{display:flex;gap:8px;flex-wrap:wrap}
+.txchip{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 14px;min-height:40px;font:700 1rem 'Nunito',system-ui,sans-serif;cursor:pointer}
+.txchip:hover{border-color:var(--violet)}
+.txerr{color:var(--coral);font-weight:700}
+@media (max-width:520px){.txbtns{width:100%}.txbtns .btn2{flex:1 1 auto}}
 .g1>.card,.g2>.card,.g1 .agc{margin-top:0}
 #agbar{display:flex}
 #agbar .card{flex:1;margin-top:0}
@@ -465,8 +480,9 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 <section id="agbar" aria-label="Agenda"></section>
 </div>
 <section class="card txtbox" id="txtbox" aria-labelledby="txT"><h2 id="txT" data-t>Pas de photo ? Écris ou colle !</h2>
-<textarea id="txIn" rows="3" maxlength="6000" aria-labelledby="txT" placeholder="Écris un sujet (ex. : les fractions) ou colle ton texte…"></textarea>
-<div class="txrow"><span class="mute" id="txCnt" aria-live="off">0 / 6000</span><button type="button" class="btn2 pri" id="txGo" disabled><span data-t>✨ Créer ma fiche</span></button></div></section>
+<textarea id="txIn" rows="3" maxlength="6000" aria-labelledby="txT" placeholder="Écris un sujet, un mot ou une phrase, ou colle ton texte…"></textarea>
+<div class="txrow"><span class="mute" id="txCnt" aria-live="off">0 / 6000</span><div class="txbtns"><button type="button" class="btn2 pri" id="txGo" disabled><span data-t>✨ Créer ma fiche</span></button><button type="button" class="btn2" id="txRw" disabled><span data-t>🔄 Reformuler</span></button><button type="button" class="btn2" id="txSy" disabled><span data-t>📚 Synonymes</span></button></div></div>
+<div id="txRes" class="txres hide" aria-live="polite"></div></section>
 <section id="load" class="card load hide" role="status" aria-live="polite"><div class="lscene" aria-hidden="true"><span class="lfox">🦊</span><span class="lpgw"><span class="lpg">📄</span><span class="lloupe">🔍</span></span></div><div id="loadT">Je lis ta leçon…</div></section>
 <section id="err" class="card err hide" role="alert"></section>
 <section id="out" class="hide">
@@ -657,7 +673,7 @@ var TR={en:{
 "Sur la photo :":"On the photo:",
 "Rien de nouveau sur cette photo.":"Nothing new on this photo.",
 "Bibliothèque":"Library",
-"Dernières séances":"Latest sessions","Je lis chaque ligne… 📖":"Reading every line… 📖","Je cherche les idées importantes… 💡":"Finding the key ideas… 💡","Je fabrique tes fiches… 🃏":"Making your flashcards… 🃏","J'invente ton quiz… 🎯":"Inventing your quiz… 🎯","Presque fini… l'IA prend un peu plus de temps que d'habitude. 🦊":"Almost done… the AI is taking a bit longer than usual. 🦊","Montre ta leçon à la caméra":"Show your lesson to the camera","Pose la page bien à plat, avec de la lumière, puis appuie sur « Prendre la photo ».":"Lay the page flat, with good light, then press “Take the photo”.","Caméra":"Camera","📸 Prendre la photo":"📸 Take the photo","Choisir un fichier à la place":"Choose a file instead","Annuler":"Cancel","L'accès à la caméra est refusé. Autorise-la avec le cadenas à côté de l'adresse, ou choisis un fichier.":"Camera access is blocked. Allow it with the padlock next to the address, or choose a file.","Aucune caméra n'a été trouvée. Branche-en une, ou choisis un fichier.":"No camera found. Plug one in, or choose a file.","La caméra ne démarre pas. Ferme les autres applications qui l'utilisent, ou choisis un fichier.":"The camera won't start. Close other apps that use it, or choose a file.","La photo n'a pas pu être prise. Réessaie.":"The photo couldn't be taken. Try again.","Pas de photo ? Écris ou colle !":"No photo? Type or paste!","Écris un sujet (ex. : les fractions) ou colle ton texte…":"Type a topic (e.g. fractions) or paste your text…","✨ Créer ma fiche":"✨ Make my summary","Je prépare ta leçon… ✍️":"Preparing your lesson… ✍️","Impossible de préparer cette leçon. Essaie encore.":"Couldn't prepare this lesson. Try again.",
+"Dernières séances":"Latest sessions","Écris un sujet, un mot ou une phrase, ou colle ton texte…":"Type a topic, a word or a sentence, or paste your text…","🔄 Reformuler":"🔄 Rewrite","📚 Synonymes":"📚 Synonyms","Pour les synonymes, écris un mot (5 mots au maximum).":"For synonyms, write one word (5 words at most).","Pour reformuler, écris 2 000 caractères au maximum.":"To rewrite, use 2,000 characters at most.","Je cherche dans le dictionnaire… 📚":"Looking it up in the dictionary… 📚","Je reformule ta phrase… ✍️":"Rewriting your sentence… ✍️","Plus simple":"Simpler","Plus court":"Shorter","Plus soigné":"More polished","Copier":"Copy","Copié ✅":"Copied ✅","Copié :":"Copied:","Utiliser ce texte":"Use this text","Synonymes":"Synonyms","Contraires":"Opposites","Exemple":"Example","Touche un mot pour le copier.":"Tap a word to copy it.","Cette demande n'a pas marché. Essaie encore.":"That didn't work. Try again.","Le serveur a mis trop de temps à répondre. Réessaie dans une minute.":"The server took too long to answer. Try again in a minute.","Je lis chaque ligne… 📖":"Reading every line… 📖","Je cherche les idées importantes… 💡":"Finding the key ideas… 💡","Je fabrique tes fiches… 🃏":"Making your flashcards… 🃏","J'invente ton quiz… 🎯":"Inventing your quiz… 🎯","Presque fini… l'IA prend un peu plus de temps que d'habitude. 🦊":"Almost done… the AI is taking a bit longer than usual. 🦊","Montre ta leçon à la caméra":"Show your lesson to the camera","Pose la page bien à plat, avec de la lumière, puis appuie sur « Prendre la photo ».":"Lay the page flat, with good light, then press “Take the photo”.","Caméra":"Camera","📸 Prendre la photo":"📸 Take the photo","Choisir un fichier à la place":"Choose a file instead","Annuler":"Cancel","L'accès à la caméra est refusé. Autorise-la avec le cadenas à côté de l'adresse, ou choisis un fichier.":"Camera access is blocked. Allow it with the padlock next to the address, or choose a file.","Aucune caméra n'a été trouvée. Branche-en une, ou choisis un fichier.":"No camera found. Plug one in, or choose a file.","La caméra ne démarre pas. Ferme les autres applications qui l'utilisent, ou choisis un fichier.":"The camera won't start. Close other apps that use it, or choose a file.","La photo n'a pas pu être prise. Réessaie.":"The photo couldn't be taken. Try again.","Pas de photo ? Écris ou colle !":"No photo? Type or paste!","Écris un sujet (ex. : les fractions) ou colle ton texte…":"Type a topic (e.g. fractions) or paste your text…","✨ Créer ma fiche":"✨ Make my summary","Je prépare ta leçon… ✍️":"Preparing your lesson… ✍️","Impossible de préparer cette leçon. Essaie encore.":"Couldn't prepare this lesson. Try again.",
 "Voir toute la bibliothèque":"See the whole library",
 "Par semaine":"By week",
 "Par mois":"By month",
@@ -728,7 +744,7 @@ pref().lang=l;save();applyPrefs();renderProfiles();renderStats();renderHist();
 if(!$("set").classList.contains("hide"))renderSet();if(!$("shop").classList.contains("hide"))renderShop();if(qEnd&&R)endScreen()}
 [].forEach.call(document.querySelectorAll("#langseg button"),function(b){b.onclick=function(){setLang(b.dataset.l)}});
 function paintLogout(){var l=$("logoutL");if(l)l.textContent=t(typeof user!=="undefined"&&user?"Déconnexion":"Connexion")}
-function applyLang(){paintLogout();if($("txIn"))$("txIn").placeholder=t("Écris un sujet (ex. : les fractions) ou colle ton texte…");[].forEach.call(document.querySelectorAll("[data-t]"),function(el){if(el.dataset.fr===undefined)el.dataset.fr=el.textContent;el.textContent=t(el.dataset.fr)})}
+function applyLang(){paintLogout();if($("txIn"))$("txIn").placeholder=t("Écris un sujet, un mot ou une phrase, ou colle ton texte…");[].forEach.call(document.querySelectorAll("[data-t]"),function(el){if(el.dataset.fr===undefined)el.dataset.fr=el.textContent;el.textContent=t(el.dataset.fr)})}
 
 // ---------- Préférences de chaque enfant (sons, police, taille, langue) et boutique ----------
 function ex(){var e=cur.extra=cur.extra||{},p=e.prefs=e.prefs||{};e.coins=e.coins||0;e.owned=e.owned||[];e.equip=e.equip||{};if(p.sound===undefined)p.sound=true;p.size=p.size||0;p.lang=(LG(p.lang).c===p.lang)?p.lang:devLang();p.voice=p.voice||{};p.easy=!!p.easy;if([5,10,15].indexOf(p.qn)<0)p.qn=10;return e}
@@ -860,8 +876,36 @@ function loadStart(txt){loadStop();var steps=txt?["Je prépare ta leçon… ✍�
 $("loadT").textContent=t(steps[0]);
 loadTm=setInterval(function(){if(Date.now()-t0>=25000){$("loadT").textContent=t("Presque fini… l'IA prend un peu plus de temps que d'habitude. 🦊");return}i=Math.min(i+1,steps.length-1);$("loadT").textContent=t(steps[i])},3500);
 try{$("load").scrollIntoView({behavior:"smooth",block:"center"})}catch(e){}}
-function txPaint(){var v=$("txIn").value;$("txCnt").textContent=v.length+" / 6000";$("txGo").disabled=v.trim().length<3}
-$("txIn").oninput=txPaint;
+function txPaint(){var v=$("txIn").value,n=v.trim().length;$("txCnt").textContent=v.length+" / 6000";$("txGo").disabled=n<3;$("txRw").disabled=n<3;$("txSy").disabled=n<2}
+function txMsg(m,bad){var r=$("txRes");r.innerHTML="";var d=document.createElement("div");d.className=bad?"txv txerr":"txv";d.textContent=m;r.appendChild(d);show("txRes",true)}
+function txCopy(s,msg){var ok=function(){toast(msg)};try{navigator.clipboard.writeText(s).then(ok,function(){txCopyOld(s);ok()})}catch(e){txCopyOld(s);ok()}}
+function txCopyOld(s){var a=document.createElement("textarea");a.value=s;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(e){}document.body.removeChild(a)}
+function txBtn(label,fn,cls){var b=document.createElement("button");b.type="button";b.className=cls||"btn2 sm";b.textContent=label;b.onclick=fn;return b}
+function txWords(tool){var v=$("txIn").value.trim();
+if(tool==="syn"&&(v.length>60||v.split(/\s+/).length>5)){txMsg(t("Pour les synonymes, écris un mot (5 mots au maximum)."),true);return}
+if(tool==="rw"&&v.length>2000){txMsg(t("Pour reformuler, écris 2 000 caractères au maximum."),true);return}
+var r=$("txRes");r.innerHTML="";var w=document.createElement("div");w.className="txv txwait";var sp=document.createElement("span");sp.className="spin";sp.textContent="🦊";var tx=document.createElement("span");tx.textContent=t(tool==="syn"?"Je cherche dans le dictionnaire… 📚":"Je reformule ta phrase… ✍️");w.appendChild(sp);w.appendChild(tx);r.appendChild(w);show("txRes",true);
+["txGo","txRw","txSy"].forEach(function(i){$(i).disabled=true});
+token().then(function(tk){var hd={"Content-Type":"application/json"};if(tk)hd.Authorization="Bearer "+tk;return fetch("/api/words",{method:"POST",headers:hd,body:JSON.stringify({tool:tool,text:v,mode:mode,lang:lang})}).catch(function(){throw new Error(t("Le serveur ne répond pas. Il se réveille peut-être : attends une minute, puis réessaie."))})})
+.then(function(x){return x.json().catch(function(){throw new Error(t("Le serveur a mis trop de temps à répondre. Réessaie dans une minute."))}).then(function(j){if(!x.ok)throw new Error(j.erreur||"Erreur");return j})})
+.then(function(d){txPaint();if(tool==="syn")txShowSyn(d.mots||[]);else txShowRw(d.versions||[])})
+.catch(function(er){txPaint();txMsg(er.message&&er.message!=="Failed to fetch"?er.message:t("Cette demande n'a pas marché. Essaie encore."),true)})}
+function txShowRw(vs){var r=$("txRes");r.innerHTML="";var names={simple:"Plus simple",court:"Plus court",soigne:"Plus soigné"};
+vs.forEach(function(v){var c=document.createElement("div");c.className="txv";var h=document.createElement("h3");h.textContent=t(names[v.type]||v.type);var p=document.createElement("p");p.textContent=v.texte;var a=document.createElement("div");a.className="txact";
+a.appendChild(txBtn(t("Copier"),function(){txCopy(v.texte,t("Copié ✅"))}));
+a.appendChild(txBtn(t("Utiliser ce texte"),function(){$("txIn").value=v.texte;txPaint();show("txRes",false);$("txIn").focus()}));
+c.appendChild(h);c.appendChild(p);c.appendChild(a);r.appendChild(c)});show("txRes",true)}
+function txShowSyn(ms){var r=$("txRes");r.innerHTML="";
+ms.forEach(function(m){var c=document.createElement("div");c.className="txv";var h=document.createElement("h3");h.textContent=m.mot+" ";if(m.nature){var n=document.createElement("span");n.className="nat";n.textContent=m.nature;h.appendChild(n)}c.appendChild(h);
+if(m.definition){var p=document.createElement("p");p.textContent=m.definition;c.appendChild(p)}
+function chips(lab,arr){if(!arr||!arr.length)return;var l=document.createElement("div");l.className="lab";l.textContent=lab;var w=document.createElement("div");w.className="txchips";arr.forEach(function(x){w.appendChild(txBtn(x,function(){txCopy(x,t("Copié :")+" "+x)},"txchip"))});c.appendChild(l);c.appendChild(w)}
+chips(t("Synonymes"),m.synonymes);chips(t("Contraires"),m.contraires);
+if(m.exemple){var l=document.createElement("div");l.className="lab";l.textContent=t("Exemple");var e=document.createElement("p");e.textContent=m.exemple;c.appendChild(l);c.appendChild(e)}
+r.appendChild(c)});
+var tip=document.createElement("div");tip.className="mute";tip.textContent=t("Touche un mot pour le copier.");r.appendChild(tip);show("txRes",true)}
+$("txRw").onclick=function(){txWords("rw")};
+$("txSy").onclick=function(){txWords("syn")};
+$("txIn").oninput=function(){txPaint();if(!$("txIn").value.trim())show("txRes",false)};
 $("txIn").onkeydown=function(e){if((e.ctrlKey||e.metaKey)&&e.key==="Enter"&&!$("txGo").disabled)$("txGo").click()};
 $("txGo").onclick=function(){var v=$("txIn").value.trim();if(v.length<3)return;analyze(null,v)};
 function pickFile(e){var f=e.target.files[0];e.target.value="";if(f)openCrop(f)}
