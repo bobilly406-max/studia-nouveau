@@ -15,7 +15,10 @@ const GEMINI_BASE = process.env.GEMINI_BASE || "https://generativelanguage.googl
 const CLAUDE_KEY = process.env.ANTHROPIC_API_KEY || "";
 const CLAUDE_MODEL = process.env.CLAUDE_MODEL || "claude-haiku-4-5-20251001";
 const CLAUDE_BASE = process.env.CLAUDE_BASE || "https://api.anthropic.com";
-const MAX_PER_HOUR = 20;
+// Limites d'analyses (leçons par photo ou par texte, calendrier) par parent : modifiables sur Render sans toucher au code
+// MAX_PER_HOUR (défaut 6 par heure) et MAX_PER_DAY (défaut 20 sur 24 h). Mettre MAX_PER_DAY=0 pour couper la limite du jour.
+const MAX_PER_HOUR = Number(process.env.MAX_PER_HOUR) || 6;
+const MAX_PER_DAY = process.env.MAX_PER_DAY === undefined || process.env.MAX_PER_DAY === "" ? 20 : Number(process.env.MAX_PER_DAY) || 0;
 
 // Langues prises en charge. Pour en ajouter une : une ligne ici + les textes du site.
 const LANG_NAME = { fr: "FRANÇAIS", en: "ANGLAIS" };
@@ -25,6 +28,10 @@ const MSG = {
   limit: {
     fr: (n, w) => `Tu as atteint la limite de ${n} analyses par heure. Réessaie dans environ ${w} minute${w > 1 ? "s" : ""}.`,
     en: (n, w) => `You reached the limit of ${n} scans per hour. Try again in about ${w} minute${w > 1 ? "s" : ""}.`,
+  },
+  limitDay: {
+    fr: (n, w) => `Tu as atteint la limite de ${n} analyses sur 24 heures. Réessaie dans environ ${w} heure${w > 1 ? "s" : ""}.`,
+    en: (n, w) => `You reached the limit of ${n} scans in 24 hours. Try again in about ${w} hour${w > 1 ? "s" : ""}.`,
   },
   image: { fr: "Image invalide. Utilise une photo JPG, PNG ou WebP.", en: "Invalid image. Use a JPG, PNG or WebP photo." },
   limitWords: {
@@ -207,18 +214,22 @@ async function whoIs(token) {
   return u.id;
 }
 
-// Limite : 20 analyses par heure et par parent (ou par adresse IP sans compte)
+// Limite : analyses par heure et par jour (24 h glissantes) et par parent (ou par adresse IP sans compte)
 const hits = new Map(), wordHits = new Map(), MAX_WORDS_PER_HOUR = 60; // reformuler / synonymes : plus légers, compteur à part
-function limited(who, store = hits, max = MAX_PER_HOUR) {
+function limited(who, store = hits, max = MAX_PER_HOUR, maxDay = 0, stamp = Date.now()) {
   const now = Date.now();
-  const list = (store.get(who) || []).filter((t) => now - t < 3600000);
-  if (list.length >= max) {
-    store.set(who, list);
-    return Math.max(1, Math.ceil((list[0] + 3600000 - now) / 60000)); // minutes à attendre
-  }
-  list.push(now);
-  store.set(who, list);
+  const day = (store.get(who) || []).filter((t) => now - t < 86400000);
+  const hour = day.filter((t) => now - t < 3600000);
+  store.set(who, day);
+  if (hour.length >= max) return { wait: Math.max(1, Math.ceil((hour[0] + 3600000 - now) / 60000)), day: false }; // minutes à attendre
+  if (maxDay && day.length >= maxDay) return { wait: Math.max(1, Math.ceil((day[0] + 86400000 - now) / 3600000)), day: true }; // heures à attendre
+  day.push(stamp);
   return 0;
+}
+// Une analyse qui échoue à cause de l'IA ne doit pas être comptée contre le parent
+function refund(who, store, stamp) {
+  const list = store.get(who) || [], i = list.indexOf(stamp);
+  if (i >= 0) list.splice(i, 1);
 }
 
 // Réessaie si le service est surchargé (503, 529), limité (429) ou en erreur (500)
@@ -422,17 +433,22 @@ async function guard(req, res, opt = {}) {
     if (!id) { res.status(401).json({ erreur: MSG.login[lg] }); return null; }
     who = "u:" + id;
   }
-  const wait = opt.words ? limited(who, wordHits, MAX_WORDS_PER_HOUR) : limited(who);
-  if (wait) { res.status(429).json({ erreur: (opt.words ? MSG.limitWords : MSG.limit)[lg](opt.words ? MAX_WORDS_PER_HOUR : MAX_PER_HOUR, wait) }); return null; }
+  const store = opt.words ? wordHits : hits, stamp = Date.now() + Math.random() / 1000;
+  const lim = opt.words ? limited(who, wordHits, MAX_WORDS_PER_HOUR, 0, stamp) : limited(who, hits, MAX_PER_HOUR, MAX_PER_DAY, stamp);
+  if (lim) {
+    const msg = opt.words ? MSG.limitWords : lim.day ? MSG.limitDay : MSG.limit;
+    res.status(429).json({ erreur: msg[lg](opt.words ? MAX_WORDS_PER_HOUR : lim.day ? MAX_PER_DAY : MAX_PER_HOUR, lim.wait) }); return null;
+  }
+  const undo = () => refund(who, store, stamp);
   if (opt.text && typeof body.text === "string" && !body.image) {      // leçon à partir d'un texte ou d'un sujet, sans photo
     const text = body.text.replace(/\r/g, "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim().slice(0, 6000);
-    if (text.length < (opt.min || 3)) { res.status(400).json({ erreur: MSG.text[lg] }); return null; }
-    return { lg, m: null, text, mode: body.mode === "kids" ? "kids" : "studia", body };
+    if (text.length < (opt.min || 3)) { undo(); res.status(400).json({ erreur: MSG.text[lg] }); return null; }
+    return { lg, m: null, text, mode: body.mode === "kids" ? "kids" : "studia", body, undo };
   }
-  if (opt.words) { res.status(400).json({ erreur: MSG.text[lg] }); return null; }  // reformuler / synonymes : du texte seulement
+  if (opt.words) { undo(); res.status(400).json({ erreur: MSG.text[lg] }); return null; }  // reformuler / synonymes : du texte seulement
   const m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(body.image || "");
-  if (!m) { res.status(400).json({ erreur: MSG.image[lg] }); return null; }
-  return { lg, m, mode: body.mode === "kids" ? "kids" : "studia", body };
+  if (!m) { undo(); res.status(400).json({ erreur: MSG.image[lg] }); return null; }
+  return { lg, m, mode: body.mode === "kids" ? "kids" : "studia", body, undo };
 }
 
 // Ordre d'essai : Gemini, Gemini (modèle de secours), puis Claude
@@ -471,6 +487,7 @@ app.post("/api/agenda", async (req, res) => {
   const today = isoOk(t0) && Math.abs(Date.parse(t0 + "T12:00:00Z") - Date.now()) < 3 * 864e5 ? t0 : new Date().toISOString().slice(0, 10);
   const r = await runAI(g.m, agendaPrompt(g.lg, today), (text) => parseAgenda(text, today), 0.2, { model: AGENDA_MODEL, cfg: { mediaResolution: "MEDIA_RESOLUTION_HIGH" } });
   if (r.ok) return r.out.erreur ? res.status(422).json({ erreur: r.out.erreur }) : res.json(r.out);
+  g.undo();
   res.status(r.busy ? 503 : 502).json({ erreur: r.busy ? MSG.busy[g.lg] : MSG.unreadableCal[g.lg] });
 });
 
@@ -479,6 +496,7 @@ app.post("/api/analyze", async (req, res) => {
   const n = [5, 10, 15].includes(Number(g.body.n)) ? Number(g.body.n) : 10; // 10 par défaut
   const r = await runAI(g.m, prompt(g.mode, g.lg, n, g.text), (text) => parseLesson(text, n), 0.4, { maxTokens: 3000 + (n - 5) * 300 });
   if (r.ok) return r.out.erreur ? res.status(422).json({ erreur: r.out.erreur }) : res.json(r.out);
+  g.undo();
   res.status(r.busy ? 503 : 502).json({ erreur: r.busy ? MSG.busy[g.lg] : (g.text ? MSG.unreadableText : MSG.unreadable)[g.lg] });
 });
 
@@ -540,6 +558,7 @@ app.post("/api/words", async (req, res) => {
   if (!syn && g.text.length > 2000) return res.status(400).json({ erreur: MSG.rwLen[g.lg] });
   const r = await runAI(null, wordsPrompt(syn ? "syn" : "rw", g.mode, g.lg, g.text), syn ? parseWords : parseRewrite, 0.5, { model: WORDS_MODEL, maxTokens: syn ? 1600 : 2000, claudeFirst: WORDS_CLAUDE });
   if (r.ok) return r.out.erreur ? res.status(422).json({ erreur: r.out.erreur }) : res.json(r.out);
+  g.undo();
   res.status(r.busy ? 503 : 502).json({ erreur: r.busy ? MSG.busy[g.lg] : MSG.unreadableWords[g.lg] });
 });
 
