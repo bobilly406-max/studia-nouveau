@@ -226,7 +226,7 @@ async function withRetry(call, tries = 3) {
   let r;
   for (let i = 0; i < tries; i++) {
     r = await call();
-    if (![500, 503, 529, 429].includes(r.status)) return r;
+    if (![500, 503, 529].includes(r.status)) return r;          // 429 = quota dépassé : inutile de réessayer 2 s plus tard, on passe tout de suite au modèle suivant
     if (i < tries - 1) await new Promise((ok) => setTimeout(ok, 2000 * (i + 1)));
   }
   return r;
@@ -320,6 +320,10 @@ function parseLesson(text, n = 10) {
 // ---------- Lecture d'un calendrier scolaire manuscrit ----------
 // Modèle Gemini réservé à la lecture des calendriers (facultatif) : GEMINI_AGENDA_MODEL sur Render
 const AGENDA_MODEL = process.env.GEMINI_AGENDA_MODEL || "";
+// Modèle plus rapide, facultatif, pour « Reformuler » et « Synonymes » (ex. un modèle Flash-Lite) : GEMINI_WORDS_MODEL sur Render
+const WORDS_MODEL = process.env.GEMINI_WORDS_MODEL || "";
+// WORDS_PROVIDER=claude : « Reformuler » et « Synonymes » utilisent d'abord Claude (clé ANTHROPIC_API_KEY requise), Gemini en secours
+const WORDS_CLAUDE = /^claude$/i.test(process.env.WORDS_PROVIDER || "") && !!process.env.ANTHROPIC_API_KEY;
 const JOURS = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
 const isoOk = (d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !isNaN(Date.parse(d + "T00:00:00Z")) && new Date(d + "T00:00:00Z").toISOString().slice(0, 10) === d;
 const shiftDay = (d, n) => new Date(Date.parse(d + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);
@@ -440,6 +444,10 @@ async function runAI(m, promptText, parse, temp, opt = {}) {
     if (FALLBACK && FALLBACK !== MODEL) steps.push([FALLBACK, (ms) => callGemini(FALLBACK, 2, m, promptText, temp, opt.cfg, ms)]);
   }
   if (CLAUDE_KEY) steps.push([CLAUDE_MODEL, (ms) => callClaude(2, m, promptText, opt.maxTokens, ms)]);
+  if (opt.claudeFirst && CLAUDE_KEY) {                          // Claude passe en premier (ex. Reformuler / Synonymes), Gemini reste en secours
+    const i = steps.findIndex((s) => s[0] === CLAUDE_MODEL);
+    if (i > 0) steps.unshift(steps.splice(i, 1)[0]);
+  }
   let busy = false;
   for (const [name, run] of steps) {
     const left = AI_BUDGET - (Date.now() - t0);                // on répond toujours avant que Render coupe la connexion (~100 s)
@@ -530,7 +538,7 @@ app.post("/api/words", async (req, res) => {
   if (syn && (g.text.length > 60 || g.text.split(/\s+/).filter(Boolean).length > 5)) return res.status(400).json({ erreur: MSG.synLen[g.lg] });
   if (!syn && g.text.length < 3) return res.status(400).json({ erreur: MSG.text[g.lg] });
   if (!syn && g.text.length > 2000) return res.status(400).json({ erreur: MSG.rwLen[g.lg] });
-  const r = await runAI(null, wordsPrompt(syn ? "syn" : "rw", g.mode, g.lg, g.text), syn ? parseWords : parseRewrite, 0.5, { maxTokens: syn ? 1600 : 2000 });
+  const r = await runAI(null, wordsPrompt(syn ? "syn" : "rw", g.mode, g.lg, g.text), syn ? parseWords : parseRewrite, 0.5, { model: WORDS_MODEL, maxTokens: syn ? 1600 : 2000, claudeFirst: WORDS_CLAUDE });
   if (r.ok) return r.out.erreur ? res.status(422).json({ erreur: r.out.erreur }) : res.json(r.out);
   res.status(r.busy ? 503 : 502).json({ erreur: r.busy ? MSG.busy[g.lg] : MSG.unreadableWords[g.lg] });
 });
