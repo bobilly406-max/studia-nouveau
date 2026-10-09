@@ -557,6 +557,27 @@ function parseWords(text) {
   if (!mots.length) throw new Error("format");
   return { mots };
 }
+// Compteur : ce qu'il reste à ce parent (ou à cette adresse IP) cette heure et aujourd'hui, sans rien consommer
+app.get("/api/usage", async (req, res) => {
+  let who = req.ip;
+  if (needLogin) {
+    const m = /^Bearer (.+)$/.exec(req.headers.authorization || "");
+    const id = m ? await whoIs(m[1]).catch(() => null) : null;
+    if (!id) return res.status(401).json({ erreur: MSG.login.fr });
+    who = "u:" + id;
+  }
+  const now = Date.now();
+  const mk = (store, mh, md) => {
+    const day = (store.get(who) || []).filter((t) => now - t < 86400000), hour = day.filter((t) => now - t < 3600000);
+    return {
+      h: { used: hour.length, max: mh, wait: hour.length && hour.length >= mh ? Math.max(1, Math.ceil((hour[0] + 3600000 - now) / 60000)) : 0 },
+      d: { used: day.length, max: md, wait: md && day.length >= md ? Math.max(1, Math.ceil((day[0] + 86400000 - now) / 3600000)) : 0 },
+    };
+  };
+  res.set("Cache-Control", "no-store");
+  res.json({ a: mk(hits, MAX_PER_HOUR, MAX_PER_DAY), w: mk(wordHits, MAX_WORDS_PER_HOUR, MAX_WORDS_PER_DAY) });
+});
+
 app.post("/api/words", async (req, res) => {
   const g = await guard(req, res, { text: true, words: true, min: 2 }); if (!g) return;
   if (g.m || !g.text) return res.status(400).json({ erreur: MSG.text[g.lg] });
