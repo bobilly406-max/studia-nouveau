@@ -117,6 +117,24 @@ body.easy,body.easy h1,body.easy h2,body.easy h3,body.easy button,body.easy inpu
 .mute{color:var(--soft);margin:0}
 .limn{font-size:.82rem;margin:10px 0 0;line-height:1.35}
 .limn:empty{display:none}
+.cnt{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 0;font-size:.85rem}
+.cnt:empty{display:none}
+.cnt .cl{color:var(--soft);font-weight:700}
+.cnt .chip{display:inline-flex;flex-direction:column;gap:4px;padding:6px 10px;border:2px solid var(--line);border-radius:14px;background:var(--bg);min-width:128px}
+.cnt .chip b{font-weight:800}
+.cnt .chip i{display:block;height:6px;border-radius:6px;background:var(--line);overflow:hidden}
+.cnt .chip u{display:block;height:100%;background:var(--ok,#2e9e5b);border-radius:6px;text-decoration:none;transition:width .4s}
+.cnt .chip.low u{background:#e69a1a}
+.cnt .chip.zero{border-color:#d9534f}
+.cnt .chip.zero u{background:#d9534f}
+.cnt .chip em{font-style:normal;color:#d9534f;font-weight:700}
+/* renard et loupe qui travaillent, dans la zone où la demande a été lancée */
+.capL>.load,.txtbox>.load{background:none;border:0;box-shadow:none;margin:6px 0 0;padding:14px 0 4px}
+.txwait .lscene{height:64px;margin:0;gap:10px;flex:none}
+.txwait .lfox{font-size:2.3rem}
+.txwait .lpgw{width:2.4rem;height:2.4rem}
+.txwait .lpg{font-size:2rem}
+.txwait .lloupe{font-size:1.6rem}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
 .stat{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:10px;text-align:center}
 .stat b{display:block;font:800 1.6rem/1.1 'Baloo 2',sans-serif}
@@ -479,6 +497,7 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 <div class="dzb"><label class="btn2 pri"><svg class="i" aria-hidden="true"><use href="#i-up"/></svg><span data-t>Choisir une photo</span><input type="file" id="file" accept="image/jpeg,image/png,image/webp"></label><label class="btn2 camonly"><svg class="i" aria-hidden="true"><use href="#i-cam"/></svg><span data-t>Prendre une photo</span><input type="file" id="fileCam" accept="image/*" capture="environment"></label></div>
 <div class="cropn capn"><span id="capnl" data-t>Nombre de fiches et de questions</span><div class="seg" id="capn" role="group" aria-labelledby="capnl"><button type="button" data-qn="5" aria-pressed="false">5</button><button type="button" data-qn="10" aria-pressed="true">10</button><button type="button" data-qn="15" aria-pressed="false">15</button></div></div></div></div>
 <p class="mute limn" id="limA"></p>
+<div class="cnt" id="cntA" aria-live="polite"></div>
 <div id="foxbox" class="foxbox"></div></section>
 <section id="agbar" aria-label="Agenda"></section>
 </div>
@@ -486,6 +505,7 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 <textarea id="txIn" rows="3" maxlength="6000" aria-labelledby="txT" placeholder="Écris un sujet, un mot ou une phrase, ou colle ton texte…"></textarea>
 <div class="txrow"><span class="mute" id="txCnt" aria-live="off">0 / 6000</span><div class="txbtns"><button type="button" class="btn2 pri" id="txGo" disabled><span data-t>✨ Créer ma fiche</span></button><button type="button" class="btn2" id="txRw" disabled><span data-t>🔄 Reformuler</span></button><button type="button" class="btn2" id="txSy" disabled><span data-t>📚 Synonymes</span></button></div></div>
 <p class="mute limn" id="limB"></p>
+<div class="cnt" id="cntB" aria-live="polite"></div>
 <div id="txRes" class="txres hide" aria-live="polite"></div></section>
 <section id="load" class="card load hide" role="status" aria-live="polite"><div class="lscene" aria-hidden="true"><span class="lfox">🦊</span><span class="lpgw"><span class="lpg">📄</span><span class="lloupe">🔍</span></span></div><div id="loadT">Je lis ta leçon…</div></section>
 <section id="err" class="card err hide" role="alert"></section>
@@ -677,7 +697,7 @@ var TR={en:{
 "Sur la photo :":"On the photo:",
 "Rien de nouveau sur cette photo.":"Nothing new on this photo.",
 "Bibliothèque":"Library",
-"Dernières séances":"Latest sessions","Écris un sujet, un mot ou une phrase, ou colle ton texte…":"Type a topic, a word or a sentence, or paste your text…","🔄 Reformuler":"🔄 Rewrite","📚 Synonymes":"📚 Synonyms","Pour les synonymes, écris un mot (5 mots au maximum).":"For synonyms, write one word (5 words at most).","Pour reformuler, écris 2 000 caractères au maximum.":"To rewrite, use 2,000 characters at most.","Je cherche dans le dictionnaire… 📚":"Looking it up in the dictionary… 📚","Je reformule ta phrase… ✍️":"Rewriting your sentence… ✍️","Plus simple":"Simpler","Plus court":"Shorter","Plus soigné":"More polished","Copier":"Copy","Copié ✅":"Copied ✅","Copié :":"Copied:","Utiliser ce texte":"Use this text","Synonymes":"Synonyms","Contraires":"Opposites","Exemple":"Example","Touche un mot pour le copier.":"Tap a word to copy it.","Cette demande n'a pas marché. Essaie encore.":"That didn't work. Try again.","Le serveur a mis trop de temps à répondre. Réessaie dans une minute.":"The server took too long to answer. Try again in a minute.","Je lis chaque ligne… 📖":"Reading every line… 📖","Je cherche les idées importantes… 💡":"Finding the key ideas… 💡","Je fabrique tes fiches… 🃏":"Making your flashcards… 🃏","J'invente ton quiz… 🎯":"Inventing your quiz… 🎯","Presque fini… l'IA prend un peu plus de temps que d'habitude. 🦊":"Almost done… the AI is taking a bit longer than usual. 🦊","Montre ta leçon à la caméra":"Show your lesson to the camera","Pose la page bien à plat, avec de la lumière, puis appuie sur « Prendre la photo ».":"Lay the page flat, with good light, then press “Take the photo”.","Caméra":"Camera","📸 Prendre la photo":"📸 Take the photo","Choisir un fichier à la place":"Choose a file instead","Annuler":"Cancel","L'accès à la caméra est refusé. Autorise-la avec le cadenas à côté de l'adresse, ou choisis un fichier.":"Camera access is blocked. Allow it with the padlock next to the address, or choose a file.","Aucune caméra n'a été trouvée. Branche-en une, ou choisis un fichier.":"No camera found. Plug one in, or choose a file.","La caméra ne démarre pas. Ferme les autres applications qui l'utilisent, ou choisis un fichier.":"The camera won't start. Close other apps that use it, or choose a file.","La photo n'a pas pu être prise. Réessaie.":"The photo couldn't be taken. Try again.","Pas de photo ? Écris ou colle !":"No photo? Type or paste!","Écris un sujet (ex. : les fractions) ou colle ton texte…":"Type a topic (e.g. fractions) or paste your text…","✨ Créer ma fiche":"✨ Make my summary","Je prépare ta leçon… ✍️":"Preparing your lesson… ✍️","Impossible de préparer cette leçon. Essaie encore.":"Couldn't prepare this lesson. Try again.","🎁 Version gratuite de lancement : %1 analyses par heure, %2 par jour.":"🎁 Free launch version: %1 scans per hour, %2 per day.","🎁 Reformuler et Synonymes : %1 demandes par heure, %2 par jour.":"🎁 Rewrite and Synonyms: %1 requests per hour, %2 per day.","🎁 Version gratuite de lancement : %1 analyses par heure.":"🎁 Free launch version: %1 scans per hour.","🎁 Reformuler et Synonymes : %1 demandes par heure.":"🎁 Rewrite and Synonyms: %1 requests per hour.",
+"Dernières séances":"Latest sessions","Écris un sujet, un mot ou une phrase, ou colle ton texte…":"Type a topic, a word or a sentence, or paste your text…","🔄 Reformuler":"🔄 Rewrite","📚 Synonymes":"📚 Synonyms","Pour les synonymes, écris un mot (5 mots au maximum).":"For synonyms, write one word (5 words at most).","Pour reformuler, écris 2 000 caractères au maximum.":"To rewrite, use 2,000 characters at most.","Je cherche dans le dictionnaire… 📚":"Looking it up in the dictionary… 📚","Je reformule ta phrase… ✍️":"Rewriting your sentence… ✍️","Plus simple":"Simpler","Plus court":"Shorter","Plus soigné":"More polished","Copier":"Copy","Copié ✅":"Copied ✅","Copié :":"Copied:","Utiliser ce texte":"Use this text","Synonymes":"Synonyms","Contraires":"Opposites","Exemple":"Example","Touche un mot pour le copier.":"Tap a word to copy it.","Cette demande n'a pas marché. Essaie encore.":"That didn't work. Try again.","Le serveur a mis trop de temps à répondre. Réessaie dans une minute.":"The server took too long to answer. Try again in a minute.","Je lis chaque ligne… 📖":"Reading every line… 📖","Je cherche les idées importantes… 💡":"Finding the key ideas… 💡","Je fabrique tes fiches… 🃏":"Making your flashcards… 🃏","J'invente ton quiz… 🎯":"Inventing your quiz… 🎯","Presque fini… l'IA prend un peu plus de temps que d'habitude. 🦊":"Almost done… the AI is taking a bit longer than usual. 🦊","Montre ta leçon à la caméra":"Show your lesson to the camera","Pose la page bien à plat, avec de la lumière, puis appuie sur « Prendre la photo ».":"Lay the page flat, with good light, then press “Take the photo”.","Caméra":"Camera","📸 Prendre la photo":"📸 Take the photo","Choisir un fichier à la place":"Choose a file instead","Annuler":"Cancel","L'accès à la caméra est refusé. Autorise-la avec le cadenas à côté de l'adresse, ou choisis un fichier.":"Camera access is blocked. Allow it with the padlock next to the address, or choose a file.","Aucune caméra n'a été trouvée. Branche-en une, ou choisis un fichier.":"No camera found. Plug one in, or choose a file.","La caméra ne démarre pas. Ferme les autres applications qui l'utilisent, ou choisis un fichier.":"The camera won't start. Close other apps that use it, or choose a file.","La photo n'a pas pu être prise. Réessaie.":"The photo couldn't be taken. Try again.","Pas de photo ? Écris ou colle !":"No photo? Type or paste!","Écris un sujet (ex. : les fractions) ou colle ton texte…":"Type a topic (e.g. fractions) or paste your text…","✨ Créer ma fiche":"✨ Make my summary","Je prépare ta leçon… ✍️":"Preparing your lesson… ✍️","Impossible de préparer cette leçon. Essaie encore.":"Couldn't prepare this lesson. Try again.","🎁 Version gratuite de lancement : %1 analyses par heure, %2 par jour.":"🎁 Free launch version: %1 scans per hour, %2 per day.","🎁 Reformuler et Synonymes : %1 demandes par heure, %2 par jour.":"🎁 Rewrite and Synonyms: %1 requests per hour, %2 per day.","Il te reste :":"You have left:","⏱️ Cette heure":"⏱️ This hour","📅 Aujourd'hui":"📅 Today","retour dans %1 min":"back in %1 min","retour dans %1 h":"back in %1 h","🎁 Version gratuite de lancement : %1 analyses par heure.":"🎁 Free launch version: %1 scans per hour.","🎁 Reformuler et Synonymes : %1 demandes par heure.":"🎁 Rewrite and Synonyms: %1 requests per hour.",
 "Voir toute la bibliothèque":"See the whole library",
 "Par semaine":"By week",
 "Par mois":"By month",
@@ -753,7 +773,15 @@ function limPaint(){if(!$("limA"))return;if(!LIM){$("limA").textContent="";$("li
 function f(s,a,b){return t(s).replace("%1",a).replace("%2",b)}
 $("limA").textContent=LIM.d?f("🎁 Version gratuite de lancement : %1 analyses par heure, %2 par jour.",LIM.h,LIM.d):f("🎁 Version gratuite de lancement : %1 analyses par heure.",LIM.h,"");
 $("limB").textContent=LIM.wd?f("🎁 Reformuler et Synonymes : %1 demandes par heure, %2 par jour.",LIM.wh,LIM.wd):f("🎁 Reformuler et Synonymes : %1 demandes par heure.",LIM.wh,"")}
-function applyLang(){limPaint();paintLogout();if($("txIn"))$("txIn").placeholder=t("Écris un sujet, un mot ou une phrase, ou colle ton texte…");[].forEach.call(document.querySelectorAll("[data-t]"),function(el){if(el.dataset.fr===undefined)el.dataset.fr=el.textContent;el.textContent=t(el.dataset.fr)})}
+var USE=null,useTm=null;
+function usageChip(lbl,max,used,wait,hours){var left=Math.max(0,max-used),p=max?Math.round(left/max*100):0,c=left<=0?"zero":left<=Math.max(1,Math.floor(max*.2))?"low":"";
+return'<span class="chip '+c+'"><b>'+t(lbl)+" "+left+" / "+max+'</b><i><u style="width:'+p+'%"></u></i>'+(left<=0&&wait?"<em>"+t(hours?"retour dans %1 h":"retour dans %1 min").replace("%1",wait)+"</em>":"")+"</span>"}
+function usagePaint(){if(!$("cntA"))return;if(!USE){$("cntA").innerHTML="";$("cntB").innerHTML="";return}
+function row(o){return'<span class="cl">'+t("Il te reste :")+"</span>"+usageChip("⏱️ Cette heure",o.h.max,o.h.used,o.h.wait,false)+(o.d.max?usageChip("📅 Aujourd'hui",o.d.max,o.d.used,o.d.wait,true):"")}
+$("cntA").innerHTML=row(USE.a);$("cntB").innerHTML=row(USE.w)}
+function usageLoad(){if(document.hidden)return;token().then(function(tk){var hd={};if(tk)hd.Authorization="Bearer "+tk;return fetch("/api/usage",{headers:hd,cache:"no-store"})}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){USE=j;usagePaint()}).catch(function(){USE=null;usagePaint()})}
+if(!useTm){useTm=setInterval(usageLoad,90000);document.addEventListener("visibilitychange",function(){if(!document.hidden)usageLoad()})}
+function applyLang(){usagePaint();limPaint();paintLogout();if($("txIn"))$("txIn").placeholder=t("Écris un sujet, un mot ou une phrase, ou colle ton texte…");[].forEach.call(document.querySelectorAll("[data-t]"),function(el){if(el.dataset.fr===undefined)el.dataset.fr=el.textContent;el.textContent=t(el.dataset.fr)})}
 
 // ---------- Préférences de chaque enfant (sons, police, taille, langue) et boutique ----------
 function ex(){var e=cur.extra=cur.extra||{},p=e.prefs=e.prefs||{};e.coins=e.coins||0;e.owned=e.owned||[];e.equip=e.equip||{};if(p.sound===undefined)p.sound=true;p.size=p.size||0;p.lang=(LG(p.lang).c===p.lang)?p.lang:devLang();p.voice=p.voice||{};p.easy=!!p.easy;if([5,10,15].indexOf(p.qn)<0)p.qn=10;return e}
@@ -877,11 +905,12 @@ var ag=cropFor==="agenda",d=o.toDataURL("image/jpeg",ag?.92:.85);src=null;if(ag)
 function analyze(img,txt){$("crop").classList.add("hide");show("err",false);show("out",false);show("load",true);loadStart(!!txt);
 token().then(function(tk){var hd={"Content-Type":"application/json"};if(tk)hd.Authorization="Bearer "+tk;return fetch("/api/analyze",{method:"POST",headers:hd,body:JSON.stringify(txt?{text:txt,mode:mode,lang:lang,n:qnPref()}:{image:img,mode:mode,lang:lang,n:qnPref()})}).catch(function(){throw new Error(t("Le serveur ne répond pas. Il se réveille peut-être : attends une minute, puis réessaie."))})})
 .then(function(r){return r.json().catch(function(){throw new Error(t("Le serveur a mis trop de temps à répondre. Réessaie dans une minute ou choisis moins de questions."))}).then(function(j){if(!r.ok)throw new Error(j.erreur||"Erreur");return j})})
-.then(function(d){R=d;show("load",false);cs=addSession(d);if(txt)$("txIn").value="",txPaint();render();celebrate();sfx("up");daily("lesson")})
-.catch(function(er){fail(er.message&&er.message!=="Failed to fetch"?er.message:t(txt?"Impossible de préparer cette leçon. Essaie encore.":"Impossible de lire cette photo. Essaie encore."))})}
+.then(function(d){usageLoad();R=d;show("load",false);cs=addSession(d);if(txt)$("txIn").value="",txPaint();render();celebrate();sfx("up");daily("lesson")})
+.catch(function(er){usageLoad();fail(er.message&&er.message!=="Failed to fetch"?er.message:t(txt?"Impossible de préparer cette leçon. Essaie encore.":"Impossible de lire cette photo. Essaie encore."))})}
 var loadTm=null;
 function loadStop(){if(loadTm){clearInterval(loadTm);loadTm=null}}
-function loadStart(txt){loadStop();var steps=txt?["Je prépare ta leçon… ✍️","Je cherche les idées importantes… 💡","Je fabrique tes fiches… 🃏","J'invente ton quiz… 🎯"]:["Je regarde ta leçon… 🔍","Je lis chaque ligne… 📖","Je cherche les idées importantes… 💡","Je fabrique tes fiches… 🃏","J'invente ton quiz… 🎯"],i=0,t0=Date.now();
+function placeLoad(txt){var host=txt?$("txtbox"):document.querySelector(".capture .capL"),l=$("load");if(host&&l&&l.parentNode!==host)host.appendChild(l)}
+function loadStart(txt){loadStop();placeLoad(txt);var steps=txt?["Je prépare ta leçon… ✍️","Je cherche les idées importantes… 💡","Je fabrique tes fiches… 🃏","J'invente ton quiz… 🎯"]:["Je regarde ta leçon… 🔍","Je lis chaque ligne… 📖","Je cherche les idées importantes… 💡","Je fabrique tes fiches… 🃏","J'invente ton quiz… 🎯"],i=0,t0=Date.now();
 $("loadT").textContent=t(steps[0]);
 loadTm=setInterval(function(){if(Date.now()-t0>=25000){$("loadT").textContent=t("Presque fini… l'IA prend un peu plus de temps que d'habitude. 🦊");return}i=Math.min(i+1,steps.length-1);$("loadT").textContent=t(steps[i])},3500);
 try{$("load").scrollIntoView({behavior:"smooth",block:"center"})}catch(e){}}
@@ -893,11 +922,11 @@ function txBtn(label,fn,cls){var b=document.createElement("button");b.type="butt
 function txWords(tool){var v=$("txIn").value.trim();
 if(tool==="syn"&&(v.length>60||v.split(/\s+/).length>5)){txMsg(t("Pour les synonymes, écris un mot (5 mots au maximum)."),true);return}
 if(tool==="rw"&&v.length>2000){txMsg(t("Pour reformuler, écris 2 000 caractères au maximum."),true);return}
-var r=$("txRes");r.innerHTML="";var w=document.createElement("div");w.className="txv txwait";var sp=document.createElement("span");sp.className="spin";sp.textContent="🦊";var tx=document.createElement("span");tx.textContent=t(tool==="syn"?"Je cherche dans le dictionnaire… 📚":"Je reformule ta phrase… ✍️");w.appendChild(sp);w.appendChild(tx);r.appendChild(w);show("txRes",true);
+var r=$("txRes");r.innerHTML="";var w=document.createElement("div");w.className="txv txwait";var sp=document.createElement("span");sp.className="lscene";sp.setAttribute("aria-hidden","true");sp.innerHTML='<span class="lfox">🦊</span><span class="lpgw"><span class="lpg">📄</span><span class="lloupe">🔍</span></span>';var tx=document.createElement("span");tx.textContent=t(tool==="syn"?"Je cherche dans le dictionnaire… 📚":"Je reformule ta phrase… ✍️");w.appendChild(sp);w.appendChild(tx);r.appendChild(w);show("txRes",true);
 ["txGo","txRw","txSy"].forEach(function(i){$(i).disabled=true});
 token().then(function(tk){var hd={"Content-Type":"application/json"};if(tk)hd.Authorization="Bearer "+tk;return fetch("/api/words",{method:"POST",headers:hd,body:JSON.stringify({tool:tool,text:v,mode:mode,lang:lang})}).catch(function(){throw new Error(t("Le serveur ne répond pas. Il se réveille peut-être : attends une minute, puis réessaie."))})})
 .then(function(x){return x.json().catch(function(){throw new Error(t("Le serveur a mis trop de temps à répondre. Réessaie dans une minute."))}).then(function(j){if(!x.ok)throw new Error(j.erreur||"Erreur");return j})})
-.then(function(d){txPaint();if(tool==="syn")txShowSyn(d.mots||[]);else txShowRw(d.versions||[])})
+.then(function(d){usageLoad();txPaint();if(tool==="syn")txShowSyn(d.mots||[]);else txShowRw(d.versions||[])})
 .catch(function(er){txPaint();txMsg(er.message&&er.message!=="Failed to fetch"?er.message:t("Cette demande n'a pas marché. Essaie encore."),true)})}
 function txShowRw(vs){var r=$("txRes");r.innerHTML="";var names={simple:"Plus simple",court:"Plus court",soigne:"Plus soigné"};
 vs.forEach(function(v){var c=document.createElement("div");c.className="txv";var h=document.createElement("h3");h.textContent=t(names[v.type]||v.type);var p=document.createElement("p");p.textContent=v.texte;var a=document.createElement("div");a.className="txact";
@@ -1074,7 +1103,7 @@ dirty=keep;return true}
 function migrate(l){var m={};db.profiles=l.profiles.map(function(p){var n=uid();m[p.id]=n;p.id=n;return p});
 db.sessions=(l.sessions||[]).filter(function(s){return m[s.pid]}).map(function(s){s.id=uid();s.pid=m[s.pid];dirty[s.id]=1;return s});
 db.active=db.profiles[0].id;push().then(function(ok){if(ok){try{localStorage.removeItem("studia:v1")}catch(e){}}})}
-async function enter(u){user=u;eyeReset();$("auth").classList.add("hide");var lg=null;try{lg=APP==="kids"?JSON.parse(localStorage.getItem("studia:v1")):null}catch(e){}
+async function enter(u){user=u;setTimeout(usageLoad,300);eyeReset();$("auth").classList.add("hide");var lg=null;try{lg=APP==="kids"?JSON.parse(localStorage.getItem("studia:v1")):null}catch(e){}
 try{await pull()}catch(e){user=null;console.error(e);toast("Connexion impossible. Réessaie dans un instant."+(e&&/^pull: /.test(e.message)?" ("+e.message.slice(6,100)+")":""));$("auth").classList.remove("hide");return}
 if(!db.profiles.length&&lg&&lg.profiles&&lg.profiles.length)migrate(lg);
 if(/access_token|[?&]code=/.test(location.hash+location.search))history.replaceState(null,"",location.pathname);
@@ -1108,7 +1137,7 @@ $("alog").onclick=function(){doAuth(false)};$("areg").onclick=function(){doAuth(
 $("apw").onkeydown=function(e){if(e.key==="Enter")doAuth(false)};
 $("parBtn").onclick=function(){gate(function(){renderDash();show("dash",true);$("dash").scrollIntoView()},true)};
 $("logout").onclick=function(){if(!user){$("auth").classList.remove("hide");return}gate(function(){sb.auth.signOut().then(function(){location.reload()})})};
-async function boot(){try{var c=await(await fetch("/api/config")).json();if(c.lim){LIM=c.lim;limPaint()}
+async function boot(){try{var c=await(await fetch("/api/config")).json();if(c.lim){LIM=c.lim;limPaint()}usageLoad();
 if(c.url&&c.key&&window.supabase){var rec=/type=recovery/.test(location.hash);sb=supabase.createClient(c.url,c.key);$("logout").classList.remove("hide");var r=await sb.auth.getSession();
 if(rec&&r.data.session){authMode("reset");$("auth").classList.remove("hide");return}
 if(r.data.session){await enter(r.data.session.user)}else{$("auth").classList.remove("hide");if(/[?&]go=google/.test(location.search))$("agoogle").click()}return}}catch(e){console.error(e)}
