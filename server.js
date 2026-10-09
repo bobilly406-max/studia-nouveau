@@ -38,6 +38,10 @@ const MSG = {
     fr: (n, w) => `Tu as atteint la limite de ${n} demandes par heure. Réessaie dans environ ${w} minute${w > 1 ? "s" : ""}.`,
     en: (n, w) => `You reached the limit of ${n} requests per hour. Try again in about ${w} minute${w > 1 ? "s" : ""}.`,
   },
+  limitWordsDay: {
+    fr: (n, w) => `Tu as atteint la limite de ${n} demandes sur 24 heures. Réessaie dans environ ${w} heure${w > 1 ? "s" : ""}.`,
+    en: (n, w) => `You reached the limit of ${n} requests in 24 hours. Try again in about ${w} hour${w > 1 ? "s" : ""}.`,
+  },
   synLen: { fr: "Pour les synonymes, écris un mot (5 mots au maximum).", en: "For synonyms, write one word (5 words at most)." },
   rwLen: { fr: "Le texte est trop long à reformuler : 2 000 caractères au maximum.", en: "This text is too long to rewrite: 2,000 characters at most." },
   unreadableWords: { fr: "Je n'ai pas réussi cette demande. Vérifie l'orthographe ou essaie un autre mot ou un autre texte.", en: "I couldn't do this. Check the spelling or try another word or text." },
@@ -193,7 +197,7 @@ app.use(express.static(path.join(__dirname, "public"), { extensions: ["html"] })
 
 // Réglages publics pour les comptes parents (la clé anon est faite pour être publique)
 app.get("/api/config", (req, res) =>
-  res.json({ url: process.env.SUPABASE_URL || "", key: process.env.SUPABASE_ANON_KEY || "" })
+  res.json({ url: process.env.SUPABASE_URL || "", key: process.env.SUPABASE_ANON_KEY || "", lim: { h: MAX_PER_HOUR, d: MAX_PER_DAY, wh: MAX_WORDS_PER_HOUR, wd: MAX_WORDS_PER_DAY } })
 );
 
 // ---------- Connexion obligatoire : on demande à Supabase si le jeton est valide ----------
@@ -215,7 +219,10 @@ async function whoIs(token) {
 }
 
 // Limite : analyses par heure et par jour (24 h glissantes) et par parent (ou par adresse IP sans compte)
-const hits = new Map(), wordHits = new Map(), MAX_WORDS_PER_HOUR = 60; // reformuler / synonymes : plus légers, compteur à part
+// Reformuler / Synonymes : plus légers, compteur à part (MAX_WORDS_PER_HOUR défaut 20, MAX_WORDS_PER_DAY défaut 60 ; 0 = pas de limite du jour)
+const hits = new Map(), wordHits = new Map();
+const MAX_WORDS_PER_HOUR = Number(process.env.MAX_WORDS_PER_HOUR) || 20;
+const MAX_WORDS_PER_DAY = process.env.MAX_WORDS_PER_DAY === undefined || process.env.MAX_WORDS_PER_DAY === "" ? 60 : Number(process.env.MAX_WORDS_PER_DAY) || 0;
 function limited(who, store = hits, max = MAX_PER_HOUR, maxDay = 0, stamp = Date.now()) {
   const now = Date.now();
   const day = (store.get(who) || []).filter((t) => now - t < 86400000);
@@ -434,10 +441,11 @@ async function guard(req, res, opt = {}) {
     who = "u:" + id;
   }
   const store = opt.words ? wordHits : hits, stamp = Date.now() + Math.random() / 1000;
-  const lim = opt.words ? limited(who, wordHits, MAX_WORDS_PER_HOUR, 0, stamp) : limited(who, hits, MAX_PER_HOUR, MAX_PER_DAY, stamp);
+  const lim = opt.words ? limited(who, wordHits, MAX_WORDS_PER_HOUR, MAX_WORDS_PER_DAY, stamp) : limited(who, hits, MAX_PER_HOUR, MAX_PER_DAY, stamp);
   if (lim) {
-    const msg = opt.words ? MSG.limitWords : lim.day ? MSG.limitDay : MSG.limit;
-    res.status(429).json({ erreur: msg[lg](opt.words ? MAX_WORDS_PER_HOUR : lim.day ? MAX_PER_DAY : MAX_PER_HOUR, lim.wait) }); return null;
+    const msg = opt.words ? (lim.day ? MSG.limitWordsDay : MSG.limitWords) : lim.day ? MSG.limitDay : MSG.limit;
+    const n = opt.words ? (lim.day ? MAX_WORDS_PER_DAY : MAX_WORDS_PER_HOUR) : lim.day ? MAX_PER_DAY : MAX_PER_HOUR;
+    res.status(429).json({ erreur: msg[lg](n, lim.wait) }); return null;
   }
   const undo = () => refund(who, store, stamp);
   if (opt.text && typeof body.text === "string" && !body.image) {      // leçon à partir d'un texte ou d'un sujet, sans photo
