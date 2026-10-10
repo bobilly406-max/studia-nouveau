@@ -66,8 +66,10 @@ function manifestFor(k) {
     id: `/${v.path}/app`, start_url: `/${v.path}/app`, scope: `/${v.path}/`, display: "standalone", lang: "fr",
     background_color: v.bg, theme_color: v.theme, categories: ["education"],
     icons: [
-      { src: `/${v.icon}-192.png`, sizes: "192x192", type: "image/png", purpose: "any maskable" },
-      { src: `/${v.icon}-512.png`, sizes: "512x512", type: "image/png", purpose: "any maskable" },
+      { src: `/${v.icon}-192.png`, sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: `/${v.icon}-512.png`, sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: `/${v.icon}-maskable-192.png`, sizes: "192x192", type: "image/png", purpose: "maskable" }, // dessin plus petit : Android peut rogner les bords
+      { src: `/${v.icon}-maskable-512.png`, sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   });
 }
@@ -150,10 +152,10 @@ function capColor(x, y) {
   return null;
 }
 const iconCache = {};
-function renderIcon(size, kind) {
-  const key = kind + size;
+function renderIcon(size, kind, art = 0.6) {   // art = part de l'icône occupée par le dessin (0,5 pour les icônes « maskable »)
+  const key = kind + size + "-" + art;
   if (iconCache[key]) return iconCache[key];
-  const px = Buffer.alloc(size * size * 4), S = 2, sc = (size * 0.6) / 120, off = (size - 120 * sc) / 2, bg = kind === "studia" ? [36, 31, 74] : [108, 76, 241], draw = kind === "studia" ? capColor : foxColor;
+  const px = Buffer.alloc(size * size * 4), S = 2, sc = (size * art) / 120, off = (size - 120 * sc) / 2, bg = kind === "studia" ? [36, 31, 74] : [108, 76, 241], draw = kind === "studia" ? capColor : foxColor;
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     let r = 0, g = 0, b = 0;
     for (let i = 0; i < S; i++) for (let j = 0; j < S; j++) {
@@ -165,8 +167,9 @@ function renderIcon(size, kind) {
   }
   return (iconCache[key] = pngRGBA(size, size, px));
 }
-for (const [name, size, kind] of [["icon-192.png", 192, "kids"], ["icon-512.png", 512, "kids"], ["apple-touch-icon.png", 180, "kids"], ["studia-icon-192.png", 192, "studia"], ["studia-icon-512.png", 512, "studia"], ["studia-apple-touch-icon.png", 180, "studia"]]) {
-  app.get("/" + name, (req, res) => res.type("image/png").set("Cache-Control", "public, max-age=86400").send(renderIcon(size, kind)));
+for (const [name, size, kind, art] of [["icon-192.png", 192, "kids"], ["icon-512.png", 512, "kids"], ["apple-touch-icon.png", 180, "kids"], ["studia-icon-192.png", 192, "studia"], ["studia-icon-512.png", 512, "studia"], ["studia-apple-touch-icon.png", 180, "studia"],
+  ["icon-maskable-192.png", 192, "kids", 0.5], ["icon-maskable-512.png", 512, "kids", 0.5], ["studia-icon-maskable-192.png", 192, "studia", 0.5], ["studia-icon-maskable-512.png", 512, "studia", 0.5]]) {
+  app.get("/" + name, (req, res) => res.type("image/png").set("Cache-Control", "public, max-age=86400").send(renderIcon(size, kind, art)));
 }
 
 // Une seule adresse, deux versions : « / » = choix, « /kids » et « /revifox » = présentations,
