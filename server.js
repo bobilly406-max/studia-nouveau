@@ -63,7 +63,7 @@ function manifestFor(k) {
   const v = VERSIONS[k];
   return JSON.stringify({
     name: v.name, short_name: v.short, description: v.desc,
-    id: `/${v.path}/app`, start_url: `/${v.path}/app`, scope: `/${v.path}/`, display: "standalone", lang: "fr",
+    id: `/${v.path}/app`, start_url: `/${v.path}/app`, scope: `/${v.path}/`, display: "standalone", orientation: "any", prefer_related_applications: false, lang: "fr",
     background_color: v.bg, theme_color: v.theme, categories: ["education"],
     icons: [
       { src: `/${v.icon}-192.png`, sizes: "192x192", type: "image/png", purpose: "any" },
