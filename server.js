@@ -61,7 +61,20 @@ if (SITE_CLOSED) {
   let closedHtml = "<!doctype html><meta charset=utf-8><title>Révifox</title><p>Révifox revient bientôt.</p>";
   try { closedHtml = fs.readFileSync(path.join(__dirname, "public", "bientot.html"), "utf8"); } catch (_) {}
   const CLOSED_PATHS = new Set(["/", "/index.html", "/app", "/app.html", "/revifox", "/revifox/app", "/studia", "/studia/app", "/kids", "/kids/app"]);
+  // Accès réservé au propriétaire : réglage OWNER_KEY (une longue phrase secrète). Ouvre une fois
+  // « https://revifox.ca/revifox/app?k=TA_CLÉ » sur chaque appareil : un témoin (cookie) te laisse ensuite entrer.
+  const OWNER_KEY = process.env.OWNER_KEY || "";
+  const sameKey = (a) => { const x = Buffer.from(String(a || "")), y = Buffer.from(OWNER_KEY); return OWNER_KEY.length >= 12 && x.length === y.length && crypto.timingSafeEqual(x, y); };
+  const cookieOf = (req, name) => { const m = new RegExp("(?:^|;\\s*)" + name + "=([^;]*)").exec(req.headers.cookie || ""); try { return m ? decodeURIComponent(m[1]) : ""; } catch (_) { return ""; } };
   app.use((req, res, next) => {
+    if (OWNER_KEY) {
+      if (req.query && typeof req.query.k === "string" && sameKey(req.query.k)) {
+        res.set("Set-Cookie", "rvx_owner=" + encodeURIComponent(OWNER_KEY) + "; Path=/; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax");
+        const rest = Object.entries(req.query).filter(([k]) => k !== "k").map(([k, v]) => encodeURIComponent(k) + "=" + encodeURIComponent(String(v))).join("&");
+        return res.redirect(302, req.path + (rest ? "?" + rest : ""));
+      }
+      if (sameKey(cookieOf(req, "rvx_owner"))) return next();
+    }
     const p = req.path.replace(/\/+$/, "") || "/";
     if (CLOSED_PATHS.has(p)) return res.status(200).type("html").set("Cache-Control", "no-cache").send(closedHtml);
     if (p.startsWith("/api/") && p !== "/api/config") return res.status(503).json({ error: "Révifox est fermé pour le moment." });
