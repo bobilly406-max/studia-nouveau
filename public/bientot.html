@@ -23,6 +23,11 @@ p{color:var(--soft);font-size:1.05rem;margin:0 0 10px}
 .seg button[aria-pressed="true"]{background:var(--brand);color:#fff}
 footer{padding:20px 16px 28px;text-align:center;font-size:.9rem}
 footer a{color:var(--soft);margin:0 10px;text-decoration:underline}
+.own{margin-top:18px;font-size:.85rem;color:var(--soft)}
+.own summary{cursor:pointer;display:inline-block;opacity:.8}
+.own form{margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.own input{font:inherit;font-size:1rem;padding:10px 12px;min-height:44px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink);min-width:0;flex:1 1 180px;max-width:280px}
+.own button{font:700 .95rem system-ui,sans-serif;padding:10px 16px;min-height:44px;border:0;border-radius:12px;background:var(--brand);color:#fff;cursor:pointer}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -40,6 +45,8 @@ footer a{color:var(--soft);margin:0 10px;text-decoration:underline}
 <p>For any question or to delete your account, write to <a href="mailto:confidentialite@revifox.ca" style="color:var(--brand)">confidentialite@revifox.ca</a>.</p>
 </div>
 <div class="seg" role="group" aria-label="Langue / Language"><button type="button" data-setl="fr" aria-pressed="true">FR</button><button type="button" data-setl="en" aria-pressed="false">EN</button></div>
+<details class="own"><summary><span data-lang="fr">Accès réservé</span><span data-lang="en" hidden>Private access</span></summary>
+<form id="ownf" autocomplete="off"><input id="ownk" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Clé / Key" placeholder="Clé / Key"><button type="submit">OK</button></form></details>
 </div></main>
 <footer>
 <a href="/confidentialite"><span data-lang="fr">Politique de confidentialité</span><span data-lang="en" hidden>Privacy policy</span></a>
@@ -54,7 +61,8 @@ function set(l){H.lang=l;try{localStorage.setItem(KEY,l)}catch(e){}
 [].forEach.call(document.querySelectorAll("[data-setl]"),function(b){b.setAttribute("aria-pressed",b.getAttribute("data-setl")===l)});
 document.title=l==="en"?"Révifox — coming soon":"Révifox — bientôt"}
 [].forEach.call(document.querySelectorAll("[data-setl]"),function(b){b.onclick=function(){set(b.getAttribute("data-setl"))}});
-set(get())})();
+set(get());
+var f=document.getElementById("ownf");if(f)f.onsubmit=function(e){e.preventDefault();var k=document.getElementById("ownk").value.trim();if(k)location.href="/revifox/app?k="+encodeURIComponent(k)}})();
 </script>
 </body>
 </html>
