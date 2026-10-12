@@ -777,7 +777,7 @@ return'<span class="chip '+c+'"><b>'+t(lbl)+" "+left+" / "+max+'</b><i><u style=
 function usagePaint(){if(!$("cntA"))return;if(!USE){$("cntA").innerHTML="";$("cntB").innerHTML="";return}
 function row(o){return'<span class="cl">'+t("Il te reste :")+"</span>"+usageChip("⏱️ Cette heure",o.h.max,o.h.used,o.h.wait,false)+(o.d.max?usageChip("📅 Aujourd'hui",o.d.max,o.d.used,o.d.wait,true):"")}
 $("cntA").innerHTML=row(USE.a);$("cntB").innerHTML=row(USE.w)}
-function usageLoad(){if(document.hidden)return;token().then(function(tk){var hd={};if(tk)hd.Authorization="Bearer "+tk;return fetch("/api/usage",{headers:hd,cache:"no-store"})}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){USE=j;usagePaint()}).catch(function(){USE=null;usagePaint()})}
+function usageLoad(){if(document.hidden)return;token().then(function(tk){var hd={};if(tk)hd.Authorization="Bearer "+tk;return fetch("/api/usage",{headers:hd,cache:"no-store"})}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){USE=j&&j.off?null:j;usagePaint()}).catch(function(){USE=null;usagePaint()})}
 if(!useTm){useTm=setInterval(usageLoad,90000);document.addEventListener("visibilitychange",function(){if(!document.hidden)usageLoad()})}
 function applyLang(){usagePaint();limPaint();paintLogout();if($("txIn"))$("txIn").placeholder=t("Écris un sujet, un mot ou une phrase, ou colle ton texte…");[].forEach.call(document.querySelectorAll("[data-t]"),function(el){if(el.dataset.fr===undefined)el.dataset.fr=el.textContent;el.textContent=t(el.dataset.fr)})}
 
