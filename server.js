@@ -54,6 +54,22 @@ const MSG = {
 
 app.use(express.json({ limit: "12mb" }));
 
+// ---------- Site fermé (mise en pause) : sur Render, ajoute le réglage SITE_CLOSED = 1 ; retire-le pour rouvrir ----------
+// Les pages légales et la suppression de compte restent accessibles ; l'application et l'IA sont fermées.
+const SITE_CLOSED = /^(1|true|oui|yes)$/i.test(process.env.SITE_CLOSED || "");
+if (SITE_CLOSED) {
+  let closedHtml = "<!doctype html><meta charset=utf-8><title>Révifox</title><p>Révifox revient bientôt.</p>";
+  try { closedHtml = fs.readFileSync(path.join(__dirname, "public", "bientot.html"), "utf8"); } catch (_) {}
+  const CLOSED_PATHS = new Set(["/", "/index.html", "/app", "/app.html", "/revifox", "/revifox/app", "/studia", "/studia/app", "/kids", "/kids/app"]);
+  app.use((req, res, next) => {
+    const p = req.path.replace(/\/+$/, "") || "/";
+    if (CLOSED_PATHS.has(p)) return res.status(200).type("html").set("Cache-Control", "no-cache").send(closedHtml);
+    if (p.startsWith("/api/") && p !== "/api/config") return res.status(503).json({ error: "Révifox est fermé pour le moment." });
+    next();
+  });
+  console.log("SITE FERMÉ : la page « bientôt » est affichée (SITE_CLOSED).");
+}
+
 // ---------- Application installable (PWA) : manifeste, service worker, icônes ----------
 const VERSIONS = {
   studia: { path: "revifox", name: "Révifox", short: "Révifox", desc: "Prends une leçon en photo : résumé, fiches, quiz et agenda.", bg: "#F6F4FF", theme: "#2F5BD6", icon: "studia-icon" },
