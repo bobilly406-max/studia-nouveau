@@ -56,7 +56,6 @@ app.use(express.json({ limit: "12mb" }));
 
 // ---------- Application installable (PWA) : manifeste, service worker, icônes ----------
 const VERSIONS = {
-  kids: { path: "kids", name: "Révifox Kids", short: "Révifox Kids", desc: "Prends ta leçon en photo : fiche, résumé et quiz pour les enfants.", bg: "#F6F4FF", theme: "#6C4CF1", icon: "icon" },
   studia: { path: "revifox", name: "Révifox", short: "Révifox", desc: "Prends une leçon en photo : résumé, fiches, quiz et agenda.", bg: "#F6F4FF", theme: "#2F5BD6", icon: "studia-icon" },
 };
 function manifestFor(k) {
@@ -73,12 +72,13 @@ function manifestFor(k) {
     ],
   });
 }
-// Adresses : /kids et /revifox (l'ancienne /studia fonctionne toujours pour les installations existantes)
-const WEB_PATHS = { kids: ["kids"], studia: ["revifox", "studia"] };
+// Adresses : l'application est sur /revifox/app (les anciennes /studia et /kids redirigent)
+const WEB_PATHS = { studia: ["revifox", "studia"] };
 for (const k of Object.keys(VERSIONS)) {
   for (const p of WEB_PATHS[k]) app.get(`/${p}/manifest.webmanifest`, (req, res) => res.type("application/manifest+json").send(manifestFor(k)));
 }
-app.get("/manifest.webmanifest", (req, res) => res.type("application/manifest+json").send(manifestFor("kids"))); // anciens liens
+app.get("/manifest.webmanifest", (req, res) => res.type("application/manifest+json").send(manifestFor("studia"))); // anciens liens
+app.get("/kids/manifest.webmanifest", (req, res) => res.type("application/manifest+json").send(manifestFor("studia"))); // anciennes installations de Révifox Kids
 
 // Réseau d'abord (les mises à jour du site apparaissent tout de suite), cache en secours hors ligne
 const SW_JS = `const V = "studia-v1";
@@ -93,7 +93,7 @@ self.addEventListener("fetch", (e) => {
   if (u.origin !== location.origin || u.pathname.startsWith("/api/")) return;
   e.respondWith(
     fetch(r).then((res) => { if (res.ok) { const c = res.clone(); caches.open(V).then((ca) => ca.put(r, c)); } return res; })
-      .catch(() => caches.match(r).then((m) => m || caches.match(/^\/(revifox|studia)/.test(u.pathname) ? "/revifox/app" : "/kids/app")))
+      .catch(() => caches.match(r).then((m) => m || caches.match("/revifox/app")))
   );
 });
 self.addEventListener("push", (e) => {
@@ -106,9 +106,8 @@ self.addEventListener("push", (e) => {
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
   const url = new URL((e.notification.data && e.notification.data.u) || "/", self.location.origin);
-  const general = /^\/(revifox|studia)/.test(url.pathname);
   e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((cs) => {
-    const c = cs.find((x) => (general ? /^\/(revifox|studia)/ : /^\/kids/).test(new URL(x.url).pathname));
+    const c = cs.find((x) => /^\/(revifox|studia|kids)/.test(new URL(x.url).pathname));
     if (c) return c.navigate(url.href).then((w) => (w || c).focus()).catch(() => c.focus());
     return self.clients.openWindow(url.href);
   }));
@@ -167,13 +166,13 @@ function renderIcon(size, kind, art = 0.6) {   // art = part de l'icône occupé
   }
   return (iconCache[key] = pngRGBA(size, size, px));
 }
-for (const [name, size, kind, art] of [["icon-192.png", 192, "kids"], ["icon-512.png", 512, "kids"], ["apple-touch-icon.png", 180, "kids"], ["studia-icon-192.png", 192, "studia"], ["studia-icon-512.png", 512, "studia"], ["studia-apple-touch-icon.png", 180, "studia"],
-  ["icon-maskable-192.png", 192, "kids", 0.5], ["icon-maskable-512.png", 512, "kids", 0.5], ["studia-icon-maskable-192.png", 192, "studia", 0.5], ["studia-icon-maskable-512.png", 512, "studia", 0.5]]) {
+for (const [name, size, kind, art] of [["icon-192.png", 192, "studia"], ["icon-512.png", 512, "studia"], ["apple-touch-icon.png", 180, "studia"], ["studia-icon-192.png", 192, "studia"], ["studia-icon-512.png", 512, "studia"], ["studia-apple-touch-icon.png", 180, "studia"],
+  ["icon-maskable-192.png", 192, "studia", 0.5], ["icon-maskable-512.png", 512, "studia", 0.5], ["studia-icon-maskable-192.png", 192, "studia", 0.5], ["studia-icon-maskable-512.png", 512, "studia", 0.5]]) {
   app.get("/" + name, (req, res) => res.type("image/png").set("Cache-Control", "public, max-age=86400").send(renderIcon(size, kind, art)));
 }
 
-// Une seule adresse, deux versions : « / » = choix, « /kids » et « /revifox » = présentations,
-// « /kids/app » et « /revifox/app » = les applications, « /confidentialite » et « /conditions » = pages légales (communes)
+// Une seule application : « / » = présentation, « /revifox/app » = l'application,
+// « /confidentialite » et « /conditions » = pages légales. Les anciennes adresses (/revifox, /studia, /kids…) redirigent.
 // Filet de sécurité : si « app.html » manque (ex. un téléchargement renommé « app (4).html »), on prend la copie au plus grand numéro.
 function findAppHtml() {
   const dir = path.join(__dirname, "public"), exact = path.join(dir, "app.html");
@@ -185,17 +184,12 @@ function findAppHtml() {
   return path.join(dir, alt[0]);
 }
 const APP_HTML = fs.readFileSync(findAppHtml(), "utf8");
-const APP_PAGES = {
-  kids: APP_HTML,
-  studia: APP_HTML.replace("<title>Révifox Kids — Apprends. Explore. Brille à ta façon.</title>", "<title>Révifox — Étudie à ton rythme</title>").replace('href="/apple-touch-icon.png"', 'href="/studia-apple-touch-icon.png"').replace('<meta name="theme-color" content="#6C4CF1">', '<meta name="theme-color" content="#2F5BD6">'),
-};
-for (const k of Object.keys(APP_PAGES)) {
-  APP_PAGES[k] = APP_PAGES[k].replace('href="/manifest.webmanifest"', `href="/${VERSIONS[k].path}/manifest.webmanifest"`);
-  for (const p of WEB_PATHS[k]) app.get(`/${p}/app`, (req, res) => res.type("html").set("Cache-Control", "no-cache").send(APP_PAGES[k]));
-}
-app.get("/studia", (req, res) => res.redirect(301, "/revifox")); // ancienne adresse de la présentation
-// Ancienne adresse de l'application : on garde les liens et les installations existants
-app.get("/app", (req, res) => res.redirect(301, "/kids/app" + (req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "")));
+const APP_PAGE = APP_HTML.replace('href="/manifest.webmanifest"', 'href="/revifox/manifest.webmanifest"');
+for (const p of WEB_PATHS.studia) app.get(`/${p}/app`, (req, res) => res.type("html").set("Cache-Control", "no-cache").send(APP_PAGE));
+const qs = (req) => (req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "");
+app.get("/kids/app", (req, res) => res.redirect(301, "/revifox/app" + qs(req))); // Révifox Kids n'existe plus : une seule application
+app.get("/app", (req, res) => res.redirect(301, "/revifox/app" + qs(req)));
+for (const p of ["/revifox", "/studia", "/kids"]) app.get(p, (req, res) => res.redirect(301, "/" + qs(req)));
 app.use(express.static(path.join(__dirname, "public"), { extensions: ["html"] }));
 
 // Réglages publics pour les comptes parents (la clé anon est faite pour être publique)
@@ -454,12 +448,12 @@ async function guard(req, res, opt = {}) {
   if (opt.text && typeof body.text === "string" && !body.image) {      // leçon à partir d'un texte ou d'un sujet, sans photo
     const text = body.text.replace(/\r/g, "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim().slice(0, 6000);
     if (text.length < (opt.min || 3)) { undo(); res.status(400).json({ erreur: MSG.text[lg] }); return null; }
-    return { lg, m: null, text, mode: body.mode === "kids" ? "kids" : "studia", body, undo };
+    return { lg, m: null, text, mode: "studia", body, undo };
   }
   if (opt.words) { undo(); res.status(400).json({ erreur: MSG.text[lg] }); return null; }  // reformuler / synonymes : du texte seulement
   const m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(body.image || "");
   if (!m) { undo(); res.status(400).json({ erreur: MSG.image[lg] }); return null; }
-  return { lg, m, mode: body.mode === "kids" ? "kids" : "studia", body, undo };
+  return { lg, m, mode: "studia", body, undo };
 }
 
 // Ordre d'essai : Gemini, Gemini (modèle de secours), puis Claude
@@ -821,7 +815,7 @@ function pushMessage(g, lang, appName) {
   const body = parts.join("\n");
   return body.length > 220 ? body.slice(0, 217) + "…" : body;
 }
-const pushPayload = (sub, body) => ({ t: sub.app === "studia" ? "Révifox" : "Révifox Kids", b: body, u: `/${sub.app === "studia" ? "revifox" : "kids"}/app?open=agenda`, i: sub.app === "studia" ? "/studia-icon-192.png" : "/icon-192.png", g: "studia-alertes", l: sub.lang === "en" ? "en" : "fr" });
+const pushPayload = (sub, body) => ({ t: "Révifox", b: body, u: "/revifox/app?open=agenda", i: "/studia-icon-192.png", g: "studia-alertes", l: sub.lang === "en" ? "en" : "fr" });
 const sendPush = (sub, payload) => webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, JSON.stringify(payload), { TTL: 12 * 3600, urgency: "normal" });
 const goneErr = (e) => Boolean(e && (e.statusCode === 404 || e.statusCode === 410));
 const noPush = (res) => res.status(503).json({ erreur: "Les notifications du téléphone ne sont pas activées sur le serveur." });
@@ -877,7 +871,7 @@ app.post("/api/push/subscribe", async (req, res) => {
   const ep = String(s.endpoint || ""), p256 = String(k.p256dh || ""), au = String(k.auth || "");
   if (ep.length > 1000 || !PUSH_HOSTS.test(ep) || !/^[\w-]{20,200}$/.test(p256) || !/^[\w-]{10,60}$/.test(au)) return res.status(400).json({ erreur: "Abonnement invalide." });
   try {
-    await sbRest("push_subs?on_conflict=endpoint", { method: "POST", prefer: "resolution=merge-duplicates,return=minimal", body: { parent_id: id, endpoint: ep, p256dh: p256, auth: au, app: b.app === "studia" ? "studia" : "kids", lang: b.lang === "en" ? "en" : "fr" } });
+    await sbRest("push_subs?on_conflict=endpoint", { method: "POST", prefer: "resolution=merge-duplicates,return=minimal", body: { parent_id: id, endpoint: ep, p256dh: p256, auth: au, app: "studia", lang: b.lang === "en" ? "en" : "fr" } });
     const rows = (await sbRest(`push_subs?select=id&parent_id=eq.${id}&order=created_at.desc`)) || []; // au plus 10 appareils par compte
     for (const r of rows.slice(10)) await sbRest(`push_subs?id=eq.${r.id}`, { method: "DELETE", prefer: "return=minimal" });
     res.json({ ok: true });
