@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#6C4CF1">
-<link rel="manifest" href="/manifest.webmanifest">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#2F5BD6">
+<link rel="manifest" href="/revifox/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/studia-apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Révifox Kids — Apprends. Explore. Brille à ta façon.</title>
+<title>Révifox — Étudie à ton rythme</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700&family=Lexend:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F3F0FF;--card:#fff;--ink:#241F4A;--soft:#6B6794;--violet:#6C4CF1;--sun:#FFC93C;--mint:#27B994;--coral:#FF6B6B;--line:#E2DCFA;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -467,11 +467,11 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 </defs></svg>
 <div class="shell" id="shell">
 <header class="mbar">
-<a class="mbrand" href="/" aria-label="Révifox Kids"><span class="bico"><svg width="34" height="34" viewBox="0 0 120 120" aria-hidden="true"><polygon points="14,12 48,34 22,64" fill="#FF8A2B"/><polygon points="106,12 72,34 98,64" fill="#FF8A2B"/><ellipse cx="60" cy="68" rx="46" ry="42" fill="#FF8A2B"/><path d="M14 76 Q60 126 106 76 Q90 60 60 84 Q30 60 14 76Z" fill="#fff"/><circle cx="42" cy="62" r="6" fill="#241F4A"/><circle cx="78" cy="62" r="6" fill="#241F4A"/><ellipse cx="60" cy="82" rx="7" ry="5" fill="#241F4A"/></svg></span><span class="bname">Révifox Kids</span></a>
+<a class="mbrand" href="/" aria-label="Révifox"><span class="bico"><svg width="34" height="34" viewBox="0 0 120 120" aria-hidden="true"><polygon points="14,12 48,34 22,64" fill="#FF8A2B"/><polygon points="106,12 72,34 98,64" fill="#FF8A2B"/><ellipse cx="60" cy="68" rx="46" ry="42" fill="#FF8A2B"/><path d="M14 76 Q60 126 106 76 Q90 60 60 84 Q30 60 14 76Z" fill="#fff"/><circle cx="42" cy="62" r="6" fill="#241F4A"/><circle cx="78" cy="62" r="6" fill="#241F4A"/><ellipse cx="60" cy="82" rx="7" ry="5" fill="#241F4A"/></svg></span><span class="bname">Révifox</span></a>
 <button type="button" class="mbtn" id="menuBtn" aria-expanded="false" aria-controls="side" aria-label="Menu"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
 </header>
 <aside class="side" id="side" aria-label="Navigation">
-<a class="sbrand" href="/"><span class="bico"><svg width="40" height="40" viewBox="0 0 120 120" aria-hidden="true"><polygon points="14,12 48,34 22,64" fill="#FF8A2B"/><polygon points="106,12 72,34 98,64" fill="#FF8A2B"/><ellipse cx="60" cy="68" rx="46" ry="42" fill="#FF8A2B"/><path d="M14 76 Q60 126 106 76 Q90 60 60 84 Q30 60 14 76Z" fill="#fff"/><circle cx="42" cy="62" r="6" fill="#241F4A"/><circle cx="78" cy="62" r="6" fill="#241F4A"/><ellipse cx="60" cy="82" rx="7" ry="5" fill="#241F4A"/></svg></span><span class="bname">Révifox Kids</span></a>
+<a class="sbrand" href="/"><span class="bico"><svg width="40" height="40" viewBox="0 0 120 120" aria-hidden="true"><polygon points="14,12 48,34 22,64" fill="#FF8A2B"/><polygon points="106,12 72,34 98,64" fill="#FF8A2B"/><ellipse cx="60" cy="68" rx="46" ry="42" fill="#FF8A2B"/><path d="M14 76 Q60 126 106 76 Q90 60 60 84 Q30 60 14 76Z" fill="#fff"/><circle cx="42" cy="62" r="6" fill="#241F4A"/><circle cx="78" cy="62" r="6" fill="#241F4A"/><ellipse cx="60" cy="82" rx="7" ry="5" fill="#241F4A"/></svg></span><span class="bname">Révifox</span></a>
 <nav class="snav">
 <button type="button" class="nav2 on" id="navHome" aria-current="page"><svg class="ci " aria-hidden="true"><use href="#c-home"/></svg><span data-t>Accueil</span></button>
 <button type="button" class="nav2" id="agBtn"><svg class="ci " aria-hidden="true"><use href="#c-cal"/></svg><span data-t>Agenda</span><b class="nbadge hide" id="agN"></b></button>
@@ -536,7 +536,6 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 <button class="go" id="alog" type="button">Se connecter</button>
 <button class="again" id="areg" type="button">Créer mon compte</button>
 <button class="pf" id="aforgot" type="button" style="margin-top:12px">Mot de passe oublié ?</button>
-<div><a class="pf homelink" href="/" data-t style="display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin-top:16px;text-decoration:none;color:var(--ink)">← Choisir une autre version</a></div>
 </div></div>
 <div id="stop" class="hide" role="alertdialog" aria-modal="true" aria-labelledby="stitle"><div class="abox">
 <div style="font-size:3rem">😴</div><h2 id="stitle" data-t>C'est fini pour aujourd'hui !</h2>
@@ -553,7 +552,7 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 <button class="again" id="pcancel" type="button">Annuler</button>
 </div></div>
 <div id="qr" class="hide" dir="ltr" role="dialog" aria-modal="true" aria-labelledby="qtitle"><div class="abox">
-<h2 id="qtitle">Partager Révifox Kids</h2>
+<h2 id="qtitle">Partager Révifox</h2>
 <p class="mute">Scanne ce code avec un téléphone pour ouvrir Révifox.</p>
 <div id="qrimg" style="display:inline-block;margin:6px 0"></div>
 <p class="mute" id="qurl" style="word-break:break-all;margin:4px 0 0"></p>
@@ -603,7 +602,6 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 <p id="cnsMsg" class="mute" role="alert"></p>
 <button class="go" id="cnsOk" type="button" disabled>Continuer</button>
 <button class="again" id="cnsOut" type="button">Se déconnecter</button>
-<div><a class="pf homelink" href="/" data-t style="display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin-top:16px;text-decoration:none;color:var(--ink)">← Choisir une autre version</a></div>
 </div></div>
 <div id="toast" role="status"></div>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
@@ -612,7 +610,7 @@ footer{margin-top:28px;text-align:center;font-size:.8rem;color:var(--soft)}
 var $=function(i){return document.getElementById(i)},mode="kids",R=null,qi=0,sc=0,lock=false,qs={tries:0};
 function esc(s){var d=document.createElement("div");d.textContent=s==null?"":s;return d.innerHTML}
 function ea(s){return esc(s).replace(/"/g,"&quot;")}
-var APP=/^\/(revifox|studia)(\/|$)/.test(location.pathname)?"studia":"kids"; // "kids" = Révifox Kids ; "studia" = Révifox (tout public)
+var APP="studia"; // "kids" = Révifox Kids ; "studia" = Révifox (tout public)
 function show(id,on){if(id==="load"&&!on)loadStop();$(id).classList.toggle("hide",!on)}
 function fail(m){show("load",false);show("err",true);$("err").textContent=m}
 
@@ -668,7 +666,7 @@ var TR={en:{
 "Révifox Kids est conçu pour les enfants, avec un compte géré par un parent ou un tuteur.":"Révifox Kids is designed for children, with an account managed by a parent or guardian.",
 "Pour utiliser Révifox, nous avons besoin de ton accord.":"To use Révifox, we need your agreement.",
 "Je suis le parent ou le tuteur légal des enfants pour qui je crée des profils, et j'accepte la politique de confidentialité et les conditions d'utilisation.":"I am the parent or legal guardian of the children I create profiles for, and I accept the privacy policy and the terms of use.",
-"J'ai 14 ans ou plus, ou j'ai l'accord d'un parent ou d'un tuteur, et j'accepte la politique de confidentialité et les conditions d'utilisation.":"I am 14 or older, or I have a parent's or guardian's permission, and I accept the privacy policy and the terms of use.",
+"J'ai 18 ans ou plus. Si un enfant ou un adolescent utilise Révifox, c'est avec mon compte et sous ma supervision. J'accepte la politique de confidentialité et les conditions d'utilisation.":"I am 18 or older. If a child or teenager uses Révifox, it is with my account and under my supervision. I accept the privacy policy and the terms of use.",
 "Politique de confidentialité":"Privacy policy",
 "Conditions d'utilisation":"Terms of use",
 "Continuer":"Continue",
@@ -754,7 +752,7 @@ var TR={en:{
 "Supprimer mon compte…":"Delete my account…",
 "Efface définitivement le compte et toutes les données. Tu pourras tout relire avant de confirmer.":"Permanently erases the account and all data. You can read everything again before confirming.",
 "Cela efface définitivement ton compte et toutes les données qui y sont liées : les profils des enfants, les séances, l'agenda, les rappels et la bibliothèque. Révifox Kids et Révifox sont toutes deux concernées. Cette action est irréversible.":"This permanently erases your account and all the data linked to it: the children's profiles, sessions, planner, reminders and library. Both Révifox Kids and Révifox are affected. This cannot be undone.",
-"Cela efface définitivement ton compte et toutes les données qui y sont liées : tes séances, ton agenda, tes rappels et ta bibliothèque. Révifox et Révifox Kids sont toutes deux concernées. Cette action est irréversible.":"This permanently erases your account and all the data linked to it: your sessions, planner, reminders and library. Both Révifox and Révifox Kids are affected. This cannot be undone.",
+"Cela efface définitivement ton compte et toutes les données qui y sont liées : tes séances, ton agenda, tes rappels et ta bibliothèque. Cette action est irréversible.":"This permanently erases your account and all the data linked to it: your sessions, planner, reminders and library. This cannot be undone.",
 "Pour confirmer, écris":"To confirm, type",
 "Supprimer définitivement":"Delete permanently",
 "Suppression en cours…":"Deleting…",
@@ -1110,11 +1108,11 @@ if(/access_token|[?&]code=/.test(location.hash+location.search))history.replaceS
 if(!hasConsent(u)){askConsent(u,function(){finishEnter(u)});return}
 finishEnter(u)}
 function finishEnter(u){KEY=(APP==="kids"?"studia:v1:":"studia:s1:")+u.id;$("logout").classList.remove("hide");paintLogout();if(APP==="kids")$("parBtn").classList.remove("hide");start()}
-var CONSENT_V=1;
+var CONSENT_V=2;
 function hasConsent(u){var c=u.user_metadata&&u.user_metadata.consent&&u.user_metadata.consent[APP];return!!(c&&c.v>=CONSENT_V)}
 function askConsent(u,cb){var kd=APP==="kids";$("cnsT").textContent=t("Avant de continuer");
 $("cnsP").textContent=t(kd?"Révifox Kids est conçu pour les enfants, avec un compte géré par un parent ou un tuteur.":"Pour utiliser Révifox, nous avons besoin de ton accord.");
-$("cnsL").textContent=t(kd?"Je suis le parent ou le tuteur légal des enfants pour qui je crée des profils, et j'accepte la politique de confidentialité et les conditions d'utilisation.":"J'ai 14 ans ou plus, ou j'ai l'accord d'un parent ou d'un tuteur, et j'accepte la politique de confidentialité et les conditions d'utilisation.");
+$("cnsL").textContent=t(kd?"Je suis le parent ou le tuteur légal des enfants pour qui je crée des profils, et j'accepte la politique de confidentialité et les conditions d'utilisation.":"J'ai 18 ans ou plus. Si un enfant ou un adolescent utilise Révifox, c'est avec mon compte et sous ma supervision. J'accepte la politique de confidentialité et les conditions d'utilisation.");
 $("cnsLk").innerHTML='<a href="/confidentialite" target="_blank" rel="noopener">'+t("Politique de confidentialité")+'</a> · <a href="/conditions" target="_blank" rel="noopener">'+t("Conditions d'utilisation")+'</a>';
 $("cnsOk").textContent=t("Continuer");$("cnsOut").textContent=t("Se déconnecter");$("cnsMsg").textContent="";
 $("cnsBox").checked=false;$("cnsOk").disabled=true;$("consent").classList.remove("hide");
@@ -1472,7 +1470,7 @@ if($("tgOff"))$("tgOff").onclick=function(){if(confirm("Arrêter les alertes Tel
 // ---------- Supprimer son compte (Google Play et la loi l'exigent) ----------
 function openDel(tr){var word=(tr===ident||lang!=="en")?"SUPPRIMER":"DELETE",box=$("delacc");
 $("delT").textContent=tr("Supprimer mon compte");
-$("delTxt").textContent=tr(APP==="kids"?"Cela efface définitivement ton compte et toutes les données qui y sont liées : les profils des enfants, les séances, l'agenda, les rappels et la bibliothèque. Révifox Kids et Révifox sont toutes deux concernées. Cette action est irréversible.":"Cela efface définitivement ton compte et toutes les données qui y sont liées : tes séances, ton agenda, tes rappels et ta bibliothèque. Révifox et Révifox Kids sont toutes deux concernées. Cette action est irréversible.");
+$("delTxt").textContent=tr(APP==="kids"?"Cela efface définitivement ton compte et toutes les données qui y sont liées : les profils des enfants, les séances, l'agenda, les rappels et la bibliothèque. Révifox Kids et Révifox sont toutes deux concernées. Cette action est irréversible.":"Cela efface définitivement ton compte et toutes les données qui y sont liées : tes séances, ton agenda, tes rappels et ta bibliothèque. Cette action est irréversible.");
 $("delL").textContent=tr("Pour confirmer, écris")+" "+word+" :";$("delIn").value="";$("delMsg").textContent="";
 $("delGo").textContent=tr("Supprimer définitivement");$("delGo").disabled=true;$("delNo").textContent=tr("Annuler");
 box.classList.remove("hide");$("delIn").focus();
