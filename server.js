@@ -17,6 +17,8 @@ const CLAUDE_MODEL = process.env.CLAUDE_MODEL || "claude-haiku-4-5-20251001";
 const CLAUDE_BASE = process.env.CLAUDE_BASE || "https://api.anthropic.com";
 // Limites d'analyses (leçons par photo ou par texte, calendrier) par parent : modifiables sur Render sans toucher au code
 // MAX_PER_HOUR (défaut 6 par heure) et MAX_PER_DAY (défaut 20 sur 24 h). Mettre MAX_PER_DAY=0 pour couper la limite du jour.
+// NO_LIMITS=1 : aucune limite (pour un usage personnel, quand tu es seul à utiliser le site). Retire ce réglage pour remettre les limites.
+const NO_LIMITS = /^(1|true|oui|yes)$/i.test(process.env.NO_LIMITS || "");
 const MAX_PER_HOUR = Number(process.env.MAX_PER_HOUR) || 6;
 const MAX_PER_DAY = process.env.MAX_PER_DAY === undefined || process.env.MAX_PER_DAY === "" ? 20 : Number(process.env.MAX_PER_DAY) || 0;
 
@@ -223,7 +225,7 @@ app.use(express.static(path.join(__dirname, "public"), { extensions: ["html"] })
 
 // Réglages publics pour les comptes parents (la clé anon est faite pour être publique)
 app.get("/api/config", (req, res) =>
-  res.json({ url: process.env.SUPABASE_URL || "", key: process.env.SUPABASE_ANON_KEY || "", lim: { h: MAX_PER_HOUR, d: MAX_PER_DAY, wh: MAX_WORDS_PER_HOUR, wd: MAX_WORDS_PER_DAY } })
+  res.json({ url: process.env.SUPABASE_URL || "", key: process.env.SUPABASE_ANON_KEY || "", lim: NO_LIMITS ? null : { h: MAX_PER_HOUR, d: MAX_PER_DAY, wh: MAX_WORDS_PER_HOUR, wd: MAX_WORDS_PER_DAY } })
 );
 
 // ---------- Connexion obligatoire : on demande à Supabase si le jeton est valide ----------
@@ -250,6 +252,7 @@ const hits = new Map(), wordHits = new Map();
 const MAX_WORDS_PER_HOUR = Number(process.env.MAX_WORDS_PER_HOUR) || 20;
 const MAX_WORDS_PER_DAY = process.env.MAX_WORDS_PER_DAY === undefined || process.env.MAX_WORDS_PER_DAY === "" ? 60 : Number(process.env.MAX_WORDS_PER_DAY) || 0;
 function limited(who, store = hits, max = MAX_PER_HOUR, maxDay = 0, stamp = Date.now()) {
+  if (NO_LIMITS) return 0;
   const now = Date.now();
   const day = (store.get(who) || []).filter((t) => now - t < 86400000);
   const hour = day.filter((t) => now - t < 3600000);
@@ -592,6 +595,7 @@ app.get("/api/usage", async (req, res) => {
     if (!id) return res.status(401).json({ erreur: MSG.login.fr });
     who = "u:" + id;
   }
+  if (NO_LIMITS) return res.set("Cache-Control", "no-store").json({ off: true });
   const now = Date.now();
   const mk = (store, mh, md) => {
     const day = (store.get(who) || []).filter((t) => now - t < 86400000), hour = day.filter((t) => now - t < 3600000);
