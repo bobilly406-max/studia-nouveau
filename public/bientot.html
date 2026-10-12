@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#241F4A">
+<title>Révifox — bientôt</title>
+<link rel="icon" href="/studia-icon-192.png">
+<style>
+:root{--bg:#F3F0FF;--card:#fff;--ink:#241F4A;--soft:#5E5A8A;--brand:#5B3FE0;--line:#E2DCFA}
+@media (prefers-color-scheme:dark){:root{--bg:#17143A;--card:#231F55;--ink:#F4F1FF;--soft:#B1ABE0;--brand:#9D8CFF;--line:#3A3590}}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;display:flex;flex-direction:column;min-height:100vh}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 16px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:24px;padding:40px 28px;max-width:520px;width:100%;text-align:center}
+svg{width:84px;height:84px}
+h1{font-size:clamp(1.7rem,6vw,2.3rem);line-height:1.15;margin:16px 0 12px}
+p{color:var(--soft);font-size:1.05rem;margin:0 0 10px}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:999px;overflow:hidden;margin-top:18px}
+.seg button{border:0;background:transparent;color:var(--ink);font:700 .9rem system-ui,sans-serif;padding:8px 16px;min-height:40px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--brand);color:#fff}
+footer{padding:20px 16px 28px;text-align:center;font-size:.9rem}
+footer a{color:var(--soft);margin:0 10px;text-decoration:underline}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main><div class="card">
+<svg viewBox="0 0 120 120" aria-hidden="true"><polygon points="60,22 116,50 60,78 4,50" fill="#5CA0FF"/><polygon points="26,62 60,78 94,62 94,88 60,104 26,88" fill="#8C68FF"/><rect x="105.5" y="52" width="5" height="38" fill="#FFB020"/><circle cx="108" cy="90" r="6" fill="#FFB020"/></svg>
+<div data-lang="fr">
+<h1>Révifox revient bientôt</h1>
+<p>Nous préparons une nouvelle version. Merci de votre patience.</p>
+<p>Pour toute question ou pour supprimer votre compte, écrivez à <a href="mailto:confidentialite@revifox.ca" style="color:var(--brand)">confidentialite@revifox.ca</a>.</p>
+</div>
+<div data-lang="en" hidden>
+<h1>Révifox is coming back soon</h1>
+<p>We are preparing a new version. Thank you for your patience.</p>
+<p>For any question or to delete your account, write to <a href="mailto:confidentialite@revifox.ca" style="color:var(--brand)">confidentialite@revifox.ca</a>.</p>
+</div>
+<div class="seg" role="group" aria-label="Langue / Language"><button type="button" data-setl="fr" aria-pressed="true">FR</button><button type="button" data-setl="en" aria-pressed="false">EN</button></div>
+</div></main>
+<footer>
+<a href="/confidentialite"><span data-lang="fr">Politique de confidentialité</span><span data-lang="en" hidden>Privacy policy</span></a>
+<a href="/conditions"><span data-lang="fr">Conditions d'utilisation</span><span data-lang="en" hidden>Terms of use</span></a>
+<a href="/supprimer-mon-compte"><span data-lang="fr">Supprimer mon compte</span><span data-lang="en" hidden>Delete my account</span></a>
+</footer>
+<script>
+(function(){var KEY="studia:lang",H=document.documentElement;
+function get(){try{var s=localStorage.getItem(KEY);if(s==="fr"||s==="en")return s}catch(e){}return(navigator.language||"fr").slice(0,2)==="en"?"en":"fr"}
+function set(l){H.lang=l;try{localStorage.setItem(KEY,l)}catch(e){}
+[].forEach.call(document.querySelectorAll("[data-lang]"),function(e){e.hidden=e.getAttribute("data-lang")!==l});
+[].forEach.call(document.querySelectorAll("[data-setl]"),function(b){b.setAttribute("aria-pressed",b.getAttribute("data-setl")===l)});
+document.title=l==="en"?"Révifox — coming soon":"Révifox — bientôt"}
+[].forEach.call(document.querySelectorAll("[data-setl]"),function(b){b.onclick=function(){set(b.getAttribute("data-setl"))}});
+set(get())})();
+</script>
+</body>
+</html>
